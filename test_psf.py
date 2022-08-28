@@ -191,6 +191,56 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
     
     return results
 
+def plot_results(methods):
+    """Draw line plot for systematic shear error in PSF vs shear estimation error."""
+    color_list = ['tab:red', 'tab:olive', 'tab:purple', 'tab:blue', 'tab:cyan', 'tab:green', 'tab:orange']
+    # Systematic shear error in PSF vs shear estimation error
+    fig = plt.figure(figsize=(12,8))
+    for method, color in zip(methods, color_list):
+        result_path = os.path.join('results', method)
+        results_file = os.path.join(result_path, 'results_psf_shear_err.json')
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+        logging.info(f'Successfully loaded in {results_file}.')
+
+        shear_errs = results['shear_errs']
+        rec_err_mean = np.array(results['rec_err_mean'])
+        
+        plt.plot(shear_errs, rec_err_mean[:,0], '-o', label='$g_1$, '+method, color=color)
+        plt.plot(shear_errs, rec_err_mean[:,1], '--v', label='$g_2$, '+method, color=color)
+    
+    plt.xlabel('Shear Error($\Delta_{g_1}$, $\Delta_{g_2}$) in PSF', fontsize=12)
+    plt.ylabel('Average shear estimated error', fontsize=12)
+    plt.xlim([-0.01, 0.41])
+    # plt.xscale('log')
+    plt.yscale('log')
+    plt.legend(fontsize=10)
+    plt.savefig(os.path.join('results', 'psf_shear_err.jpg'), bbox_inches='tight')
+    plt.close()
+    
+    # Seeing error in PSF vs shear estimation error
+    fig = plt.figure(figsize=(12,8))
+    for method, color in zip(methods, color_list):
+        result_path = os.path.join('results', method)
+        results_file = os.path.join(result_path, 'results_psf_seeing_err.json')
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+        logging.info(f'Successfully loaded in {results_file}.')
+
+        seeing_errs = results['seeing_errs']
+        rec_err_mean = np.array(results['rec_err_mean'])
+        
+        plt.plot(seeing_errs, rec_err_mean[:,0], '-o', label='$g_1$, '+method, color=color)
+        plt.plot(seeing_errs, rec_err_mean[:,1], '--v', label='$g_2$, '+method, color=color)
+    
+    plt.xlabel('Seeing Error in PSF (arcsec)', fontsize=12)
+    plt.ylabel('Average shear estimated error', fontsize=12)
+    plt.xlim([-0.01, 0.31])
+    # plt.xscale('log')
+    plt.yscale('log')
+    plt.legend(fontsize=10)
+    plt.savefig(os.path.join('results', 'psf_seeing_err.jpg'), bbox_inches='tight')
+    plt.close()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
