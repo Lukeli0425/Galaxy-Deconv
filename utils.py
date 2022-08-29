@@ -167,11 +167,26 @@ def plot_shear_err(n_iters, llh, PnP, n_epochs, survey, I):
 
 def plot_time_shear_err(methods):
     """Line plot of time and average shear error vs methods."""
-    
+    shear_err_1, shear_err_2, t = [], [], []
+    for method in methods:
+        results_file = os.path.join('results', method, 'results.json')
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+        total_time, n_gal = results['time']
+        shear_err_1.append(results['time'][0])
+        shear_err_2.append(results['time'][1])
+        t.append(results[total_time/n_gal])
     x = range(len(methods))
-    plt.figure(figsize=(10,6))
-    plt.plot(x, shear_err, '-o', label='Average Shear Error')
-    plt.plot(x, t, '--v', label='Time per galaxy')
+    
+    fig, ax1 = plt.subplots(figsize=(10,6))
+    ax1.plot(x, shear_err_1, '--^', label='$g_1$')
+    ax1.plot(x, shear_err_2, '--v', label='$g_2$')
+    ax1.set_ylabel('Average Shear Error')
+    
+    ax2 = ax1.twinx()
+    ax2.plot(x, t, '-o', label='Time per galaxy')
+    ax2.set_ylabel('Time/sec')
+    
     plt.xticks(x, methods, rotation=45)
     plt.xlabel('Methods')
     plt.legend()
