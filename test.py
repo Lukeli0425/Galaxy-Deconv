@@ -1,5 +1,6 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+import time
 import logging
 import argparse
 import json
@@ -10,8 +11,9 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import Galaxy_Dataset
 from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Richard_Lucy import Richard_Lucy
 from utils_poisson_deblurring.utils_torch import MultiScaleLoss
-from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err
+from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err, plot_time_shear_err
 
 
 class ADMM_deconvolver:
@@ -91,7 +93,7 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
         # io.imsave(os.path.join(result_path, 'rec', f"rec_{I}_{idx}.tiff"), rec.numpy(), check_contrast=False)
         
         # Visualization
-        if idx < 100:
+        if idx < 50:
             plt.figure(figsize=(10,10))
             plt.subplot(2,2,1)
             plt.imshow(gt)
@@ -133,105 +135,246 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
 
     return results
 
-def test_shear(n_iters, llh, PnP, n_epochs, survey, I):
-    """Estimate shear with saved model."""
-    test_dataset = Galaxy_Dataset(train=False, survey=survey, I=I)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+# def test_shear(n_iters, llh, PnP, n_epochs, survey, I):
+#     """Estimate shear with saved model."""
+#     test_dataset = Galaxy_Dataset(train=False, survey=survey, I=I)
+#     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    gt_shear = []
-    obs_shear = []
-    rec_shear = []
-    fpfs_shear = []
+#     gt_shear = []
+#     obs_shear = []
+#     rec_shear = []
+#     fpfs_shear = []
     
-    result_path = f'./results/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_{n_epochs}epochs/'
-    results_file = os.path.join(result_path, 'results.json')
-    if not os.path.exists(result_path):
-        os.mkdir(result_path)
-    try:
-        with open(results_file, 'r') as f:
-            results = json.load(f)
-        logging.info(f'Successfully loaded in {results_file}.')
-    except:
-        logging.warning(f'Failed loading in {results_file}.')
-        results = {}
+#     result_path = f'./results/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_{n_epochs}epochs/'
+#     results_file = os.path.join(result_path, 'results.json')
+#     if not os.path.exists(result_path):
+#         os.mkdir(result_path)
+#     try:
+#         with open(results_file, 'r') as f:
+#             results = json.load(f)
+#         logging.info(f'Successfully loaded in {results_file}.')
+#     except:
+#         logging.warning(f'Failed loading in {results_file}.')
+#         results = {}
 
-    model_file = f'saved_models/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_{n_epochs}epochs.pth'
-    model = ADMM_deconvolver(n_iters=n_iters, llh=llh, PnP=PnP, model_file=model_file)
+#     model_file = f'saved_models/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_{n_epochs}epochs.pth'
+#     model = ADMM_deconvolver(n_iters=n_iters, llh=llh, PnP=PnP, model_file=model_file)
     
-    for idx, ((obs, psf, M), gt) in enumerate(test_loader):
-        with torch.no_grad():
-            try:
-                rec = io.imread(os.path.join(result_path, 'rec/', f"rec_{I}_{idx}.tiff"))
-            except:
-                rec = model.deconvolve(obs, psf)
-            gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-            psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-            obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+#     for idx, ((obs, psf, M), gt) in enumerate(test_loader):
+#         with torch.no_grad():
+#             try:
+#                 rec = io.imread(os.path.join(result_path, 'rec/', f"rec_{I}_{idx}.tiff"))
+#             except:
+#                 rec = model.deconvolve(obs, psf)
+#             gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+#             psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+#             obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
 
-            # Calculate shear
-            try:
-                fpfs_shear.append(estimate_shear(obs, psf, use_psf=True))
-                if abs(fpfs_shear[-1][0]) + abs(fpfs_shear[-1][1]) > 10:
-                    fpfs_shear.pop()
-                else:
+#             # Calculate shear
+#             try:
+#                 fpfs_shear.append(estimate_shear(obs, psf, use_psf=True))
+#                 if abs(fpfs_shear[-1][0]) + abs(fpfs_shear[-1][1]) > 10:
+#                     fpfs_shear.pop()
+#                 else:
+#                     gt_shear.append(estimate_shear(gt))
+#                     obs_shear.append(estimate_shear(obs))
+#                     rec_shear.append(estimate_shear(rec))
+#                     logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})  fpfs:({:.3f},{:.3f})'.format(
+#                         idx+1, len(test_loader),
+#                         gt_shear[-1][0], gt_shear[-1][1],
+#                         obs_shear[-1][0], obs_shear[-1][1],
+#                         rec_shear[-1][0], rec_shear[-1][1],
+#                         fpfs_shear[-1][0], fpfs_shear[-1][1]))
+#             except:
+#                 pass
+#     gt_shear = np.array(gt_shear)
+#     obs_shear = np.array(obs_shear)
+#     rec_shear = np.array(rec_shear)
+#     fpfs_shear = np.array(fpfs_shear)
+#     obs_err_mean = np.mean(abs(obs_shear - gt_shear), axis=0)
+#     rec_err_mean = np.mean(abs(rec_shear - gt_shear), axis=0)
+#     fpfs_err_mean = np.mean(abs(fpfs_shear - gt_shear), axis=0)
+#     obs_err_median = np.median(abs(obs_shear - gt_shear), axis=0)
+#     rec_err_median = np.median(abs(rec_shear - gt_shear), axis=0)
+#     fpfs_err_median = np.median(abs(fpfs_shear - gt_shear), axis=0)
+#     obs_err_rms = np.sqrt(np.mean((obs_shear - gt_shear)**2, axis=0))
+#     rec_err_rms = np.sqrt(np.mean((rec_shear - gt_shear)**2, axis=0))
+#     fpfs_err_rms = np.sqrt(np.mean((fpfs_shear - gt_shear)**2, axis=0))
+#     logging.info('Shear error (mean): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
+#                 obs_err_mean[0], obs_err_mean[1],
+#                 rec_err_mean[0], rec_err_mean[1],
+#                 fpfs_err_mean[0], fpfs_err_mean[1]))
+#     logging.info('Shear error (median): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
+#                 obs_err_median[0], obs_err_median[1],
+#                 rec_err_median[0], rec_err_median[1],
+#                 fpfs_err_median[0], fpfs_err_median[1]))
+#     logging.info('Shear error (RMS): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
+#                 obs_err_rms[0], obs_err_rms[1],
+#                 rec_err_rms[0], rec_err_rms[1],
+#                 fpfs_err_rms[0], fpfs_err_rms[1]))
+    
+#     # Save shear estimation
+#     results['gt_shear'] = gt_shear.tolist()
+#     results['obs_shear'] = obs_shear.tolist()
+#     results['rec_shear'] = rec_shear.tolist()
+#     results['fpfs_shear'] = fpfs_shear.tolist()
+#     results['obs_err_mean'] = obs_err_mean.tolist()
+#     results['rec_err_mean'] = rec_err_mean.tolist()
+#     results['fpfs_err_mean'] = fpfs_err_mean.tolist()
+#     results['obs_err_median'] = obs_err_median.tolist()
+#     results['rec_err_median'] = rec_err_median.tolist()
+#     results['fpfs_err_median'] = fpfs_err_median.tolist()
+#     results['obs_err_rms'] = obs_err_rms.tolist()
+#     results['rec_err_rms'] = rec_err_rms.tolist()
+#     results['fpfs_err_rms'] = fpfs_err_rms.tolist()
+#     with open(results_file, 'w') as f:
+#         json.dump(results, f)
+#     logging.info(f"Shear estimation results saved to {results_file}.")
+#     return results
+
+def test_shear(methods, n_iters, model_files, n_gal):   
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    
+    gt_shear, obs_shear = [], []
+    for method, model_file, n_iter in zip(methods, model_files, n_iters):
+        logging.info(f'Tesing method: {method}')
+        result_path = os.path.join('results/', method)
+        if not os.path.exists(result_path):
+            os.mkdir(result_path)
+        results_file = os.path.join(result_path, 'results.json')
+        try:
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+        except:
+            results = {} # dictionary to record the test results
+        
+        if n_iter > 0:
+            if method == 'Richard-Lucy':
+                model = Richard_Lucy(n_iters=n_iter)
+                model.to(device)
+            else:
+                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+                model.to(device)
+                try: # Load the model
+                    model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+                    logging.info(f'Successfully loaded in {model_file}.')
+                except:
+                    logging.raiseExceptions(f'Failed loading in {model_file} model!')   
+            model.eval()     
+        
+        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err>0 else 'psf/')
+        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    
+        rec_shear = []
+        for idx, ((obs, psf, alpha), gt) in enumerate(test_loader):
+            with torch.no_grad():
+                if method == 'No_deconv':
+                    gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     gt_shear.append(estimate_shear(gt))
                     obs_shear.append(estimate_shear(obs))
+                    rec_shear.append(estimate_shear(obs))
+                elif method == 'FPFS':
+                    psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    try:
+                        rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    except:
+                        rec_shear.append(obs_shear[idx])
+                elif method == 'Richard-Lucy':
+                    obs, psf = obs.to(device), psf.to(device)
+                    rec = model(obs, psf) 
+                    rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    # Calculate shear
                     rec_shear.append(estimate_shear(rec))
-                    logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})  fpfs:({:.3f},{:.3f})'.format(
-                        idx+1, len(test_loader),
-                        gt_shear[-1][0], gt_shear[-1][1],
-                        obs_shear[-1][0], obs_shear[-1][1],
-                        rec_shear[-1][0], rec_shear[-1][1],
-                        fpfs_shear[-1][0], fpfs_shear[-1][1]))
-            except:
-                pass
-    gt_shear = np.array(gt_shear)
-    obs_shear = np.array(obs_shear)
-    rec_shear = np.array(rec_shear)
-    fpfs_shear = np.array(fpfs_shear)
-    obs_err_mean = np.mean(abs(obs_shear - gt_shear), axis=0)
-    rec_err_mean = np.mean(abs(rec_shear - gt_shear), axis=0)
-    fpfs_err_mean = np.mean(abs(fpfs_shear - gt_shear), axis=0)
-    obs_err_median = np.median(abs(obs_shear - gt_shear), axis=0)
-    rec_err_median = np.median(abs(rec_shear - gt_shear), axis=0)
-    fpfs_err_median = np.median(abs(fpfs_shear - gt_shear), axis=0)
-    obs_err_rms = np.sqrt(np.mean((obs_shear - gt_shear)**2, axis=0))
-    rec_err_rms = np.sqrt(np.mean((rec_shear - gt_shear)**2, axis=0))
-    fpfs_err_rms = np.sqrt(np.mean((fpfs_shear - gt_shear)**2, axis=0))
-    logging.info('Shear error (mean): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
-                obs_err_mean[0], obs_err_mean[1],
-                rec_err_mean[0], rec_err_mean[1],
-                fpfs_err_mean[0], fpfs_err_mean[1]))
-    logging.info('Shear error (median): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
-                obs_err_median[0], obs_err_median[1],
-                rec_err_median[0], rec_err_median[1],
-                fpfs_err_median[0], fpfs_err_median[1]))
-    logging.info('Shear error (RMS): ({:.5f},{:.5f}) -> ({:.5f},{:.5f})   fpfs:({:.5f},{:.5f})'.format(
-                obs_err_rms[0], obs_err_rms[1],
-                rec_err_rms[0], rec_err_rms[1],
-                fpfs_err_rms[0], fpfs_err_rms[1]))
-    
-    # Save shear estimation
-    results['gt_shear'] = gt_shear.tolist()
-    results['obs_shear'] = obs_shear.tolist()
-    results['rec_shear'] = rec_shear.tolist()
-    results['fpfs_shear'] = fpfs_shear.tolist()
-    results['obs_err_mean'] = obs_err_mean.tolist()
-    results['rec_err_mean'] = rec_err_mean.tolist()
-    results['fpfs_err_mean'] = fpfs_err_mean.tolist()
-    results['obs_err_median'] = obs_err_median.tolist()
-    results['rec_err_median'] = rec_err_median.tolist()
-    results['fpfs_err_median'] = fpfs_err_median.tolist()
-    results['obs_err_rms'] = obs_err_rms.tolist()
-    results['rec_err_rms'] = rec_err_rms.tolist()
-    results['fpfs_err_rms'] = fpfs_err_rms.tolist()
-    with open(results_file, 'w') as f:
-        json.dump(results, f)
-    logging.info(f"Shear estimation results saved to {results_file}.")
+                else:
+                    obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
+                    rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
+                    rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    # Calculate shear
+                    rec_shear.append(estimate_shear(rec))
+            logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+                idx+1, len(test_loader),
+                gt_shear[idx][0], gt_shear[idx][1],
+                obs_shear[idx][0], obs_shear[idx][1],
+                rec_shear[idx][0], rec_shear[idx][1]))
+            if idx > n_gal:
+                break
+        results['rec_shear'] = rec_shear
+        results['gt_shear'] = gt_shear.tolist()
+        results['obs_shear'] = obs_shear
+        
+        gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
+        results['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0)
+        
+        # Save results to json file
+        with open(results_file, 'w') as f:
+            json.dump(results, f)
+        logging.info(f"Test results saved to {results_file}.")
     
     return results
 
+def test_time(methods, n_iters, model_files, n_gal):  
+    """Test the time of different models.""" 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    
+    for method, model_file, n_iter in zip(methods, model_files, n_iters):
+        logging.info(f'Tesing PSF with shear error: {method}')
+        result_path = os.path.join('results', method)
+        if not os.path.exists(result_path):
+            os.mkdir(result_path)
+        results_file = os.path.join(result_path, 'results.json')
+        try:
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+        except:
+            results = {} # dictionary to record the test results
+            
+        if method == 'No_deconv':
+            results['time'] = (0, n_gal)
+            with open(results_file, 'w') as f:
+                json.dump(results, f)
+            logging.info(f"Test results saved to {results_file}.")  
+            continue
+        elif method == 'Richard-Lucy':
+            model = Richard_Lucy(n_iters=n_iter)
+            model.to(device)
+        else:
+            model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+            model.to(device)
+            try: # Load the model
+                model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+                logging.info(f'Successfully loaded in {model_file}.')
+            except:
+                logging.raiseExceptions(f'Failed loading in {model_file} model!')   
+        model.eval()     
+        
+        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
+        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
+        time_start = time.time()
+        for idx, ((obs, psf, alpha), gt) in enumerate(test_loader):
+            with torch.no_grad():
+                if method == 'Richard-Lucy':
+                    obs, psf = obs.to(device), psf.to(device)
+                    rec = model(obs, psf) 
+                    # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                else:
+                    obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
+                    rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
+                    # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+            if idx >= n_gal:
+                break
+        time_end = time.time()
+        
+        logging.info(f'Tested {method} on {n_gal} galaxies: Time = {time_end-time_start}')
+        results['time'] = (time_end-time_start, n_gal)
+    
+        # Save results to json file
+        with open(results_file, 'w') as f:
+            json.dump(results, f)
+        logging.info(f"Test results saved to {results_file}.")  
+    return results
 
 if __name__ =="__main__":
     logging.basicConfig(level=logging.INFO)
@@ -248,7 +391,17 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    test(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    methods = ['No_deconv', 'Richard-Lucy', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
+               'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
+    n_iters = [0, 100, 1, 2, 4, 8]
+    model_files = [None, None,
+                   "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
+                   "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
+                   "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
+                   "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
+    
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     test_shear(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    plot_shear_err(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    plot_shear_err(meth0ds=methods)
+    plot_time_shear_err(methods=methods)
