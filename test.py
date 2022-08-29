@@ -249,7 +249,7 @@ def test_shear(methods, n_iters, model_files, n_gal):
             results = {} # dictionary to record the test results
         
         if n_iter > 0:
-            if method == 'Richard-Lucy':
+            if 'Richard-Lucy' in method:
                 model = Richard_Lucy(n_iters=n_iter)
                 model.to(device)
             else:
@@ -262,7 +262,7 @@ def test_shear(methods, n_iters, model_files, n_gal):
                     logging.raiseExceptions(f'Failed loading in {model_file} model!')   
             model.eval()     
         
-        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err>0 else 'psf/')
+        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
     
         rec_shear = []
@@ -281,7 +281,7 @@ def test_shear(methods, n_iters, model_files, n_gal):
                         rec_shear.append(estimate_shear(obs, psf, use_psf=True))
                     except:
                         rec_shear.append(obs_shear[idx])
-                elif method == 'Richard-Lucy':
+                elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -298,14 +298,14 @@ def test_shear(methods, n_iters, model_files, n_gal):
                 gt_shear[idx][0], gt_shear[idx][1],
                 obs_shear[idx][0], obs_shear[idx][1],
                 rec_shear[idx][0], rec_shear[idx][1]))
-            if idx > n_gal:
+            if idx >= n_gal:
                 break
-        results['rec_shear'] = rec_shear
-        results['gt_shear'] = gt_shear.tolist()
-        results['obs_shear'] = obs_shear
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0)
+        results['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
+        results['rec_shear'] = rec_shear.tolist()
+        results['gt_shear'] = gt_shear.tolist()
+        results['obs_shear'] = obs_shear
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -401,7 +401,7 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     # # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
     # plot_shear_err(meth0ds=methods)
