@@ -246,7 +246,7 @@ class Galaxy_Dataset(Dataset):
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
         
-        for k in range(start_k, self.n_total):
+        for k in range(self.n_train, self.n_total):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
             
@@ -381,7 +381,8 @@ class Galaxy_Dataset(Dataset):
             json.dump(self.info, f)
 
     def __len__(self):
-        return self.n_train if self.train else self.n_test
+        # return self.n_train if self.train else self.n_test
+        return 2000
 
     def __getitem__(self, i):
         idx = i if self.train else i + self.n_train

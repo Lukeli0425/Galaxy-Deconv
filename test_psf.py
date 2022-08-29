@@ -209,10 +209,10 @@ if __name__ == "__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'FPFS', 'Richard-Lucy', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
+    methods = ['No_deconv', 'FPFS', 'Richard-Lucy(50)', 'Richard-Lucy(200)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
                'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 0, 100, 1, 2, 4, 8]
-    model_files = [None, None, None,
+    n_iters = [0, 0, 50, 200, 1, 2, 4, 8]
+    model_files = [None, None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
@@ -220,7 +220,7 @@ if __name__ == "__main__":
                 #    "saved_models/Poisson_PnP_12iters_LSST23.5_25epochs.pth"]
     shear_errs=[0.0, 0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     seeing_errs=[0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-    # test_psf_shear_err(methods=methods, shear_errs=shear_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    # test_psf_seeing_err(methods=methods, seeing_errs=seeing_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_psf_shear_err(methods=methods, shear_errs=shear_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_psf_seeing_err(methods=methods, seeing_errs=seeing_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     plot_shear_err_results(methods=methods)
     plot_seeing_err_results(methods=methods)

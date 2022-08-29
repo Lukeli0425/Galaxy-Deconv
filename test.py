@@ -232,21 +232,27 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
 #     logging.info(f"Shear estimation results saved to {results_file}.")
 #     return results
 
-def test_shear(methods, n_iters, model_files, n_gal):   
+def test_shear(methods, n_iters, model_files, n_gal, snr):   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
+    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, 
+                                  obs_folder=f'obs_{snr}', gt_folder=f'gt_{snr}')
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logging.info(f'Tesing method: {method}')
         result_path = os.path.join('results/', method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
-        results_file = os.path.join(result_path, 'results.json')
+        results_file = os.path.join(result_path, f'results.json')
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
         except:
             results = {} # dictionary to record the test results
+        if not str(snr) in results:
+            results[str(snr)] = {}
         
         if n_iter > 0:
             if 'Richard-Lucy' in method:
@@ -261,9 +267,6 @@ def test_shear(methods, n_iters, model_files, n_gal):
                 except:
                     logging.raiseExceptions(f'Failed loading in {model_file} model!')   
             model.eval()     
-        
-        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
-        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
     
         rec_shear = []
         for idx, ((obs, psf, alpha), gt) in enumerate(test_loader):
@@ -302,10 +305,10 @@ def test_shear(methods, n_iters, model_files, n_gal):
                 break
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
-        results['rec_shear'] = rec_shear.tolist()
-        results['gt_shear'] = gt_shear.tolist()
-        results['obs_shear'] = obs_shear
+        results[str(snr)]['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
+        results[str(snr)]['rec_shear'] = rec_shear.tolist()
+        results[str(snr)]['gt_shear'] = gt_shear.tolist()
+        results[str(snr)]['obs_shear'] = obs_shear
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -387,6 +390,7 @@ if __name__ =="__main__":
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
     parser.add_argument('--n_gal', type=int, default=np.inf)
+    parser.add_argument('--snr', type=int, default=20, choices=[20, 100])
     opt = parser.parse_args()
     
     if not os.path.exists('./results/'):
@@ -400,9 +404,10 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
-    
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    snrs = [20, 100]
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=20)
+    test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=100)
     # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    # plot_shear_err(meth0ds=methods)
-    plot_time_shear_err(methods=methods)
+    # plot_shear_err(methods=methods)
+    plot_time_shear_err(methods=methods, snrs=snrs)

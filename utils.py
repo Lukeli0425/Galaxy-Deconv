@@ -165,31 +165,38 @@ def plot_shear_err(n_iters, llh, PnP, n_epochs, survey, I):
     plt.title('Fourier Power Spectrum Deconvolution', fontsize=13)
     plt.savefig(os.path.join(result_path, 'shear_err.jpg'), bbox_inches='tight')
 
-def plot_time_shear_err(methods):
+def plot_time_shear_err(methods, snrs):
     """Line plot of time and average shear error vs methods."""
-    shear_err_1, shear_err_2, t = [], [], []
-    for method in methods:
-        results_file = os.path.join('results', method, 'results.json')
-        with open(results_file, 'r') as f:
-            results = json.load(f)
-        total_time, n_gal = results['time']
-        shear_err_1.append(results['time'][0])
-        shear_err_2.append(results['time'][1])
-        t.append(results[total_time/n_gal])
     x = range(len(methods))
+    colors = ['tab:blue', 'tab:purple']
+    fig, ax1 = plt.subplots(figsize=(12,8))
+    plt.xticks(x, methods, rotation=20, fontsize=11)
+    for snr, color in zip(snrs, colors):
+        shear_err_1, shear_err_2, t = [], [], []
+        for method in methods:
+            results_file = os.path.join('results', method, f'results.json')
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+            total_time, n_gal = results['time']
+            shear_err_1.append(results[str(snr)]['rec_err_mean'][0])
+            shear_err_2.append(results[str(snr)]['rec_err_mean'][1])
+            t.append(total_time/n_gal)
     
-    fig, ax1 = plt.subplots(figsize=(10,6))
-    ax1.plot(x, shear_err_1, '--^', label='$g_1$')
-    ax1.plot(x, shear_err_2, '--v', label='$g_2$')
-    ax1.set_ylabel('Average Shear Error')
+        ax1.plot(x, shear_err_1, '--^', label=f'$g_1$ (SNR={snr})', color=color, markersize=8)
+        ax1.plot(x, shear_err_2, '-.v', label=f'$g_2$ (SNR={snr})', color=color, markersize=8)
+    ax1.set_ylabel('Average Shear Error', fontsize=15)
+    ax1.set_ylim([0.01, 1])
+    ax1.set_yscale('log')
+    ax1.legend(loc="upper left", fontsize=12)
     
     ax2 = ax1.twinx()
-    ax2.plot(x, t, '-o', label='Time per galaxy')
-    ax2.set_ylabel('Time/sec')
+    ax2.plot(x, t, '-o', label='Time per galaxy', color='tab:red', markersize=8)
+    ax2.set_ylabel('Time/sec', fontsize=15)
+    ax2.set_ylim([0, 0.04])
+    ax2.legend(loc="upper right", fontsize=12)
     
-    plt.xticks(x, methods, rotation=45)
-    plt.xlabel('Methods')
-    plt.legend()
+    # ax1.xticks(x, methods, rotation=20, fontsize=14)
+    ax1.set_xlabel('Methods', fontsize=15)
     plt.savefig(os.path.join('figures', 'time_shear_err.jpg'), bbox_inches='tight')
     plt.close()
 
