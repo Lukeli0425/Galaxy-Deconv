@@ -165,6 +165,19 @@ def plot_shear_err(n_iters, llh, PnP, n_epochs, survey, I):
     plt.title('Fourier Power Spectrum Deconvolution', fontsize=13)
     plt.savefig(os.path.join(result_path, 'shear_err.jpg'), bbox_inches='tight')
 
+def plot_time_shear_err(methods):
+    """Line plot of time and average shear error vs methods."""
+    
+    x = range(len(methods))
+    plt.figure(figsize=(10,6))
+    plt.plot(x, shear_err, '-o', label='Average Shear Error')
+    plt.plot(x, t, '--v', label='Time per galaxy')
+    plt.xticks(x, methods, rotation=45)
+    plt.xlabel('Methods')
+    plt.legend()
+    plt.savefig(os.path.join('figures', 'time_shear_err.jpg'), bbox_inches='tight')
+    plt.close()
+
 def plot_shear_err_results(methods):
     """Draw line plot for systematic shear error in PSF vs shear estimation error."""
     color_list = ['tab:red', 'tab:olive', 'tab:purple', 'tab:blue', 'tab:cyan', 'tab:green', 'tab:orange']
