@@ -33,7 +33,7 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
         rec_err_mean = []
         
         if n_iter > 0:
-            if method == 'Richard-Lucy':
+            if 'Richard-Lucy' in method:
                 model = Richard_Lucy(n_iters=n_iter)
                 model.to(device)
             else:
@@ -69,7 +69,7 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
                             rec_shear.append(estimate_shear(obs, psf, use_psf=True))
                         except:
                             rec_shear.append(obs_shear[idx])
-                    elif method == 'Richard-Lucy':
+                    elif 'Richard-Lucy' in method:
                         obs, psf = obs.to(device), psf.to(device)
                         rec = model(obs, psf) 
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -122,7 +122,7 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
         rec_err_mean = []
         
         if n_iter > 0:
-            if method == 'Richard-Lucy':
+            if 'Richard-Lucy' in method:
                 model = Richard_Lucy(n_iters=n_iter)
                 model.to(device)
             else:
@@ -158,7 +158,7 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
                             rec_shear.append(estimate_shear(obs, psf, use_psf=True))
                         except:
                             rec_shear.append(obs_shear[idx])
-                    elif method == 'Richard-Lucy':
+                    elif 'Richard-Lucy' in method:
                         obs, psf = obs.to(device), psf.to(device)
                         rec = model(obs, psf) 
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()

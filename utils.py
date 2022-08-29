@@ -192,7 +192,7 @@ def plot_time_shear_err(methods, snrs):
     ax2 = ax1.twinx()
     ax2.plot(x, t, '-o', label='Time per galaxy', color='tab:red', markersize=8)
     ax2.set_ylabel('Time/sec', fontsize=15)
-    ax2.set_ylim([0, 0.04])
+    ax2.set_ylim([0, 0.05])
     ax2.legend(loc="upper right", fontsize=12)
     
     # ax1.xticks(x, methods, rotation=20, fontsize=14)
