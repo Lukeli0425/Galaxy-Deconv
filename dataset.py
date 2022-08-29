@@ -95,7 +95,7 @@ def get_Webb_PSF(fov_pixels, insts=['NIRCam', 'NIRSpec','NIRISS', 'MIRI', 'FGS']
 
     return psf_names, psfs
 
-def get_COSMOS_Galaxy(catalog, idx, gal_flux, sky_level, gal_e, gal_beta, theta, gal_mu, fov_pixels, pixel_scale, rng):
+def get_COSMOS_Galaxy(catalog, idx, gal_flux, sky_level, gal_e, gal_beta, theta, gal_mu, fov_pixels, pixel_scale, dx, dy):
     """Simulate a background galaxy with data from COSMOS real galaxy catalog.
 
     Args:
@@ -126,10 +126,6 @@ def get_COSMOS_Galaxy(catalog, idx, gal_flux, sky_level, gal_e, gal_beta, theta,
     gal = gal.shear(e=gal_e, beta=gal_beta * galsim.radians) # Apply the desired shear
     gal = gal.magnify(gal_mu) # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1, this conserves surface brightness, so it scales both the area and flux.
     
-    # Offset by up to 1/2 pixel in each direction
-    dx = rng() - 0.5
-    dy = rng() - 0.5
-    
     gal_image = galsim.ImageF(fov_pixels, fov_pixels)
     gal.drawImage(gal_image, scale=pixel_scale, offset=(dx,dy), method='auto')
     gal_image += sky_level * (pixel_scale**2)
@@ -143,7 +139,8 @@ class Galaxy_Dataset(Dataset):
     """Simulated Galaxy Image Dataset inherited from torch.utils.data.Dataset."""
     def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/', COSMOS_path='/mnt/WD6TB/tianaoli/', 
                  survey='LSST', I=23.5, fov_pixels=0, gal_max_shear=0.5, 
-                 train=True, train_split=0.7, psf_folder='psf',
+                 train=True, train_split=0.7, 
+                 psf_folder='psf', obs_folder='obs', gt_folder='gt',
                  pixel_scale=0.2, atmos_max_shear=0.25, seeing=0.7):
         """Construction function for the PyTorch Galaxy Dataset.
 
@@ -166,6 +163,8 @@ class Galaxy_Dataset(Dataset):
         # Initialize parameters
         self.train= train # Using train data or test data
         self.psf_folder = psf_folder # Path for PSFs
+        self.obs_folder = obs_folder
+        self.gt_folder = gt_folder
         self.COSMOS_dir = os.path.join(COSMOS_path, f"COSMOS_{I}_training_sample")
         self.train_split = train_split # n_train/n_total
         self.n_total = 0
@@ -309,13 +308,13 @@ class Galaxy_Dataset(Dataset):
             gal_shear = galsim.Shear(e=gal_e, beta=gal_beta*galsim.radians)
             gal_mu = 1 + rng() * 0.1            # mu = ((1-kappa)^2 - g1^2 - g2^2)^-1 (1.082)
             theta = 2. * np.pi * rng()          # radians
-            
+            dx = rng() - 0.5 # Offset by up to 1/2 pixel in each direction
+            dy = rng() - 0.5
             gal_image, gal_orig = get_COSMOS_Galaxy(catalog=self.real_galaxy_catalog, idx=idx, 
                                                     gal_flux=gal_flux, sky_level=sky_level, 
                                                     gal_e=gal_e, gal_beta=gal_beta, 
-                                                    theta=theta, gal_mu=gal_mu, 
-                                                    fov_pixels=self.fov_pixels, pixel_scale=pixel_scale, 
-                                                    rng=rng)
+                                                    theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
+                                                    fov_pixels=self.fov_pixels, pixel_scale=pixel_scale)
 
             # Convolution via FFT
             conv = ifftshift(ifft2(fft2(psf_image) * fft2(gal_image))).real
@@ -333,8 +332,34 @@ class Galaxy_Dataset(Dataset):
             torch.save(obs.clone(), os.path.join(self.data_path, 'obs', f"obs_{self.I}_{k}.pth"))
             logging.info("Simulating Image:  [{:}/{:}]   PSNR={:.2f}".format(k+1, self.n_total, psnr))
 
+            if k >= self.n_train:
+                # Simulate different SNR
+                for snr in [20, 100]:
+                    gal_flux = snr * (snr + np.sqrt((snr**2) + 4*sky_level*(self.fov_pixels**2)*(self.pixel_scale**2)))/2      
+                    gal_image_snr, _ = get_COSMOS_Galaxy(catalog=self.real_galaxy_catalog, idx=idx, 
+                                                    gal_flux=gal_flux, sky_level=sky_level, 
+                                                    gal_e=gal_e, gal_beta=gal_beta, 
+                                                    theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
+                                                    fov_pixels=self.fov_pixels, pixel_scale=pixel_scale)
+
+                    # Convolution via FFT
+                    conv = ifftshift(ifft2(fft2(psf_image) * fft2(gal_image_snr))).real
+                    conv = torch.max(torch.zeros_like(conv), conv) # set negative pixels to zero
+
+                    # Add CCD noise (Poisson + Gaussian)
+                    obs_snr = torch.poisson(conv) + torch.normal(mean=torch.zeros_like(conv), std=5*torch.ones_like(conv))
+                    obs_snr = torch.max(torch.zeros_like(obs_snr), obs_snr) # set negative pixels to zero
+                    
+                    # Save
+                    if not os.path.exists(os.path.join(self.data_path, f'gt_{snr}')):
+                        os.mkdir(os.path.join(self.data_path, f'gt_{snr}'))
+                    if not os.path.exists(os.path.join(self.data_path, f'obs_{snr}')):
+                        os.mkdir(os.path.join(self.data_path, f'obs_{snr}'))
+                    torch.save(gal_image_snr.clone(), os.path.join(self.data_path, f'gt_{snr}', f"gt_{self.I}_{k}.pth"))
+                    torch.save(obs_snr.clone(), os.path.join(self.data_path, f'obs_{snr}', f"obs_{self.I}_{k}.pth"))
+                    
             # Visualization
-            if k < 200:
+            if k < 50:
                 plt.figure(figsize=(10,10))
                 plt.subplot(2,2,1)
                 plt.imshow(gal_orig)
@@ -364,11 +389,11 @@ class Galaxy_Dataset(Dataset):
         psf_path = os.path.join(self.data_path, self.psf_folder)
         psf = torch.load(os.path.join(psf_path, f"psf_{self.I}_{idx}.pth")).unsqueeze(0)
 
-        obs_path = os.path.join(self.data_path, 'obs')
+        obs_path = os.path.join(self.data_path, self.obs_folder)
         obs = torch.load(os.path.join(obs_path, f"obs_{self.I}_{idx}.pth")).unsqueeze(0)
         obs = (obs - obs.min())/(obs.max() - obs.min())
 
-        gt_path = os.path.join(self.data_path, 'gt')
+        gt_path = os.path.join(self.data_path, self.gt_folder)
         gt = torch.load(os.path.join(gt_path, f"gt_{self.I}_{idx}.pth")).unsqueeze(0)
         gt = (gt - gt.min())/(gt.max() - gt.min())
 
