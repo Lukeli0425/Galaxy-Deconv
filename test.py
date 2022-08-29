@@ -13,7 +13,7 @@ from dataset import Galaxy_Dataset
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
 from utils_poisson_deblurring.utils_torch import MultiScaleLoss
-from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err#, plot_time_shear_err
+from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err, plot_time_shear_err
 
 
 class ADMM_deconvolver:
@@ -402,7 +402,7 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     
     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    # test_shear(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     # # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
     # plot_shear_err(meth0ds=methods)
     # plot_time_shear_err(methods=methods)
