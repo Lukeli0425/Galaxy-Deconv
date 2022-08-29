@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 import time
 import logging
 import argparse
@@ -13,7 +13,7 @@ from dataset import Galaxy_Dataset
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
 from utils_poisson_deblurring.utils_torch import MultiScaleLoss
-from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err, plot_time_shear_err
+from utils import PSNR, estimate_shear, plot_psnr, plot_shear_err#, plot_time_shear_err
 
 
 class ADMM_deconvolver:
@@ -319,7 +319,6 @@ def test_time(methods, n_iters, model_files, n_gal):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
-        logging.info(f'Tesing PSF with shear error: {method}')
         result_path = os.path.join('results', method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
@@ -331,12 +330,13 @@ def test_time(methods, n_iters, model_files, n_gal):
             results = {} # dictionary to record the test results
             
         if method == 'No_deconv':
+            logging.info(f'Tested {method} on {n_gal} galaxies: Time = 0s')
             results['time'] = (0, n_gal)
             with open(results_file, 'w') as f:
                 json.dump(results, f)
             logging.info(f"Test results saved to {results_file}.")  
             continue
-        elif method == 'Richard-Lucy':
+        elif 'Richard-Lucy' in method:
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
         else:
@@ -355,7 +355,7 @@ def test_time(methods, n_iters, model_files, n_gal):
         time_start = time.time()
         for idx, ((obs, psf, alpha), gt) in enumerate(test_loader):
             with torch.no_grad():
-                if method == 'Richard-Lucy':
+                if 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -367,7 +367,7 @@ def test_time(methods, n_iters, model_files, n_gal):
                 break
         time_end = time.time()
         
-        logging.info(f'Tested {method} on {n_gal} galaxies: Time = {time_end-time_start}')
+        logging.info('Tested {} on {} galaxies: Time = {:.3f}s'.format(method, n_gal, time_end-time_start))
         results['time'] = (time_end-time_start, n_gal)
     
         # Save results to json file
@@ -386,22 +386,23 @@ if __name__ =="__main__":
     parser.add_argument('--n_epochs', type=int, default=30)
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
+    parser.add_argument('--n_gal', type=int, default=np.inf)
     opt = parser.parse_args()
     
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'Richard-Lucy', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
+    methods = ['No_deconv', 'Richard-Lucy(20)', 'Richard-Lucy(100)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
                'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 100, 1, 2, 4, 8]
-    model_files = [None, None,
+    n_iters = [0, 20, 100, 1, 2, 4, 8]
+    model_files = [None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     
     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    test_shear(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    plot_shear_err(meth0ds=methods)
-    plot_time_shear_err(methods=methods)
+    # test_shear(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    # # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
+    # plot_shear_err(meth0ds=methods)
+    # plot_time_shear_err(methods=methods)
