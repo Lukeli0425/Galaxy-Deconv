@@ -189,7 +189,7 @@ def plot_shear_err_results(methods):
     # plt.xscale('log')
     plt.yscale('log')
     plt.legend(fontsize=10)
-    plt.savefig(os.path.join('results', 'psf_shear_err.jpg'), bbox_inches='tight')
+    plt.savefig(os.path.join('figures', 'psf_shear_err.jpg'), bbox_inches='tight')
     plt.close()
     
 
@@ -218,7 +218,7 @@ def plot_seeing_err_results(methods):
     # plt.xscale('log')
     plt.yscale('log')
     plt.legend(fontsize=10)
-    plt.savefig(os.path.join('results', 'psf_seeing_err.jpg'), bbox_inches='tight')
+    plt.savefig(os.path.join('figures', 'psf_seeing_err.jpg'), bbox_inches='tight')
     plt.close()
     
 
