@@ -381,8 +381,7 @@ class Galaxy_Dataset(Dataset):
             json.dump(self.info, f)
 
     def __len__(self):
-        # return self.n_train if self.train else self.n_test
-        return 2000
+        return self.n_train if self.train else self.n_test
 
     def __getitem__(self, i):
         idx = i if self.train else i + self.n_train
