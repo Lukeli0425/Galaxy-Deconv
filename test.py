@@ -306,9 +306,9 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'Richard-Lucy(50)', 'Richard-Lucy(200)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
+    methods = ['No_deconv', 'Richard-Lucy(20)', 'Richard-Lucy(100)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
                'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 50, 200, 1, 2, 4, 8]
+    n_iters = [0, 20, 100, 1, 2, 4, 8]
     model_files = [None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
