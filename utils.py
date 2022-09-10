@@ -55,7 +55,7 @@ def estimate_shear(obs, psf=None, use_psf=False):
     resp = ells['fpfs_RE'][0]
     g_1 = ells['fpfs_e1'][0] / resp
     g_2 = ells['fpfs_e2'][0] / resp
-    g = np.aqrt(g_1 ** 2 + g_2 ** 2)
+    g = np.sqrt(g_1 ** 2 + g_2 ** 2)
 
     return (g_1, g_2, g) 
 

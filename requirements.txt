@@ -2,6 +2,7 @@ numpy
 matplotlib 
 scipy
 pandas
+tqdm
 torch
 scikit-learn
 scikit-image

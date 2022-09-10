@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import argparse
+from tqdm import tqdm
 import numpy as np
 from skimage import io
 import torch
@@ -246,7 +247,7 @@ class Galaxy_Dataset(Dataset):
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
         
-        for k in range(self.n_train, self.n_total):
+        for k, _ in zip(range(start_k, self.n_total), tqdm(range(self.n_total-start_k))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
             
@@ -330,7 +331,7 @@ class Galaxy_Dataset(Dataset):
             torch.save(gal_image.clone(), os.path.join(self.data_path, 'gt', f"gt_{self.I}_{k}.pth"))
             torch.save(psf_image.clone(), os.path.join(self.data_path, 'psf', f"psf_{self.I}_{k}.pth"))
             torch.save(obs.clone(), os.path.join(self.data_path, 'obs', f"obs_{self.I}_{k}.pth"))
-            logging.info("Simulating Image:  [{:}/{:}]   PSNR={:.2f}".format(k+1, self.n_total, psnr))
+            # logging.info("Simulating Image:  [{:}/{:}]   PSNR={:.2f}".format(k+1, self.n_total, psnr))
 
             if k >= self.n_train:
                 # Simulate different SNR
@@ -439,5 +440,5 @@ if __name__ == "__main__":
     Dataset = Galaxy_Dataset(data_path='/mnt/WD6TB/tianaoli/dataset/', 
                              COSMOS_path='/mnt/WD6TB/tianaoli/',
                              survey=opt.survey, I=opt.I, pixel_scale=0.2)
-    Dataset.create_images(start_k=53936)
+    Dataset.create_images(start_k=45100)
     
