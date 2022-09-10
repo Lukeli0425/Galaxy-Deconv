@@ -3,6 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 import time
 import logging
 import argparse
+import tqdm
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -240,7 +241,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         
     gt_shear, obs_shear = [], []
-    for method, model_file, n_iter in zip(methods, model_files, n_iters):
+    for method, model_file, n_iter, i in zip(methods, model_files, n_iters, tqdm(range(len(test_loader)))):
         logging.info(f'Tesing method: {method}')
         result_path = os.path.join('results/', method)
         if not os.path.exists(result_path):
@@ -296,11 +297,11 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
                     rec_shear.append(estimate_shear(rec))
-            logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
-                idx+1, len(test_loader),
-                gt_shear[idx][0], gt_shear[idx][1],
-                obs_shear[idx][0], obs_shear[idx][1],
-                rec_shear[idx][0], rec_shear[idx][1]))
+            # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+            #     idx+1, len(test_loader),
+            #     gt_shear[idx][0], gt_shear[idx][1],
+            #     obs_shear[idx][0], obs_shear[idx][1],
+            #     rec_shear[idx][0], rec_shear[idx][1]))
             if idx >= n_gal:
                 break
         
@@ -405,10 +406,8 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [20, 100]
+    
     # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=20)
-    # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=100)
-    # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    # plot_sheclear
-    # ar_err(methods=methods)
-    plot_time_shear_err(methods=methods, snrs=snrs)
+    for snr in snrs:
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=20)
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=100)
