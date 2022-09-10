@@ -409,5 +409,6 @@ if __name__ =="__main__":
     # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=20)
     # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=100)
     # plot_psnr(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP, n_epochs=opt.n_epochs, survey=opt.survey, I=opt.I)
-    # plot_shear_err(methods=methods)
+    # plot_sheclear
+    # ar_err(methods=methods)
     plot_time_shear_err(methods=methods, snrs=snrs)
