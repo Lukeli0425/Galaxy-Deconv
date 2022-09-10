@@ -212,7 +212,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 break
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results[str(snr)]['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
+        # results[str(snr)]['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
         results[str(snr)]['rec_shear'] = rec_shear.tolist()
         results[str(snr)]['gt_shear'] = gt_shear.tolist()
         results[str(snr)]['obs_shear'] = obs_shear
