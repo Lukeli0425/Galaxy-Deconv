@@ -1,4 +1,5 @@
 import os
+from pickle import NONE
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 import time
 import logging
@@ -309,18 +310,17 @@ if __name__ =="__main__":
     # methods = ['No_deconv', 
     #            'Richard-Lucy(10)', 'Richard-Lucy(15)', 'Richard-Lucy(30)', 'Richard-Lucy(80)', 
     #            'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    methods = ['Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(15)', 'Richard-Lucy(20)', 
-               'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(60)', 'Richard-Lucy(80)', 'Richard-Lucy(100)']
+    methods = ['No_deconv', 'FPFS']
     # n_iters = [0, 10, 15, 30, 60, 1, 2, 4, 8]
-    n_iters = [5, 10, 15, 20, 30, 50, 60, 80, 100]
+    n_iters = [0, 0]
     # model_files = [None, None, None, None, None,
     #                "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
     #                "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
     #                "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
     #                "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
-    model_files = [None for i in range(9)]
+    model_files = [None, None]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
