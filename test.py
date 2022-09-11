@@ -29,7 +29,7 @@ class ADMM_deconvolver:
             self.model.load_state_dict(torch.load(model_file, map_location=torch.device(self.device)))
             logging.info(f'Successfully loaded in {model_file}.')
         except:
-            logging.raiseExceptions(f'Failed loading {model_file}!')
+            logging.error(f'Failed loading {model_file}!')
 
     def deconvolve(self, obs, psf):
         """Deconvolve PSF with unrolled ADMM model."""
@@ -69,7 +69,7 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
         model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
         logging.info(f'Successfully loaded in {model_file}.')
     except:
-        logging.raiseExceptions('Failed loading pretrained model!')
+        logging.error('Failed loading pretrained model!')
     
     loss_fn = MultiScaleLoss()
 
@@ -165,14 +165,14 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
             if 'Richard-Lucy' in method:
                 model = Richard_Lucy(n_iters=n_iter)
                 model.to(device)
-            else:
+            elif 'ADMM' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
                 model.to(device)
                 try: # Load the model
                     model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                     logger.info(f'Successfully loaded in {model_file}.')
                 except:
-                    logger.raiseExceptions(f'Failed loading in {model_file} model!')   
+                    logger.error(f'Failed loading in {model_file} model!')   
             model.eval()     
     
         rec_shear = []
@@ -197,7 +197,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
                     rec_shear.append(estimate_shear(rec))
-                else:
+                elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -247,19 +247,19 @@ def test_time(methods, n_iters, model_files, n_gal):
             results['time'] = (0, n_gal)
             with open(results_file, 'w') as f:
                 json.dump(results, f)
-            logger.info(f"Test results saved to {results_file}.")  
+            logger.info(f"Test results saved to {results_file}.\n")  
             continue
         elif 'Richard-Lucy' in method:
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
-        else:
+        elif 'ADMM' in method:
             model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.raiseExceptions(f'Failed loading in {model_file} model!')   
+                logger.error(f'Failed loading in {model_file} model!')   
         model.eval()     
         
         test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
@@ -272,7 +272,7 @@ def test_time(methods, n_iters, model_files, n_gal):
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                else:
+                elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
                     # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -306,16 +306,17 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'Richard-Lucy(20)', 'Richard-Lucy(100)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
-               'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 20, 100, 1, 2, 4, 8]
-    model_files = [None, None, None,
+    methods = ['No_deconv', 
+               'Richard-Lucy(10)', 'Richard-Lucy(15)', 'Richard-Lucy(30)', 'Richard-Lucy(80)', 
+               'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
+    n_iters = [0, 10, 15, 30, 60, 1, 2, 4, 8]
+    model_files = [None, None, None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
-    snrs = [20, 100]
+    snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)

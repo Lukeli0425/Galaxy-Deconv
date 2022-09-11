@@ -233,7 +233,7 @@ class Galaxy_Dataset(Dataset):
 
     def create_images(self, start_k=0, 
                       shear_errs=[0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4],
-                      seeing_errs=[0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]):
+                      seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]):
         
         logging.info(f'Simulating {self.survey} images.')
         
@@ -335,7 +335,7 @@ class Galaxy_Dataset(Dataset):
 
             if k >= self.n_train:
                 # Simulate different SNR
-                for snr in [20, 100]:
+                for snr in [5, 10, 20, 40, 60, 80, 100, 150, 200]:
                     gal_flux = snr * (snr + np.sqrt((snr**2) + 4*sky_level*(self.fov_pixels**2)*(self.pixel_scale**2)))/2      
                     gal_image_snr, _ = get_COSMOS_Galaxy(catalog=self.real_galaxy_catalog, idx=idx, 
                                                     gal_flux=gal_flux, sky_level=sky_level, 
@@ -440,5 +440,5 @@ if __name__ == "__main__":
     Dataset = Galaxy_Dataset(data_path='/mnt/WD6TB/tianaoli/dataset/', 
                              COSMOS_path='/mnt/WD6TB/tianaoli/',
                              survey=opt.survey, I=opt.I, pixel_scale=0.2)
-    Dataset.create_images(start_k=45100)
+    Dataset.create_images(start_k=42950)
     
