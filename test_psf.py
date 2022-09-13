@@ -12,12 +12,13 @@ from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
 from utils import PSNR, estimate_shear, plot_shear_err_results, plot_seeing_err_results
 
-def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):   
+def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
+    logger = logging.getLogger('PSF shear error test')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
-        logging.info(f'Tesing PSF with shear error: {method}')
+        
         result_path = os.path.join('results/', method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
@@ -40,9 +41,9 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
                 model.to(device)
                 try: # Load the model
                     model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
-                    logging.info(f'Successfully loaded in {model_file}.')
+                    logger.info(f'Successfully loaded in {model_file}.')
                 except:
-                    logging.raiseExceptions(f'Failed loading in {model_file} model!')   
+                    logger.raiseExceptions(f'Failed loading in {model_file} model!')   
             model.eval()     
         
         for k, shear_err in enumerate(shear_errs):
@@ -80,7 +81,7 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                         # Calculate shear
                         rec_shear.append(estimate_shear(rec))
-                logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+                logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
                     idx+1, len(test_loader),
                     gt_shear[idx][0], gt_shear[idx][1],
                     obs_shear[idx][0], obs_shear[idx][1],
@@ -97,16 +98,17 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
         # Save results to json file
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logging.info(f"Test results saved to {results_file}.")
+        logger.info(f"Test results saved to {results_file}.")
     
     return results
     
 def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
+    logger = logging.getLogger('PSF shear error test')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
-        logging.info(f'Tesing PSF with shear error: {method}')
+        logger.info(f'Tesing PSF with shear error: {method}')
         result_path = os.path.join('results/', method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
@@ -129,9 +131,9 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
                 model.to(device)
                 try: # Load the model
                     model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
-                    logging.info(f'Successfully loaded in {model_file}.')
+                    logger.info(f'Successfully loaded in {model_file}.')
                 except:
-                    logging.raiseExceptions(f'Failed loading in {model_file} model!')   
+                    logger.raiseExceptions(f'Failed loading in {model_file} model!')   
             model.eval()  
         
         for k, seeing_err in enumerate(seeing_errs):
@@ -169,7 +171,7 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                         # Calculate shear
                         rec_shear.append(estimate_shear(rec))
-                logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+                logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
                     idx+1, len(test_loader),
                     gt_shear[idx][0], gt_shear[idx][1],
                     obs_shear[idx][0], obs_shear[idx][1],
@@ -186,7 +188,7 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
         # Save results to json file
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logging.info(f"Test results saved to {results_file}.")
+        logger.info(f"Test results saved to {results_file}.")
     
     return results
 
