@@ -4,15 +4,14 @@ import logging
 import argparse
 from tqdm import tqdm
 import numpy as np
-from skimage import io
 import torch
 from torch.fft import fft2, ifft2, fftshift, ifftshift
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import galsim
-# import webbpsf
 from utils import PSNR
+# import webbpsf
 
 # webbpsf.setup_logging('ERROR')
 
