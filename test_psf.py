@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 from dataset import Galaxy_Dataset
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
-from utils_poisson_deblurring.utils_torch import MultiScaleLoss
 from utils import PSNR, estimate_shear, plot_shear_err_results, plot_seeing_err_results
 
 def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):   

@@ -4,11 +4,7 @@ import json
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 import logging
-from skimage import io
-import torch
-import galsim
 import fpfs
-
 
 
 def PSNR(img1, img2, normalize=True):
@@ -48,7 +44,7 @@ def estimate_shear(obs, psf=None, use_psf=False):
         endj = startj + psf.shape[1]
         psf_pad[starti:endi, startj:endj] = psf
         psf = psf_pad
-    # print(psf.shape, obs.shape)
+
     fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=0.75)
     modes = fpTask.measure(obs)
     ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
