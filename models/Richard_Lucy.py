@@ -8,7 +8,7 @@ from torch.fft import fft2, ifft2, fftshift, ifftshift
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
-from utils_poisson_deblurring.utils_torch import conv_fft_batch, psf_to_otf
+from utils.utils_torch import conv_fft_batch, psf_to_otf
 
 class Richard_Lucy(nn.Module):
     def __init__(self, n_iters):

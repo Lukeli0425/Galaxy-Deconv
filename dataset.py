@@ -10,10 +10,8 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import galsim
-from utils import PSNR
-# import webbpsf
+from utils.utils import PSNR
 
-# webbpsf.setup_logging('ERROR')
 
 def get_LSST_PSF(lam, tel_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
                   atmos_fwhm, atmos_e, atmos_beta, g1_err, g2_err,
