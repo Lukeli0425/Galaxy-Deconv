@@ -216,6 +216,7 @@ def plot_shear_err_results(methods):
         
         plt.plot(shear_errs, rec_err_mean[:,0], '-o', label='$g_1$, '+method, color=color)
         plt.plot(shear_errs, rec_err_mean[:,1], '--v', label='$g_2$, '+method, color=color)
+        # plt.plot(shear_errs, rec_err_mean[:,1], '--v', label='$g_2$, '+method, color=color)
     
     plt.xlabel('Shear Error($\Delta_{g_1}$, $\Delta_{g_2}$) in PSF', fontsize=12)
     plt.ylabel('Average shear estimated error', fontsize=12)

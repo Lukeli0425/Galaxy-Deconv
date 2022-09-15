@@ -2,6 +2,7 @@ from cmath import inf
 import os
 import logging
 import argparse
+from tqdm import tqdm
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
     
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
-        
+        logger.info(f'Tesing method: {method}')
         result_path = os.path.join('results/', method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
@@ -47,11 +48,12 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
             model.eval()     
         
         for k, shear_err in enumerate(shear_errs):
-            test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err>0 else 'psf/')
+            logger.info(f'Running psf shear test with {n_gal} galaxies with psf shear error of {shear_err}.')   
+            test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err > 0 else 'psf/')
             test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         
             rec_shear = []
-            for idx, ((obs, psf, alpha), gt) in enumerate(test_loader):
+            for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
                 with torch.no_grad():
                     if method == 'No_deconv':
                         if k > 0:
@@ -81,11 +83,11 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                         # Calculate shear
                         rec_shear.append(estimate_shear(rec))
-                logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
-                    idx+1, len(test_loader),
-                    gt_shear[idx][0], gt_shear[idx][1],
-                    obs_shear[idx][0], obs_shear[idx][1],
-                    rec_shear[idx][0], rec_shear[idx][1]))
+                # logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+                #     idx+1, len(test_loader),
+                #     gt_shear[idx][0], gt_shear[idx][1],
+                #     obs_shear[idx][0], obs_shear[idx][1],
+                #     rec_shear[idx][0], rec_shear[idx][1]))
                 if idx > n_gal:
                     break
             results['rec_shear'][str(shear_err)] = rec_shear
@@ -98,7 +100,7 @@ def test_psf_shear_err(methods, shear_errs, n_iters, model_files, n_gal):
         # Save results to json file
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(f"Test results saved to {results_file}.")
+        logger.info(f"Test results saved to {results_file}.\n")
     
     return results
     
@@ -219,10 +221,10 @@ if __name__ == "__main__":
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
                 #    "saved_models/Poisson_PnP_12iters_LSST23.5_25epochs.pth"]
-    shear_errs=[0.0, 0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-    # seeing_errs=[0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+
+    shear_errs=[0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
-    # test_psf_shear_err(methods=methods, shear_errs=shear_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_psf_shear_err(methods=methods, shear_errs=shear_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     test_psf_seeing_err(methods=methods, seeing_errs=seeing_errs, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    plot_shear_err_results(methods=methods)
-    plot_seeing_err_results(methods=methods)
+    # plot_shear_err_results(methods=methods)
+    # plot_seeing_err_results(methods=methods)
