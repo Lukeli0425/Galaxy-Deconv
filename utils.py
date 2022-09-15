@@ -45,13 +45,15 @@ def estimate_shear(obs, psf=None, use_psf=False):
         psf_pad[starti:endi, startj:endj] = psf
         psf = psf_pad
 
-    fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=0.75)
+    fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=0.5)
     modes = fpTask.measure(obs)
     ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
     resp = ells['fpfs_RE'][0]
     g_1 = ells['fpfs_e1'][0] / resp
     g_2 = ells['fpfs_e2'][0] / resp
     g = np.sqrt(g_1 ** 2 + g_2 ** 2)
+    
+    g = min(g, 1)
 
     return (g_1, g_2, g) 
 

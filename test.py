@@ -186,10 +186,10 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    try:
-                        rec_shear.append(estimate_shear(obs, psf, use_psf=True))
-                    except:
-                        rec_shear.append(obs_shear[idx])
+                    # try:
+                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    # except:
+                    #     rec_shear.append((gt_shear[idx][0],gt_shear[idx][1],gt_shear[idx][2]+1))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -211,7 +211,6 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 break
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        # results[str(snr)]['rec_err_mean'] = np.mean(abs(rec_shear - gt_shear), axis=0).tolist()
         results[str(snr)]['rec_shear'] = rec_shear.tolist()
         results[str(snr)]['gt_shear'] = gt_shear.tolist()
         results[str(snr)]['obs_shear'] = obs_shear
@@ -248,33 +247,48 @@ def test_time(methods, n_iters, model_files, n_gal):
                 json.dump(results, f)
             logger.info(f"Test results saved to {results_file}.\n")  
             continue
-        elif 'Richard-Lucy' in method:
+        if 'Richard-Lucy' in method:
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
+            model.eval() 
         elif 'ADMM' in method:
             model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
+            model.eval()  
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file} model!')   
-        model.eval()     
+                logger.error(f'Failed loading in {model_file} model!')     
         
         test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
+        rec_shear = []
         time_start = time.time()
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
-                if 'Richard-Lucy' in method:
+                if method == 'No_deconv':
+                    # gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(obs))
+                elif method == 'FPFS':
+                        psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                        obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                        # try:
+                        rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                        # except:
+                        #     pass
+                elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
-                    # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(rec))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
-                    rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
-                    # rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec = model(obs, psf, alpha) 
+                    rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(rec))
             if idx >= n_gal:
                 break
         time_end = time.time()
@@ -316,6 +330,6 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
