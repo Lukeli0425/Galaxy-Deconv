@@ -1,8 +1,6 @@
 import numpy as np
 from numpy.fft import fft2, ifft2, ifftshift
 from scipy.signal import convolve2d
-import matplotlib.pyplot as plt
-from PIL import Image
 
 
 def pad(h, shape_x):

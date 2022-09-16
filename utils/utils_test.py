@@ -5,8 +5,8 @@ from skimage.metrics import structural_similarity as ssim
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
-from utils_poisson_deblurring.utils_torch import conv_fft, img_to_tens, scalar_to_tens
-from utils_poisson_deblurring.utils_deblur import gauss_kernel, pad, crop
+from utils.utils_torch import conv_fft, img_to_tens, scalar_to_tens
+from utils.utils_deblur import gauss_kernel, pad, crop
 from PIL import Image
 import cv2 as cv
 

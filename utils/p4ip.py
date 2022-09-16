@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from numpy.fft import fft2, ifft2, ifftshift
 from scipy.optimize import fmin_l_bfgs_b as l_bfgs
 from torch.autograd import Variable
-from utils_poisson_deblurring.utils_torch import conv_fft, img_to_tens, scalar_to_tens
+from utils.utils_torch import conv_fft, img_to_tens, scalar_to_tens
 from bm3d import bm3d, BM3DProfile
 
 
