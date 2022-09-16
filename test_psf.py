@@ -191,7 +191,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_epochs', type=int, default=20)
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
-    parser.add_argument('--n_gal', type=int, default=100)
+    parser.add_argument('--n_gal', type=int, default=10000)
     opt = parser.parse_args()
     
     if not os.path.exists('./results/'):
