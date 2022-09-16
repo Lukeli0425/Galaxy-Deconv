@@ -212,15 +212,15 @@ if __name__ == "__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'FPFS', 'Richard-Lucy(50)', 'Richard-Lucy(200)', 'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 
-               'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 0, 50, 200, 1, 2, 4, 8]
-    model_files = [None, None, None, None,
+    methods = ['No_deconv', 'FPFS',
+               'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
+               'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
+    n_iters = [0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
+    model_files = [None, None, None, None, None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
-                #    "saved_models/Poisson_PnP_12iters_LSST23.5_25epochs.pth"]
 
     shear_errs=[0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
