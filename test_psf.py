@@ -173,11 +173,11 @@ def test_psf_seeing_err(methods, seeing_errs, n_iters, model_files, n_gal):
                         rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                         # Calculate shear
                         rec_shear.append(estimate_shear(rec))
-                logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
-                    idx+1, len(test_loader),
-                    gt_shear[idx][0], gt_shear[idx][1],
-                    obs_shear[idx][0], obs_shear[idx][1],
-                    rec_shear[idx][0], rec_shear[idx][1]))
+                # logger.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
+                #     idx+1, len(test_loader),
+                #     gt_shear[idx][0], gt_shear[idx][1],
+                #     obs_shear[idx][0], obs_shear[idx][1],
+                #     rec_shear[idx][0], rec_shear[idx][1]))
                 if idx > n_gal:
                     break
             results['rec_shear'][str(seeing_err)] = rec_shear
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_epochs', type=int, default=20)
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
-    parser.add_argument('--n_gal', type=int, default=10000)
+    parser.add_argument('--n_gal', type=int, default=100)
     opt = parser.parse_args()
     
     if not os.path.exists('./results/'):
