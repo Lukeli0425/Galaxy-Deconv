@@ -98,7 +98,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
     return results
     
 def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
-    logger = logging.getLogger('PSF shear seeing test')
+    logger = logging.getLogger('PSF seeing error test')
     logger.info(f'Running PSF seeing_error={seeing_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -146,10 +146,10 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    # try:
-                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
-                    # except:
-                    #     rec_shear.append((gt_shear[idx][0],gt_shear[idx][1],gt_shear[idx][2]+1))
+                    try:
+                        rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    except:
+                        rec_shear.append((gt_shear[idx][0],gt_shear[idx][1],gt_shear[idx][2]+1))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -207,10 +207,11 @@ if __name__ == "__main__":
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
 
-    shear_errs=[0, 0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-    for shear_err in shear_errs:
-        test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
+    # shear_errs=[0, 0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+    # for shear_err in shear_errs:
+    #     test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
     
-    seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
+    # seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
+    seeing_errs = [0.1, 0.15, 0.2]
     for seeing_err in seeing_errs:
         test_psf_seeing_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, seeing_err=seeing_err)
