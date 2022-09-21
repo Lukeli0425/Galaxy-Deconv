@@ -240,13 +240,13 @@ def test_time(methods, n_iters, model_files, n_gal):
         except:
             results = {} # dictionary to record the test results
             
-        if method == 'No_deconv':
-            logger.info(f'Tested {method} on {n_gal} galaxies: Time = 0s')
-            results['time'] = (0, n_gal)
-            with open(results_file, 'w') as f:
-                json.dump(results, f)
-            logger.info(f"Test results saved to {results_file}.\n")  
-            continue
+        # if method == 'No_deconv':
+        #     logger.info(f'Tested {method} on {n_gal} galaxies: Time = 0s')
+        #     results['time'] = (0, n_gal)
+        #     with open(results_file, 'w') as f:
+        #         json.dump(results, f)
+        #     logger.info(f"Test results saved to {results_file}.\n")  
+        #     continue
         if 'Richard-Lucy' in method:
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
