@@ -211,7 +211,7 @@ if __name__ == "__main__":
     # for shear_err in shear_errs:
     #     test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
     
-    # seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
-    seeing_errs = [0.1, 0.15, 0.2]
+    seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
+    # seeing_errs = [0.1, 0.15, 0.2]
     for seeing_err in seeing_errs:
         test_psf_seeing_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, seeing_err=seeing_err)
