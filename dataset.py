@@ -291,7 +291,7 @@ class Galaxy_Dataset(Dataset):
                         seeing_rng = galsim.GaussianDeviate(seed=random_seed+k+1, mean=0, sigma=seeing_err)
 
                         psf_noisy = get_LSST_PSF(lam, tel_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                                atmos_fwhm+seeing_rng(), atmos_e, atmos_beta, g1_err, g2_err, 
+                                                atmos_fwhm+seeing_rng(), atmos_e, atmos_beta, 0, 0, 
                                                 self.fov_pixels, pixel_scale=pixel_scale)
                         # save PSF with error
                         if not os.path.exists(os.path.join(self.data_path, f'psf_seeing_err{seeing_err}')):
