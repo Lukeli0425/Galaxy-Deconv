@@ -32,9 +32,7 @@ def estimate_shear(obs, psf_in=None, use_psf=False):
     """Estimate shear from input 2D image."""
     
     psf = np.zeros(obs.shape)
-    if not use_psf: # Use delta for PSF if not given, equivalent to no deconvolution
-        psf[obs.shape[0]//2, obs.shape[1]//2] = 1
-    else: # Crop out PSF
+    if use_psf: # Crop out PSF
         # beg = psf.shape[0]//2 - rcut
         # end = beg + 2*rcut + 1
         # psf = psf[beg:end,beg:end]
@@ -44,6 +42,8 @@ def estimate_shear(obs, psf_in=None, use_psf=False):
         startj = (obs.shape[1] - psf_in.shape[1]) // 2
         endj = startj + psf_in.shape[1]
         psf[starti:endi, startj:endj] = psf_in
+    else: # Use delta for PSF if not given, equivalent to no deconvolution
+        psf[obs.shape[0]//2, obs.shape[1]//2] = 1
 
     fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=0.5)
     modes = fpTask.measure(obs)

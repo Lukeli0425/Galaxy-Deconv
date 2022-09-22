@@ -230,7 +230,7 @@ class Galaxy_Dataset(Dataset):
 
     def create_images(self, start_k=0, 
                       shear_errs=[0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4],
-                      seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]):
+                      seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]):
         
         logging.info(f'Simulating {self.survey} images.')
         
@@ -244,7 +244,7 @@ class Galaxy_Dataset(Dataset):
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
         
-        for k, _ in zip(range(start_k, self.n_total), tqdm(range(self.n_total-start_k))):
+        for k, _ in zip(range(self.n_train, self.n_total), tqdm(range(self.n_total-start_k))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
             
