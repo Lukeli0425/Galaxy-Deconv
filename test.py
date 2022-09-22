@@ -13,7 +13,7 @@ from dataset import Galaxy_Dataset
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
 from utils.utils_torch import MultiScaleLoss
-from utils.utils import PSNR, estimate_shear, plot_psnr, plot_shear_err, plot_time_shear_err
+from utils.utils import PSNR, estimate_shear
 
 
 class ADMM_deconvolver:
@@ -228,6 +228,9 @@ def test_time(methods, n_iters, model_files, n_gal):
     logger.info(f'Running time test with {n_gal} galaxies.\n')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
+    psf_delta = np.zeros([48, 48])
+    psf_delta[23,23] = 1
+    
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
         result_path = os.path.join('results', method)
@@ -271,7 +274,7 @@ def test_time(methods, n_iters, model_files, n_gal):
                 if method == 'No_deconv':
                     # gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(obs))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                         psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                         obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -283,12 +286,12 @@ def test_time(methods, n_iters, model_files, n_gal):
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
             if idx >= n_gal:
                 break
         time_end = time.time()
@@ -319,11 +322,11 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'FPFS',
+    methods = ['No_deconv', 'FPFS', 'No_deconv',
                'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
                'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
-    model_files = [None, None, None, None, None, None, None,
+    n_iters = [0, 0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
+    model_files = [None, None, None, None, None, None, None, None,
                    "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",

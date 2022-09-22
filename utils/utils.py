@@ -28,24 +28,24 @@ def PSNR(img1, img2, normalize=True):
     return psnr
 
 
-def estimate_shear(obs, psf_in=None, use_psf=False):
+def estimate_shear(obs, psf_in=None, use_psf=False, beta=0.5):
     """Estimate shear from input 2D image."""
     
-    psf = np.zeros(obs.shape)
-    if use_psf: # Crop out PSF
-        # beg = psf.shape[0]//2 - rcut
-        # end = beg + 2*rcut + 1
-        # psf = psf[beg:end,beg:end]
-        # psf_pad = np.zeros((obs.shape[0], obs.shape[1]))
-        starti = (obs.shape[0] - psf_in.shape[0]) // 2
-        endi = starti + psf_in.shape[0]
-        startj = (obs.shape[1] - psf_in.shape[1]) // 2
-        endj = startj + psf_in.shape[1]
-        psf[starti:endi, startj:endj] = psf_in
-    else: # Use delta for PSF if not given, equivalent to no deconvolution
-        psf[obs.shape[0]//2, obs.shape[1]//2] = 1
+    # psf = np.zeros(obs.shape)
+    # if use_psf: # Crop out PSF
+    #     # beg = psf.shape[0]//2 - rcut
+    #     # end = beg + 2*rcut + 1
+    #     # psf = psf[beg:end,beg:end]
+    #     # psf_pad = np.zeros((obs.shape[0], obs.shape[1]))
+    #     starti = (obs.shape[0] - psf_in.shape[0]) // 2
+    #     endi = starti + psf_in.shape[0]
+    #     startj = (obs.shape[1] - psf_in.shape[1]) // 2
+    #     endj = startj + psf_in.shape[1]
+    #     psf[starti:endi, startj:endj] = psf_in
+    # else: # Use delta for PSF if not given, equivalent to no deconvolution
+    #     psf[obs.shape[0]//2, obs.shape[1]//2] = 1
 
-    fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=0.5)
+    fpTask = fpfs.fpfsBase.fpfsTask(psf_in, beta=beta)
     modes = fpTask.measure(obs)
     ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
     resp = ells['fpfs_RE'][0]
