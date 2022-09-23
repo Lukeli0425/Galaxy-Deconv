@@ -19,7 +19,10 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
     
     test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err > 0 else 'psf/')
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-            
+        
+    psf_delta = np.zeros([48, 48])
+    psf_delta[23,23] = 1
+    
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
@@ -55,9 +58,9 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
                 if method == 'No_deconv':
                     gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    gt_shear.append(estimate_shear(gt))
-                    obs_shear.append(estimate_shear(obs))
-                    rec_shear.append(estimate_shear(obs))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    obs_shear.append(estimate_shear(obs, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -70,13 +73,13 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
                     rec = model(obs, psf) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
             # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
             #     idx+1, len(test_loader),
             #     gt_shear[idx][0], gt_shear[idx][1],
@@ -104,7 +107,10 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
 
     test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_seeing_err{seeing_err}/' if seeing_err > 0 else 'psf/')
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-            
+    
+    psf_delta = np.zeros([48, 48])
+    psf_delta[23,23] = 1
+    
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
@@ -140,9 +146,9 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
                 if method == 'No_deconv':
                     gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    gt_shear.append(estimate_shear(gt))
-                    obs_shear.append(estimate_shear(obs))
-                    rec_shear.append(estimate_shear(obs))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    obs_shear.append(estimate_shear(obs, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -155,13 +161,13 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
                     rec = model(obs, psf) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
             # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
             #     idx+1, len(test_loader),
             #     gt_shear[idx][0], gt_shear[idx][1],
@@ -211,7 +217,6 @@ if __name__ == "__main__":
     # for shear_err in shear_errs:
     #     test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
     
-    seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-    # seeing_errs = [0.1, 0.15, 0.2]
+    seeing_errs=[0, 0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     for seeing_err in seeing_errs:
         test_psf_seeing_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, seeing_err=seeing_err)
