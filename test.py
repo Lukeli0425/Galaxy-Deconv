@@ -177,7 +177,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
         rec_shear = []
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
-                if method == 'No_deconv':
+                if method == 'No_Deconv':
                     gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     gt_shear.append(estimate_shear(gt))
@@ -243,7 +243,7 @@ def test_time(methods, n_iters, model_files, n_gal):
         except:
             results = {} # dictionary to record the test results
             
-        # if method == 'No_deconv':
+        # if method == 'No_Deconv':
         #     logger.info(f'Tested {method} on {n_gal} galaxies: Time = 0s')
         #     results['time'] = (0, n_gal)
         #     with open(results_file, 'w') as f:
@@ -271,7 +271,7 @@ def test_time(methods, n_iters, model_files, n_gal):
         time_start = time.time()
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
-                if method == 'No_deconv':
+                if method == 'No_Deconv':
                     # gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(obs, psf_delta))
@@ -322,7 +322,7 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_deconv', 'FPFS', 'No_deconv',
+    methods = ['No_Deconv', 'FPFS', 'No_Deconv',
                'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
                'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
     n_iters = [0, 0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
