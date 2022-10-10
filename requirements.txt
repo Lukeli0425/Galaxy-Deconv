@@ -1,14 +1,8 @@
 numpy 
 matplotlib 
 scipy
-pandas
-tqdm
 torch
-scikit-learn
-scikit-image
-opencv-python
-PILLOW
+tqdm
 bm3d
-astropy
 galsim
 fpfs
