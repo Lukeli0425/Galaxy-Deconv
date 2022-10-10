@@ -279,8 +279,8 @@ class Galaxy_Dataset(Dataset):
                         g1_err = shear_err if rng() > 0.5 else shear_err
                         g2_err = shear_err if rng() > 0.5 else shear_err
                         psf_noisy = get_LSST_PSF(lam, tel_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                                atmos_fwhm, atmos_e, atmos_beta, g1_err, g2_err,
-                                                self.fov_pixels, pixel_scale=pixel_scale)
+                                                 atmos_fwhm, atmos_e, atmos_beta, g1_err, g2_err,
+                                                 self.fov_pixels, pixel_scale=pixel_scale)
                         # save PSF with error
                         if not os.path.exists(os.path.join(self.data_path, f'psf_shear_err{shear_err}')):
                             os.mkdir(os.path.join(self.data_path, f'psf_shear_err{shear_err}'))
@@ -289,10 +289,11 @@ class Galaxy_Dataset(Dataset):
                     # Simulate PSF with seeing error
                     for seeing_err in seeing_errs:
                         # seeing_rng = galsim.GaussianDeviate(seed=random_seed+k+1, mean=0, sigma=seeing_err)
-                        delta = seeing_err if rng() > 0.5 else - seeing_err
+                        fwhm = atmos_fwhm + seeing_err if rng() > 0.5 else atmos_fwhm - seeing_err
+                        fwhm = fwhm + 2*seeing_err if fwhm < 0 else fwhm
                         psf_noisy = get_LSST_PSF(lam, tel_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                                atmos_fwhm+delta, atmos_e, atmos_beta, 0, 0, 
-                                                self.fov_pixels, pixel_scale=pixel_scale)
+                                                 fwhm, atmos_e, atmos_beta, 0, 0, 
+                                                 self.fov_pixels, pixel_scale=pixel_scale)
                         # save PSF with error
                         if not os.path.exists(os.path.join(self.data_path, f'psf_seeing_err{seeing_err}')):
                             os.mkdir(os.path.join(self.data_path, f'psf_seeing_err{seeing_err}'))

@@ -5,4 +5,4 @@ torch
 tqdm
 bm3d
 galsim
-fpfs
+fpfs==2.0.4
