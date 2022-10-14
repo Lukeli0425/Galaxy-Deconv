@@ -229,12 +229,12 @@ class Galaxy_Dataset(Dataset):
             logging.info(f'Information saved in {self.info_file}.')
 
     def create_images(self, start_k=0, 
-                      shear_errs=[0.01, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4],
+                      shear_errs=[0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4],
                       seeing_errs=[0.001, 0.002, 0.003, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]):
         
         logging.info(f'Simulating {self.survey} images.')
         
-        random_seed = 2431
+        random_seed = 345
         psnr_list = []
         
         # Calculate all Webb PSFs and split for train/test
@@ -244,7 +244,7 @@ class Galaxy_Dataset(Dataset):
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
         
-        for k, _ in zip(range(self.n_train, self.n_total), tqdm(range(self.n_total-start_k))):
+        for k, _ in zip(range(self.n_train, self.n_train+10000), tqdm(range(10000))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
             
@@ -253,7 +253,7 @@ class Galaxy_Dataset(Dataset):
                 psf_image, pixel_scale = psfs[psf_name]
             elif self.survey == 'LSST': # Simulate a LSST PSF 
                 # PSF parameters
-                rng_gaussian = galsim.GaussianDeviate(seed=random_seed+k+1, mean=self.seeing, sigma=0.18)
+                rng_gaussian = galsim.GaussianDeviate(seed=random_seed+k+10, mean=self.seeing, sigma=0.18)
                 atmos_fwhm = 0 # arcsec (mean 0.7 for LSST)
                 while atmos_fwhm < 0.35 or atmos_fwhm > 1.1: # sample fwhm
                     atmos_fwhm = rng_gaussian()
