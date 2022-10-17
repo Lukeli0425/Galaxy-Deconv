@@ -1,7 +1,6 @@
 import numpy as np
 import torch 
 
-import matplotlib.pyplot as plt
 from numpy.fft import fft2, ifft2, ifftshift
 from scipy.optimize import fmin_l_bfgs_b as l_bfgs
 from torch.autograd import Variable
