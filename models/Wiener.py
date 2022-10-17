@@ -7,7 +7,6 @@ class Wiener(nn.Module):
         super(Wiener, self).__init__()
         
     def forward(self, y, psf, snr):
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
         psf = psf/psf.sum() # normalize PSF
         x = fftshift(ifft2(fft2(y) / fft2(psf) / (1+1/(fft2(psf).abs()**2 * snr)) )).real
