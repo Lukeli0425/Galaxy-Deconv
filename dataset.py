@@ -244,7 +244,7 @@ class Galaxy_Dataset(Dataset):
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
         
-        for k, _ in zip(range(self.n_train+10000, self.n_total), tqdm(range(self.n_train+10000, self.n_total))):
+        for k, _ in zip(range(start_k, self.n_total), tqdm(range(start_k, self.n_total))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
             
@@ -300,8 +300,8 @@ class Galaxy_Dataset(Dataset):
                         torch.save(psf_noisy.clone(), os.path.join(self.data_path, f'psf_seeing_err{seeing_err}', f"psf_{self.I}_{k}.pth"))
             
             # Galaxy parameters 
-            sky_level = 1.e3                    # ADU / arcsec^2
-            gal_flux = 0.8e4 + 5.e4 * rng()      # arbitrary choice, makes nice (not too) noisy images
+            sky_level = 1.e3                                        # ADU / arcsec^2
+            gal_flux = 0.4e4 * np.exp(rng() * np.log(5e4/0.4e4))    # log uniform distribution
             gal_e = rng() * self.gal_max_shear  # shear of galaxy
             gal_beta = 2. * np.pi * rng()       # radians
             gal_shear = galsim.Shear(e=gal_e, beta=gal_beta*galsim.radians)
@@ -438,5 +438,5 @@ if __name__ == "__main__":
     Dataset = Galaxy_Dataset(data_path='/mnt/WD6TB/tianaoli/dataset/', 
                              COSMOS_path='/mnt/WD6TB/tianaoli/',
                              survey=opt.survey, I=opt.I, pixel_scale=0.2)
-    Dataset.create_images(start_k=47000)
+    Dataset.create_images(start_k=2000)
     

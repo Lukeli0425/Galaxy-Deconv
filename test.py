@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader
 from dataset import Galaxy_Dataset
-from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Wiener import Wiener
 from models.Richard_Lucy import Richard_Lucy
+from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils import PSNR, estimate_shear
 
@@ -144,7 +145,10 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
     test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, 
                                   obs_folder=f'obs_{snr}', gt_folder=f'gt_{snr}')
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        
+    
+    psf_delta = np.zeros([48, 48])
+    psf_delta[23,23] = 1
+    
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
@@ -160,18 +164,22 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
         if not str(snr) in results:
             results[str(snr)] = {}
         
-        if n_iter > 0:
-            if 'Richard-Lucy' in method:
-                model = Richard_Lucy(n_iters=n_iter)
-                model.to(device)
-            elif 'ADMM' in method:
-                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
-                model.to(device)
-                try: # Load the model
-                    model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
-                    logger.info(f'Successfully loaded in {model_file}.')
-                except:
-                    logger.error(f'Failed loading in {model_file} model!')   
+        if method == 'Wiener':
+            model = Wiener()
+            model.to(device)
+            model.eval()
+        elif 'Richard-Lucy' in method:
+            model = Richard_Lucy(n_iters=n_iter)
+            model.to(device)
+            model.eval()
+        elif 'ADMM' in method:
+            model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+            model.to(device)
+            try: # Load the model
+                model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+                logger.info(f'Successfully loaded in {model_file}.')
+            except:
+                logger.error(f'Failed loading in {model_file} model!')   
             model.eval()     
     
         rec_shear = []
@@ -180,28 +188,28 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 if method == 'No_Deconv':
                     gt = gt.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    gt_shear.append(estimate_shear(gt))
-                    obs_shear.append(estimate_shear(obs))
-                    rec_shear.append(estimate_shear(obs))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    obs_shear.append(estimate_shear(obs, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    # try:
                     rec_shear.append(estimate_shear(obs, psf, use_psf=True))
-                    # except:
-                    #     rec_shear.append((gt_shear[idx][0],gt_shear[idx][1],gt_shear[idx][2]+1))
+                elif method == 'Wiener':
+                    obs, psf = obs.to(device), psf.to(device)
+                    rec = model(obs, psf, snr) 
+                    rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    # Calculate shear
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
             # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
             #     idx+1, len(test_loader),
             #     gt_shear[idx][0], gt_shear[idx][1],
@@ -242,8 +250,12 @@ def test_time(methods, n_iters, model_files, n_gal):
                 results = json.load(f)
         except:
             results = {} # dictionary to record the test results
-            
-        if 'Richard-Lucy' in method:
+        
+        if method == 'Wiener':
+            model = Wiener()
+            model.to(device) 
+            model.eval()
+        elif 'Richard-Lucy' in method:
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval() 
@@ -269,12 +281,14 @@ def test_time(methods, n_iters, model_files, n_gal):
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
-                        psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                        obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                        # try:
-                        rec_shear.append(estimate_shear(obs, psf, use_psf=True))
-                        # except:
-                        #     pass
+                    psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                elif method == 'Wiener':
+                    obs, psf = obs.to(device), psf.to(device)
+                    rec = model(obs, psf, 20) 
+                    rec = rec.squeeze(dim=0).cpu().numpy()
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -315,7 +329,7 @@ if __name__ =="__main__":
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     
-    methods = ['No_Deconv', 'FPFS', 'No_Deconv',
+    methods = ['No_Deconv', 'FPFS', 'Wiener',
                'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
                'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
     n_iters = [0, 0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
@@ -326,6 +340,6 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    # for snr in snrs:
-    #     test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    for snr in snrs:
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
