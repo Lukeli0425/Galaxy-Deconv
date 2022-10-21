@@ -340,6 +340,6 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    for snr in snrs:
-        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    # for snr in snrs:
+    #     test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
