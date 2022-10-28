@@ -255,7 +255,7 @@ class Galaxy_Dataset(Dataset):
                 # PSF parameters
                 rng_gaussian = galsim.GaussianDeviate(seed=random_seed+k+10, mean=self.seeing, sigma=0.18)
                 atmos_fwhm = 0 # arcsec (mean 0.7 for LSST)
-                while atmos_fwhm < 0.35 or atmos_fwhm > 1.1: # sample fwhm
+                while atmos_fwhm < 0.35 or atmos_fwhm > 1.3: # sample fwhm
                     atmos_fwhm = rng_gaussian()
                 atmos_e = rng() * self.atmos_max_shear # ellipticity of atmospheric PSF
                 atmos_beta = 2. * np.pi * rng()     # radians
