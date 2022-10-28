@@ -9,4 +9,4 @@ This folder holds the figures in the paper and the files that created them. The 
     psf_err_cartoon.jpg  Figure 5: The response curves of ellipticity error as a function of systematic errors in the PSF.
 
 ### Figure 1
-This figure is create with Powerpoint (see `pipeline.pptx`). The cartoon figures for the ground truth, PSF, observation, and reconstruction (`gt.jpg`) are created by [`tutorials/image_simulations.ipynb`](../tutorials/image_simulation.ipynb).
+This figure is create with Powerpoint (see [`pipeline.pptx`](pipeline.pptx)). The cartoon figures for the ground truth ([`gal_image.jpg`](gal_image.jpg)), PSF ([`psf_image.jpg`](psf_image.jpg)), observation ([`obs.jpg`](obs.jpg)), and reconstruction ([`gal_image.jpg`](gal_image.jpg)) are created by [`tutorials/image_simulations.ipynb`](../tutorials/image_simulation.ipynb).
