@@ -1,4 +1,4 @@
-# Algorithm Unrolling for PSF Deconvolution of Galaxy Surveys
+# Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning
 
 This repository holds code for Galaxy Image Deconvolution for Weak Gravitational Lensing with
 Physics-informed Deep Learning [pdf link tp come].
