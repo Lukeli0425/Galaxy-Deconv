@@ -42,7 +42,11 @@ pip install -r requirements.txt
 ## Retraining on simulated data
 
 ## Recreating our figures
-Go to (dir), see FIGUREREADME
+
+This [`figures`](figures) folder holds the figures in the paper and the files that created them (see ['figures/README.md'](figures/README.md)).
+
+
+
 -- all the figure code is in a directory, in that directory is a figure readme that names the notebook for (fig1: grid.ipynb, etc)
 -- how to rerun on your own data/simualtions
 
