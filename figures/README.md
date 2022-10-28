@@ -9,4 +9,4 @@ This folder holds the figures in the paper and the files that created them. The 
     psf_err_cartoon.jpg  Figure 5: The response curves of ellipticity error as a function of systematic errors in the PSF.
 
 ### Figure 1
-This figure is create with Powerpoint (see `pipeline.pptx`).
+This figure is create with Powerpoint (see `pipeline.pptx`). The cartoon figures for the PSF, observed galaxy, recovered galaxy and ground truth are created by [`tutorials/image_simulations.ipynb`](https://github.com/Lukeli0425/Galaxy-Deconv/blob/main/tutorials/image_simulation.ipynb).
