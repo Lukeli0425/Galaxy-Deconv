@@ -45,7 +45,7 @@ tar zxvf COSMOS_23.5_training_sample.tar.gz
 tar zxvf COSMOS_25.2_training_sample.tar.gz
 ```
 
-Run [`dataset.py`](dataset.py) to simulate your own dataset under different settings. We provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)).
+Run [`dataset.py`](dataset.py) to simulate your own dataset under different settings. We provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
 
 ## Retraining on simulated data
 
@@ -53,11 +53,6 @@ If you want to train the model with your own dataset, you can either train it fr
 
 ## Recreating our figures
 
-The [`figures`](figures) folder holds the figures in the paper and the files that created them (see ['figures/README.md'](figures/README.md)).
-
-
-
--- all the figure code is in a directory, in that directory is a figure readme that names the notebook for (fig1: grid.ipynb, etc)
--- how to rerun on your own data/simualtions
+The [`figures`](figures) folder holds the figures in the paper and the files that created them (see ['figures/README.md'](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
 
 
