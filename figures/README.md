@@ -1,4 +1,4 @@
-## Figures
+# Figures
 
 This folder holds the figures in the paper and the files that created them. The 5 figures in the paper are:
 
@@ -11,6 +11,8 @@ Figure 3 ([`err_snr.jpg`](err_snr.jpg)): Average ellipticity errors at multiple 
 Figure 4 ([`time_err.jpg`](error_time.jpg)): Ellipticity error curve with respect to time at different SNR levels.
 
 Figure 5 ([`psf_err_cartoon.jpg`](psf_err_cartoon.jpg)): The response curves of ellipticity error as a function of systematic errors in the PSF.
+
+---
 
 ### Figure 1: ([`pipeline.jpg`](pipeline.jpg))
 
