@@ -109,7 +109,6 @@ if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Arguments for training urolled ADMM.')
     parser.add_argument('--n_iters', type=int, default=8)
     parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
-    parser.add_argument('--PnP', action="store_true")
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
@@ -120,7 +119,7 @@ if __name__ =="__main__":
     opt = parser.parse_args()
 
 
-    train(n_iters=opt.n_iters, llh=opt.llh, PnP=opt.PnP,
+    train(n_iters=opt.n_iters, llh=opt.llh, PnP=True,
           n_epochs=opt.n_epochs, lr=opt.lr,
           survey=opt.survey, I=opt.I, train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           load_pretrain=opt.load_pretrain,
