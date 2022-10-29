@@ -2,7 +2,7 @@
 data/
 dataset/
 webbpsf-data/
-saved_models/
+# saved_models/
 
 # Vscode setting
 .vscode/
