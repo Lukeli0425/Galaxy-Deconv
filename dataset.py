@@ -139,7 +139,7 @@ class Galaxy_Dataset(Dataset):
                  survey='LSST', I=23.5, fov_pixels=0, gal_max_shear=0.5, 
                  train=True, train_split=0.7, 
                  psf_folder='psf', obs_folder='obs', gt_folder='gt',
-                 pixel_scale=0.2, atmos_max_shear=0.25, seeing=0.7):
+                 pixel_scale=0.2, atmos_max_shear=0.25, seeing=0.67):
         """Construction function for the PyTorch Galaxy Dataset.
 
         Args:
@@ -438,5 +438,8 @@ if __name__ == "__main__":
     Dataset = Galaxy_Dataset(data_path='/mnt/WD6TB/tianaoli/dataset/', 
                              COSMOS_path='/mnt/WD6TB/tianaoli/',
                              survey=opt.survey, I=opt.I, pixel_scale=0.2)
-    Dataset.create_images(start_k=2000)
+    # Dataset = Galaxy_Dataset(data_path='/Users/luke/Desktop/', 
+    #                          COSMOS_path='/Users/luke/Downloads/',
+    #                          survey=opt.survey, I=opt.I, pixel_scale=0.2)
+    Dataset.create_images(start_k=0)
     
