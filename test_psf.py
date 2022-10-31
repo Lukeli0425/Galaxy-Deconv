@@ -190,13 +190,13 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
-    parser = argparse.ArgumentParser(description='Arguments for tesing unrolled ADMM.')
-    parser.add_argument('--n_iters', type=int, default=4)
-    parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
-    parser.add_argument('--PnP', action="store_true")
-    parser.add_argument('--n_epochs', type=int, default=20)
-    parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
-    parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
+    parser = argparse.ArgumentParser(description='Arguments for testing.')
+    # parser.add_argument('--n_iters', type=int, default=4)
+    # parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
+    # parser.add_argument('--PnP', action="store_true")
+    # parser.add_argument('--n_epochs', type=int, default=20)
+    # parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
+    # parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
     parser.add_argument('--n_gal', type=int, default=10000)
     opt = parser.parse_args()
     
