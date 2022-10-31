@@ -4,7 +4,7 @@ Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics
 
 ![](figures/pipeline.jpg)
 
-![](figures/grid.jpg)
+<!-- ![](figures/grid.jpg) -->
 
 ## Running the Project
 
