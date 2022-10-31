@@ -3,6 +3,8 @@
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
 in Monthly Notices of the Royal Astronomical Society (**MNRAS**), 2022 (__Under Review__) 
 
+Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [PDF link to come].
+
 ![](figures/pipeline.jpg)
 
 <!-- ![](figures/grid.jpg) -->
