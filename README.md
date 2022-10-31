@@ -2,6 +2,9 @@
 
 Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [pdf link tp come].
 
+![](figures/pipeline.jpg)
+
+![](figures/grid.eps)
 
 ## Running the Project
 
@@ -22,7 +25,7 @@ To train to model, run [`train.py`](train.py), where you can choose the number o
 python train.py --n_epochs 100 --n_iters 4 --load_pretrain
 ```
 
-Test the algorithms from the perspectives of time and performance with [`test.py`](test.py).You can specify the number of galaxies you want to use in the test dataset:
+Test the algorithms from the perspectives of time and performance with [`test.py`](test.py). You can specify the number of galaxies you want to use in the test dataset:
 ```zsh
 python test.py --n_gal 5000
 ```
@@ -31,7 +34,7 @@ Test the robustness of the algorithms to systematic errors in PSF with [`test_ps
 ```zsh
 python test_psf.py --n_gal 5000
 ```
-All the test results will be saved in the [`results`](results) folder.
+All the test results will be automatically saved in the [`results`](results) folder.
 
 ## Using the model on your own data
 
@@ -64,7 +67,7 @@ Run [`dataset.py`](dataset.py) to simulate your own dataset under different sett
 ```python
 python dataset.py
 ```
- We provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
+We also provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
 
 
 ## Retraining on simulated data
