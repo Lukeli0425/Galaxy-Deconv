@@ -1,10 +1,13 @@
 # Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning
+[Tianao Li](https://lukeli0425.github.io), [Emma Alexander](https://www.alexander.vision/emma)
 
-Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [pdf link tp come].
+Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [PDF link to come].
 
 ![](figures/pipeline.jpg)
 
 <!-- ![](figures/grid.jpg) -->
+
+---
 
 ## Running the Project
 
