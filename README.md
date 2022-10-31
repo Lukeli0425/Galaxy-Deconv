@@ -23,7 +23,7 @@ Create a virtual environment and download the required packages, by running:
 pip install -r requirements.txt
 ```
 
-Download our simulated [galaxy dataset](https://drive.google.com/drive/folders/1IwgvbetMDpLK2skRalYWmth2J1gvF-qm?usp=share_link) from Google Drive.
+Download our simulated [galaxy dataset](https://drive.google.com/drive/folders/1IwgvbetMDpLK2skRalYWmth2J1gvF-qm) from Google Drive.
 
 To train to model, run [`train.py`](train.py), where you can choose the number of iterations and whether to load pretrained weights, for instance:
 ```zsh
