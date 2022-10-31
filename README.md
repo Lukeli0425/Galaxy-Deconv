@@ -1,13 +1,13 @@
 # Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning
 
-This repository holds code for Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning [pdf link tp come].
+Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [pdf link tp come].
 
 
-## Run the Project
+## Running the Project
 
 To clone this project, run:
 ```zsh
-git clone https://github.com/Lukeli0425/Galaxy-Deconvolution.git
+git clone https://github.com/Lukeli0425/Galaxy-Deconv.git
 ```
 
 Create a virtual environment and download the required packages, by running:
@@ -22,9 +22,20 @@ To train to model, run [`train.py`](train.py), where you can choose the number o
 python train.py --n_epochs 100 --n_iters 4 --load_pretrain
 ```
 
+Test the algorithms from the perspectives of time and performance with [`test.py`](test.py).You can specify the number of galaxies you want to use in the test dataset:
+```zsh
+python test.py --n_gal 5000
+```
+
+Test the robustness of the algorithms to systematic errors in PSF with [`test_psf.py`](test_psf.py). Similarly, you can set the number of galaxies you want to use:
+```zsh
+python test_psf.py --n_gal 5000
+```
+All the test results will be saved in the [`results`](results) folder.
+
 ## Using the model on your own data
 
-We provide a tutorial for using the suggested model on your data, see ['tutorial/deconv.ipynb'](tutorial/deconv.ipynb) for details. 
+We provide a tutorial for using the suggested model on your data, see [`tutorial/deconv.ipynb`](tutorial/deconv.ipynb) for details. 
 
 
 ## Simulating your own dataset
@@ -49,7 +60,11 @@ tar zxvf COSMOS_23.5_training_sample.tar.gz
 tar zxvf COSMOS_25.2_training_sample.tar.gz
 ```
 
-Run [`dataset.py`](dataset.py) to simulate your own dataset under different settings. We provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
+Run [`dataset.py`](dataset.py) to simulate your own dataset under different settings:
+```python
+python dataset.py
+```
+ We provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
 
 
 ## Retraining on simulated data
