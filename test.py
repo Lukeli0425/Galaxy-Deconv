@@ -315,15 +315,15 @@ def test_time(methods, n_iters, model_files, n_gal):
 if __name__ =="__main__":
     logging.basicConfig(level=logging.INFO)
     
-    parser = argparse.ArgumentParser(description='Arguments for tesing unrolled ADMM.')
-    parser.add_argument('--n_iters', type=int, default=8)
-    parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
-    parser.add_argument('--PnP', action="store_true")
-    parser.add_argument('--n_epochs', type=int, default=30)
-    parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
-    parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
+    parser = argparse.ArgumentParser(description='Arguments for testing.')
+    # parser.add_argument('--n_iters', type=int, default=8)
+    # parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
+    # parser.add_argument('--PnP', action="store_true")
+    # parser.add_argument('--n_epochs', type=int, default=30)
+    # parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
+    # parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
+    # parser.add_argument('--snr', type=int, default=20, choices=[20, 100])
     parser.add_argument('--n_gal', type=int, default=10000)
-    parser.add_argument('--snr', type=int, default=20, choices=[20, 100])
     opt = parser.parse_args()
     
     if not os.path.exists('./results/'):
@@ -340,6 +340,6 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
