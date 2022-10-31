@@ -1,7 +1,7 @@
 # Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning
 [Tianao Li](https://lukeli0425.github.io)<sup>1</sup>, [Emma Alexander](https://www.alexander.vision/emma)<sup>2</sup><br>
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
-in Monthly Notices of the Royal Astronomical Society (**MNRAS**), 2022 (__Under Review__) 
+_Monthly Notices of the Royal Astronomical Society_ (**MNRAS**), 2022 (__Under Review__) 
 
 Code for _Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning_ [PDF link to come].
 
@@ -50,13 +50,9 @@ We provide a tutorial for using the suggested model on your data, see [`tutorial
 
 We simulated our dataset with the modular galaxy image simulation toolkit [Galsim](https://github.com/GalSim-developers/GalSim) and the [COSMOS Real Galaxy Dataset](https://zenodo.org/record/3242143#.Ytjzki-KFAY). To create your own dataset, one need to first download the COSMOS data (or use your own data).
 
-Create a `data` folder under the root directory:
+Create a `data` folder and download COSMOS dataset:
 ```zsh
 mkdir data
-```
-
-Go under `data` directory and download COSMOS data:
-```zsh
 cd data
 wget https://zenodo.org/record/3242143/files/COSMOS_23.5_training_sample.tar.gz
 wget https://zenodo.org/record/3242143/files/COSMOS_25.2_training_sample.tar.gz
