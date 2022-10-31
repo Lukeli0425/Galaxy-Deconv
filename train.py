@@ -1,14 +1,14 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 import logging
 import argparse
 import torch
-from torch import nn
 from torch.optim import Adam
 from dataset import get_dataloader
 from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils import plot_loss
+
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 def train(n_iters=8, llh='Poisson', PnP=True, 
             n_epochs=10, lr=1e-4, survey='JWST', I=23.5, train_val_split=0.857, batch_size=32, 
