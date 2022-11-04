@@ -78,7 +78,7 @@ If you want to train the model with your own dataset, you can either train it fr
 
 ## Recreating our figures
 
-The [`figures`](figures) folder holds the figures in the paper and the files that created them (see ['figures/README.md'](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
+The [`figures`](figures) folder holds the figures in the paper and the files that created them (see [`figures/README.md`](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
 
 ## Citation
 ```bibtex
