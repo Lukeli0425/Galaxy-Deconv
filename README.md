@@ -80,4 +80,16 @@ If you want to train the model with your own dataset, you can either train it fr
 
 The [`figures`](figures) folder holds the figures in the paper and the files that created them (see ['figures/README.md'](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
 
-
+## Citation
+```bibtex
+@misc{https://doi.org/10.48550/arxiv.2211.01567,
+    doi = {10.48550/ARXIV.2211.01567},
+    url = {https://arxiv.org/abs/2211.01567},
+    author = {Li, Tianao and Alexander, Emma},
+    keywords = {Instrumentation and Methods for Astrophysics (astro-ph.IM), Computer Vision and Pattern Recognition (cs.CV), FOS: Physical sciences, FOS: Physical sciences, FOS: Computer and information sciences, FOS: Computer and information sciences},
+    title = {Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning},
+    publisher = {arXiv},
+    year = {2022},
+    copyright = {arXiv.org perpetual, non-exclusive license}
+}
+```
