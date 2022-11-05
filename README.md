@@ -68,7 +68,7 @@ Run [`dataset.py`](dataset.py) to simulate your own dataset under different sett
 ```python
 python dataset.py
 ```
-We also provide a detailed tutorial for image simulation (see [`tutorials/image_simulation`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
+We also provide a detailed tutorial for image simulation (see [`tutorials/image_simulation.ipynb`](tutorials/image_simulation.ipynb)), where you can find out how to set your own parameters.
 
 
 ## Retraining on simulated data
