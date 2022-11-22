@@ -18,7 +18,7 @@ To clone this project, run:
 git clone https://github.com/Lukeli0425/Galaxy-Deconv.git
 ```
 
-Create a virtual environment and download the required packages, by running:
+Create a virtual environment and download the required packages:
 ```zsh
 pip install -r requirements.txt
 ```
@@ -82,14 +82,10 @@ The [`figures`](figures) folder holds the figures in the paper and the files tha
 
 ## Citation
 ```bibtex
-@misc{https://doi.org/10.48550/arxiv.2211.01567,
-    doi = {10.48550/ARXIV.2211.01567},
-    url = {https://arxiv.org/abs/2211.01567},
-    author = {Li, Tianao and Alexander, Emma},
-    keywords = {Instrumentation and Methods for Astrophysics (astro-ph.IM), Computer Vision and Pattern Recognition (cs.CV), FOS: Physical sciences, FOS: Physical sciences, FOS: Computer and information sciences, FOS: Computer and information sciences},
-    title = {Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning},
-    publisher = {arXiv},
-    year = {2022},
-    copyright = {arXiv.org perpetual, non-exclusive license}
+@article{li2022galaxy,
+  title={Galaxy Image Deconvolution for Weak Gravitational Lensing with Physics-informed Deep Learning},
+  author={Li, Tianao and Alexander, Emma},
+  journal={arXiv preprint arXiv:2211.01567},
+  year={2022}
 }
 ```
