@@ -3,6 +3,7 @@ data/
 dataset/
 webbpsf-data/
 # saved_models/
+ngmix/
 
 # Vscode setting
 .vscode/
