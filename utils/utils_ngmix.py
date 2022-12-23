@@ -1,6 +1,29 @@
 import numpy as np
 import ngmix
 
+def make_data(obs_im, psf_im, pixel_scale=0.2):
+    
+    cen = (np.array(obs_im.shape)-1.0)/2.0
+    psf_cen = (np.array(psf_im.shape)-1.0)/2.0
+
+    jacobian = ngmix.DiagonalJacobian(
+        row=cen[0], col=cen[1], scale=pixel_scale,
+    )
+    psf_jacobian = ngmix.DiagonalJacobian(
+        row=psf_cen[0], col=psf_cen[1], scale=pixel_scale,
+    )
+        
+    psf_obs = ngmix.Observation(
+        image=psf_im,
+        jacobian=psf_jacobian,
+    )
+    obs = ngmix.Observation(
+        image=obs_im,
+        jacobian=jacobian,
+        psf=psf_obs,
+    )
+
+    return obs
 
 def get_prior(*, rng, scale, T_range=None, F_range=None, nband=None):
     """
