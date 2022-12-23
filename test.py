@@ -14,7 +14,7 @@ from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils import PSNR, estimate_shear
-
+from utils.utils_ngmix import get_ngmix_Bootstrapper
 
 class ADMM_deconvolver:
     """Wrapper class for unrolled ADMM deconvolution."""
@@ -163,6 +163,8 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
         if not str(snr) in results:
             results[str(snr)] = {}
         
+        if method == 'ngmix':
+            boot = get_ngmix_Bootstrapper()
         if method == 'Wiener':
             model = Wiener()
             model.to(device)
@@ -193,7 +195,13 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    rec_shear.append(estimate_shear(obs, psf))
+                elif method == 'ngmix':
+                    psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    res = boot.go(obs)
+                    rec = res.make_image()
+                    rec_shear.append(estimate_shear(rec))
                 elif method == 'Wiener':
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, snr) 
@@ -339,6 +347,11 @@ if __name__ =="__main__":
                    "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
     
+    methods = ['ngmix']
+    n_iters = [0]
+    model_files = [None]
+    
     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+
