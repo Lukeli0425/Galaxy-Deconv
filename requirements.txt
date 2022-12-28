@@ -7,3 +7,4 @@ bm3d
 galsim
 fpfs==2.0.4
 ngmix
+scikit-image # score
