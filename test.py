@@ -14,7 +14,7 @@ from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils import PSNR, estimate_shear
-from utils.utils_ngmix import get_ngmix_Bootstrapper
+from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
 
 class ADMM_deconvolver:
     """Wrapper class for unrolled ADMM deconvolution."""
@@ -136,7 +136,7 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
     return results
 
 
-def test_shear(methods, n_iters, model_files, n_gal, snr):
+def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
     logger = logging.getLogger('shear test')
     logger.info(f'Running shear test with {n_gal} SNR={snr} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -151,7 +151,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join('results/', method)
+        result_path = os.path.join(result_save_path, method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
         results_file = os.path.join(result_path, f'results.json')
@@ -164,8 +164,8 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
             results[str(snr)] = {}
         
         if method == 'ngmix':
-            boot = get_ngmix_Bootstrapper()
-        if method == 'Wiener':
+            boot = get_ngmix_Bootstrapper(psf_ngauss=1, ntry=2)
+        elif method == 'Wiener':
             model = Wiener()
             model.to(device)
             model.eval()
@@ -174,7 +174,10 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
             model.to(device)
             model.eval()
         elif 'ADMM' in method:
-            model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+            if 'Gaussian' in method:
+                model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
+            else:
+                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
@@ -195,13 +198,13 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                 elif method == 'FPFS':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(obs, psf))
+                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
                 elif method == 'ngmix':
                     psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = make_data(obs_im=obs, psf_im=psf)
                     res = boot.go(obs)
-                    rec = res.make_image()
-                    rec_shear.append(estimate_shear(rec))
+                    rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif method == 'Wiener':
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, snr) 
@@ -214,7 +217,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr):
                     rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
-                    rec = model(obs, psf, alpha) #*= alpha.view(1,1,1)
+                    rec = model(obs, psf, alpha)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(rec, psf_delta))
             # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
@@ -258,7 +261,9 @@ def test_time(methods, n_iters, model_files, n_gal):
         except:
             results = {} # dictionary to record the test results
         
-        if method == 'Wiener':
+        if method == 'ngmix':
+            boot = get_ngmix_Bootstrapper(psf_ngauss=1, ntry=2)
+        elif method == 'Wiener':
             model = Wiener()
             model.to(device) 
             model.eval()
@@ -296,6 +301,12 @@ def test_time(methods, n_iters, model_files, n_gal):
                     rec = model(obs, psf, 20) 
                     rec = rec.squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(rec, psf_delta))
+                elif method == 'ngmix':
+                    psf = psf.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = obs.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    obs = make_data(obs_im=obs, psf_im=psf)
+                    res = boot.go(obs)
+                    rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -333,25 +344,26 @@ if __name__ =="__main__":
     parser.add_argument('--n_gal', type=int, default=10000)
     opt = parser.parse_args()
     
-    if not os.path.exists('./results/'):
-        os.mkdir('./results/')
+    if not os.path.exists('./results1/'):
+        os.mkdir('./results1/')
     
-    methods = ['No_Deconv', 'FPFS', 'Wiener',
+    methods = ['No_Deconv', 'FPFS', 'Wiener', 'ngmix', 
                'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-               'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
-    n_iters = [0, 0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
-    model_files = [None, None, None, None, None, None, None, None,
-                   "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
+               'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
+               'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)']
+    n_iters = [0, 0, 0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8, 1, 2, 4, 8]
+    model_files = [None, None, None, None, None, None, None, None, None,
+                   "saved_models1/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_8iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Gaussian_PnP_1iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Gaussian_PnP_2iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Gaussian_PnP_4iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
-    
-    methods = ['ngmix']
-    n_iters = [0]
-    model_files = [None]
-    
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
-    for snr in snrs:
-        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
 
+    for snr in snrs:
+        test_shear(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)

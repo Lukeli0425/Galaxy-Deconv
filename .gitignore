@@ -4,8 +4,10 @@ dataset/
 webbpsf-data/
 # saved_models/
 ngmix/
-# score-master/
-# alpha-transform-master/
+score/
+alpha-transform/
+saved_models1/
+saved_models/
 
 # Vscode setting
 .vscode/

@@ -28,7 +28,7 @@ def PSNR(img1, img2, normalize=True):
     return psnr
 
 
-def estimate_shear(obs, psf_in=None, beta=0.5):
+def estimate_shear(obs, psf_in=False, use_psf=True, beta=0.5):
     """Estimate shear from input 2D image."""
     
     # psf = np.zeros(obs.shape)
@@ -45,7 +45,7 @@ def estimate_shear(obs, psf_in=None, beta=0.5):
     # else: # Use delta for PSF if not given, equivalent to no deconvolution
     #     psf[obs.shape[0]//2, obs.shape[1]//2] = 1
     
-    if psf_in == None:
+    if not use_psf:
         cen = ((np.array(obs.shape)-1.0)/2.0).astype(int)
         psf = np.zeros(obs.shape)
         psf[cen[0], cen[1]] = 1.0
@@ -65,7 +65,7 @@ def estimate_shear(obs, psf_in=None, beta=0.5):
     return (g_1, g_2, g) 
 
 
-def plot_loss(train_loss, val_loss, llh, PnP, n_iters, n_epochs, survey, I):
+def plot_loss(train_loss, val_loss, model_save_path, llh, PnP, n_iters, n_epochs, survey, I):
     n_epochs = len(train_loss)
     plt.figure(figsize=(12,7))
     plt.plot(range(1, n_epochs+1), train_loss, '-o', markersize=3.5, label='Train Loss')
@@ -75,7 +75,7 @@ def plot_loss(train_loss, val_loss, llh, PnP, n_iters, n_epochs, survey, I):
     plt.ylabel('Loss', fontsize=14)
     # plt.yscale("log")
     plt.legend(fontsize=15)
-    file_name = f'./saved_models/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_loss_curve.jpg'
+    file_name = f'./{model_save_path}/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{survey}{I}_loss_curve.jpg'
     plt.savefig(file_name)
     plt.close()
 

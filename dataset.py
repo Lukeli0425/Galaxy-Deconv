@@ -138,7 +138,7 @@ class Galaxy_Dataset(Dataset):
     def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/', COSMOS_path='/mnt/WD6TB/tianaoli/', 
                  survey='LSST', I=23.5, fov_pixels=0, gal_max_shear=0.5, 
                  train=True, train_split=0.7, 
-                 psf_folder='psf', obs_folder='obs', gt_folder='gt',
+                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/',
                  pixel_scale=0.2, atmos_max_shear=0.25, seeing=0.67):
         """Construction function for the PyTorch Galaxy Dataset.
 
@@ -163,7 +163,7 @@ class Galaxy_Dataset(Dataset):
         self.psf_folder = psf_folder # Path for PSFs
         self.obs_folder = obs_folder
         self.gt_folder = gt_folder
-        self.COSMOS_dir = os.path.join(COSMOS_path, f"COSMOS_{I}_training_sample")
+        self.COSMOS_dir = os.path.join(COSMOS_path, f"COSMOS_{I}_training_sample/")
         self.train_split = train_split # n_train/n_total
         self.n_total = 0
         self.n_train = 0
@@ -198,7 +198,7 @@ class Galaxy_Dataset(Dataset):
         try:
             self.real_galaxy_catalog = galsim.RealGalaxyCatalog(dir=self.COSMOS_dir, sample=str(self.I))
             self.n_total = self.real_galaxy_catalog.nobjects
-            # logging.info(f'Successfully read in {self.n_total} real galaxies from {self.COSMOS_dir}.')
+            logging.info(f'Successfully read in {self.n_total} real galaxies from {self.COSMOS_dir}.')
         except:
             logging.warning(f'Failed reading in real galaxies from {self.COSMOS_dir}.')
 
@@ -243,7 +243,7 @@ class Galaxy_Dataset(Dataset):
             np.random.shuffle(psf_names)
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
-        
+        start_k = self.n_train
         for k, _ in zip(range(start_k, self.n_total), tqdm(range(start_k, self.n_total))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
@@ -300,7 +300,7 @@ class Galaxy_Dataset(Dataset):
                         torch.save(psf_noisy.clone(), os.path.join(self.data_path, f'psf_seeing_err{seeing_err}', f"psf_{self.I}_{k}.pth"))
             
             # Galaxy parameters 
-            sky_level = 1.e3                                        # ADU / arcsec^2
+            sky_level = 100                                         # ADU / arcsec^2
             gal_flux = 0.4e4 * np.exp(rng() * np.log(5e4/0.4e4))    # log uniform distribution
             gal_e = rng() * self.gal_max_shear  # shear of galaxy
             gal_beta = 2. * np.pi * rng()       # radians
@@ -333,7 +333,7 @@ class Galaxy_Dataset(Dataset):
 
             if k >= self.n_train:
                 # Simulate different SNR
-                for snr in [5, 10, 20, 40, 60, 80, 100, 150, 200]:
+                for snr in [2, 5, 10, 20, 40, 60, 80, 100, 150, 200]:
                     gal_flux = snr * (snr + np.sqrt((snr**2) + 4*sky_level*(self.fov_pixels**2)*(self.pixel_scale**2)))/2      
                     gal_image_snr, _ = get_COSMOS_Galaxy(catalog=self.real_galaxy_catalog, idx=idx, 
                                                     gal_flux=gal_flux, sky_level=sky_level, 
@@ -390,13 +390,14 @@ class Galaxy_Dataset(Dataset):
 
         obs_path = os.path.join(self.data_path, self.obs_folder)
         obs = torch.load(os.path.join(obs_path, f"obs_{self.I}_{idx}.pth")).unsqueeze(0)
-        obs = (obs - obs.min())/(obs.max() - obs.min())
+        # obs = (obs - obs.min())/(obs.max() - obs.min())
+        alpha = obs.ravel().mean().float()
 
+        
         gt_path = os.path.join(self.data_path, self.gt_folder)
         gt = torch.load(os.path.join(gt_path, f"gt_{self.I}_{idx}.pth")).unsqueeze(0)
-        gt = (gt - gt.min())/(gt.max() - gt.min())
+        # gt = (gt - gt.min())/(gt.max() - gt.min())
 
-        alpha = obs.ravel().mean().float()
         alpha = torch.Tensor(alpha).view(1,1,1)
 
         return (obs, psf, alpha), gt

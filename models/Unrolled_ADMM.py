@@ -161,7 +161,7 @@ class Unrolled_ADMM(nn.Module):
 	def forward(self, y, kernel, alpha):
 		device = torch.device("cuda:0" if y.is_cuda else "cpu")
 		x_list = []
-
+		# y = y/alpha if self.llh=='Poisson' else y
 		N, _, _, _ = y.size()
 		# Generate auxiliary variables for convolution
 		k_pad, H = psf_to_otf(kernel, y.size())
@@ -189,4 +189,4 @@ class Unrolled_ADMM(nn.Module):
 			u2 = u2 + conv_fft_batch(H,x) - v
 			x_list.append(x)
 
-		return x_list[-1] #* alpha
+		return x_list[-1] * alpha if self.llh=='Poisson' else x_list[-1]

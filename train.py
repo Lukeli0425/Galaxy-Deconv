@@ -8,12 +8,12 @@ from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils import plot_loss
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
-def train(n_iters=8, llh='Poisson', PnP=True, 
-            n_epochs=10, lr=1e-4, survey='JWST', I=23.5, train_val_split=0.857, batch_size=32, 
-            model_save_path='./saved_models/', load_pretrain=False,
-            pretrained_file = None):
+def train(n_iters=8, llh='Poisson', PnP=True,
+          n_epochs=10, lr=1e-4, survey='LSST', I=23.5, train_val_split=0.857, batch_size=32,
+          model_save_path='./saved_models/', load_pretrain=False,
+          pretrained_file = None):
 
     logging.info(f'Start training unrolled {"PnP-" if PnP else ""}ADMM with {llh} likelihood on {survey}{I} data for {n_epochs} epochs.')
     train_loader, val_loader = get_dataloader(survey=survey, I=I, train_test_split=train_val_split, batch_size=batch_size)
@@ -42,7 +42,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
         for idx, ((obs, psf, alpha), gt) in enumerate(train_loader):
             optimizer.zero_grad()
             obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-            rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+            rec = model(obs, psf, alpha)
             # loss = loss_fn(gt.squeeze(dim=1), rec.squeeze(dim=1))
             loss = loss_fn(gt, rec)
 
@@ -57,7 +57,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
                 with torch.no_grad():
                     for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                         obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-                        rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+                        rec = model(obs, psf, alpha)
                         loss = loss_fn(gt.squeeze(dim=1), rec.squeeze(dim=1))
                         val_loss += loss.item()
 
@@ -98,7 +98,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
             logging.info(f'P4IP model saved to {os.path.join(model_save_path, model_file_name)}')
 
         # Plot loss curve
-        plot_loss(train_loss_list, val_loss_list, llh, PnP, n_iters, n_epochs, survey, I)
+        plot_loss(train_loss_list, val_loss_list, model_save_path, llh, PnP, n_iters, n_epochs, survey, I)
 
     return
 
@@ -123,5 +123,5 @@ if __name__ =="__main__":
           n_epochs=opt.n_epochs, lr=opt.lr,
           survey=opt.survey, I=opt.I, train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           load_pretrain=opt.load_pretrain,
-          model_save_path='./saved_models/',
-          pretrained_file='./saved_models/Poisson_PnP_8iters_LSST23.5_10epochs.pth')
+          model_save_path='./saved_models1/',
+          pretrained_file='./saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth')

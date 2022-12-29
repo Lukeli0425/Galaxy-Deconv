@@ -11,7 +11,7 @@ from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Richard_Lucy import Richard_Lucy
 from utils.utils import estimate_shear
 
-def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
+def test_psf_shear_err(result_save_path, methods, n_iters, model_files, n_gal, shear_err):
     logger = logging.getLogger('PSF shear error test')
     logger.info(f'Running PSF shear_error={shear_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -25,7 +25,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join('results/', method)
+        result_path = os.path.join(result_save_path, method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
         results_file = os.path.join(result_path, 'results_psf_shear_err.json')
@@ -99,7 +99,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err):
     
     return results
     
-def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
+def test_psf_seeing_err(result_save_path, methods, n_iters, model_files, n_gal, seeing_err):
     logger = logging.getLogger('PSF seeing error test')
     logger.info(f'Running PSF seeing_error={seeing_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -113,7 +113,7 @@ def test_psf_seeing_err(methods, n_iters, model_files, n_gal, seeing_err):
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join('results/', method)
+        result_path = os.path.join(result_save_path, method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
         results_file = os.path.join(result_path, 'results_psf_seeing_err.json')
@@ -207,15 +207,15 @@ if __name__ == "__main__":
                'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)']
     n_iters = [0, 0, 10, 20, 30, 50, 100, 1, 2, 4, 8]
     model_files = [None, None, None, None, None, None, None,
-                   "saved_models/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
-                   "saved_models/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
+                   "saved_models1/Poisson_PnP_1iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_2iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_4iters_LSST23.5_50epochs.pth",
+                   "saved_models1/Poisson_PnP_8iters_LSST23.5_50epochs.pth"]
 
     shear_errs=[0, 0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     for shear_err in shear_errs:
-        test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
+        test_psf_shear_err(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err)
     
     seeing_errs=[0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
     for seeing_err in seeing_errs:
-        test_psf_seeing_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, seeing_err=seeing_err)
+        test_psf_seeing_err(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, seeing_err=seeing_err)
