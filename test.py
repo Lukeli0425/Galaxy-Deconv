@@ -240,7 +240,7 @@ def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
     
     return results
 
-def test_time(methods, n_iters, model_files, n_gal):  
+def test_time(result_save_path, methods, n_iters, model_files, n_gal):  
     """Test the time of different models."""
     logger = logging.getLogger('time test')
     logger.info(f'Running time test with {n_gal} galaxies.\n')
@@ -251,7 +251,7 @@ def test_time(methods, n_iters, model_files, n_gal):
     
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join('results', method)
+        result_path = os.path.join(result_save_path, method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
         results_file = os.path.join(result_path, 'results.json')
@@ -360,10 +360,10 @@ if __name__ =="__main__":
                    "saved_models1/Gaussian_PnP_1iters_LSST23.5_50epochs.pth",
                    "saved_models1/Gaussian_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models1/Gaussian_PnP_4iters_LSST23.5_50epochs.pth",
-                   "saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth"]
+                   "saved_models1/Gaussian_PnP_8iters_LSST23.5_50epochs.pth"]
     snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
 
-    for snr in snrs:
-        test_shear(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+    # for snr in snrs:
+    #     test_shear(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
 
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_time(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)

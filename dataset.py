@@ -243,7 +243,7 @@ class Galaxy_Dataset(Dataset):
             np.random.shuffle(psf_names)
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
-        start_k = self.n_train
+        start_k = self.n_train + 6000
         for k, _ in zip(range(start_k, self.n_total), tqdm(range(start_k, self.n_total))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             rng = galsim.UniformDeviate(seed=random_seed+k+1) # Initialize the random number generator
@@ -300,7 +300,7 @@ class Galaxy_Dataset(Dataset):
                         torch.save(psf_noisy.clone(), os.path.join(self.data_path, f'psf_seeing_err{seeing_err}', f"psf_{self.I}_{k}.pth"))
             
             # Galaxy parameters 
-            sky_level = 100                                         # ADU / arcsec^2
+            sky_level = 1000                                         # ADU / arcsec^2
             gal_flux = 0.4e4 * np.exp(rng() * np.log(5e4/0.4e4))    # log uniform distribution
             gal_e = rng() * self.gal_max_shear  # shear of galaxy
             gal_beta = 2. * np.pi * rng()       # radians
@@ -333,7 +333,7 @@ class Galaxy_Dataset(Dataset):
 
             if k >= self.n_train:
                 # Simulate different SNR
-                for snr in [2, 5, 10, 20, 40, 60, 80, 100, 150, 200]:
+                for snr in [2, 3, 5, 10, 20, 40, 60, 80, 100, 150, 200]:
                     gal_flux = snr * (snr + np.sqrt((snr**2) + 4*sky_level*(self.fov_pixels**2)*(self.pixel_scale**2)))/2      
                     gal_image_snr, _ = get_COSMOS_Galaxy(catalog=self.real_galaxy_catalog, idx=idx, 
                                                     gal_flux=gal_flux, sky_level=sky_level, 

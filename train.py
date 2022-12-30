@@ -6,7 +6,7 @@ from torch.optim import Adam
 from dataset import get_dataloader
 from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
-from utils.utils import plot_loss
+from utils.utils_plot import plot_loss
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
