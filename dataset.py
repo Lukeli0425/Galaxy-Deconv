@@ -187,7 +187,7 @@ class Galaxy_Dataset(Dataset):
         # Create directory for the dataset
         if not os.path.exists(data_path):
             os.mkdir(data_path)
-        self.data_path = os.path.join(data_path, f'{self.survey}_{self.I}')
+        self.data_path = os.path.join(data_path, f'{self.survey}_{self.I}_new')
         if not os.path.exists(self.data_path):
             os.mkdir(self.data_path)
         if not os.path.exists(os.path.join(self.data_path, 'obs')): # create directory for obs images
