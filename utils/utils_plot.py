@@ -5,6 +5,41 @@ import logging
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
+
+def get_color(method):
+    
+    if 'Gaussian' in method:
+        color = 'xkcd:purple'
+    if 'Unrolled_ADMM' in method:
+        color = 'xkcd:blue'
+    elif 'Richard-Lucy' in method:
+        color = 'xkcd:green' 
+    elif method == 'FPFS':
+        color = 'xkcd:red'
+    elif method == 'ngmix':
+        color = 'xkcd:pink'
+    elif method == 'No_Deconv':
+        color = 'black'
+        
+    return color
+
+def get_label(method):
+    
+    if 'Gaussian' in method:
+        label = 'Unrolled ADMM (Gaussian)'
+    elif 'Unrolled_ADMM' in method:
+        label = 'Unrolled ADMM (Poisson)'
+    elif 'Richard-Lucy' in method:
+        label = 'Richardson-Lucy'
+    elif method == 'FPFS':
+        label = 'Fourier Division'
+    elif method == 'ngmix':
+        label = 'ngmix'
+    elif method == 'No_Deconv':
+        label = 'No Deconv'
+        
+    return label
+
 def plot_loss(train_loss, val_loss, model_save_path, llh, PnP, n_iters, n_epochs, survey, I):
     n_epochs = len(train_loss)
     plt.figure(figsize=(12,7))

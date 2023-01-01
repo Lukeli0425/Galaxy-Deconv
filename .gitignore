@@ -2,7 +2,7 @@
 data/
 dataset/
 webbpsf-data/
-# saved_models/
+galsim-examples/
 ngmix/
 score/
 alpha-transform/
