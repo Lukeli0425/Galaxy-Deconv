@@ -3,8 +3,17 @@ import json
 import logging
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, random_split
+
+
+def down_sample(input, rate=4):
+    weight = torch.ones([1,1,rate,rate]) / (rate**2) # Average filter.
+    input = input.unsqueeze(0).unsqueeze(0)
+    output = F.conv2d(input=input, weight=weight, stride=rate).squeeze(0).squeeze(0)
+    
+    return output
 
 
 class Galaxy_Dataset(Dataset):

@@ -9,13 +9,13 @@ from torch.fft import fft2, ifft2, fftshift, ifftshift
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
 import galsim
-from utils.utils import PSNR
+from utils.utils_data import down_sample
 
 
 def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
                  atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2,
                  g1_err=0, g2_err=0,
-                 fov_pixels=48, pixel_scale=0.2):
+                 fov_pixels=48, pixel_scale=0.2, upsample=4):
     """Simulate a PSF from a ground-based observation.
 
     Args:
@@ -36,6 +36,7 @@ def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt
         g2_err (float, optional): The second component of extra shear applied to the overall PSF to simulated a erroneously estimated PSF. Defaults to 0.
         fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to 48.
         pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to 0.2.
+        upsample (int, optional): Upsampling factor for the PSF image. Defaults to 4.
 
     Returns:
         ```torch.Tensor```: Simulated PSF image with shape (fov_pixels, fov_pixels).
@@ -60,8 +61,8 @@ def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt
     psf = psf.shear(g1=g1_err, g2=g2_err) 
 
     # Draw PSF images.
-    psf_image = galsim.ImageF(fov_pixels, fov_pixels)
-    psf.drawImage(psf_image, scale=pixel_scale, method='auto')
+    psf_image = galsim.ImageF(fov_pixels*upsample, fov_pixels*upsample)
+    psf.drawImage(psf_image, scale=pixel_scale/upsample, method='auto')
     psf_image = torch.from_numpy(psf_image.array)
          
     return psf_image
@@ -95,9 +96,9 @@ def get_Webb_PSF(fov_pixels, insts=['NIRCam', 'NIRSpec','NIRISS', 'MIRI', 'FGS']
 
     return psf_names, psfs
 
-def get_COSMOS_Galaxy(cosmos_catalog, idx, 
+def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx, 
                       gal_g, gal_beta, theta, gal_mu, dx, dy, 
-                      fov_pixels, pixel_scale):
+                      fov_pixels=48, pixel_scale=0.2, upsample=4):
     """Simulate a background galaxy with data from COSMOS Catalog.
 
     Args:
@@ -109,16 +110,17 @@ def get_COSMOS_Galaxy(cosmos_catalog, idx,
         gal_beta (float): Position angle (in radians) of the shear to apply, twice the phase of a complex valued shear.
         theta (float): Rotation angle of the galaxy (in radians, positive means anticlockwise).
         gal_mu (float): The lensing magnification to apply.
-        fov_pixels (int): Width of the simulated images in pixels.
-        pixel_scale (float): Pixel scale of the simulated image determining the resolution.
-        rng (```galsim.UniformDeviate```): A galsim random number generator object for simulation.
+        fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to 48.
+        pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to 0.2.
+        upsample (int, optional): Upsampling factor for galaxy image. Defaults to 4.
 
     Returns:
-        ```torch.Tensor```: Simulated galaxy image of shape (fov_pixels, fov_pixels).
+        ```torch.Tensor```: Simulated galaxy image of shape (fov_pixels*upsample, fov_pixels*upsample).
     """
 
     # Read out real galaxy from the catalog.
-    gal_ori = cosmos_catalog.makeGalaxy(idx, gal_type='parametric', sersic_prec=0.) # Use parametric model
+    # gal_ori = cosmos_catalog.makeGalaxy(idx, gal_type='parametric', sersic_prec=0.05) # Use parametric model
+    gal_ori = galsim.RealGalaxy(real_galaxy_catalog, index = idx)
     
     # Add random rotation, shear, and magnification.
     gal = gal_ori.rotate(theta * galsim.radians) # Rotate by a random angle
@@ -126,57 +128,21 @@ def get_COSMOS_Galaxy(cosmos_catalog, idx,
     gal = gal.magnify(gal_mu) # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1, this conserves surface brightness, so it scales both the area and flux.
     
     # Draw galaxy image.
-    gal_image = galsim.ImageF(fov_pixels, fov_pixels)
-    try:
-        gal.drawImage(gal_image, scale=pixel_scale, offset=(dx,dy), method='auto')
-    except:
-        psf_hst = cosmos_catalog.getPSF(idx)
-        gal = galsim.Convolve([psf_hst, gal]) # Concolve wth original PSF of HST
-        gal.drawImage(gal_image, scale=pixel_scale, offset=(dx,dy), method='auto')
+    gal_image = galsim.ImageF(fov_pixels*upsample, fov_pixels*upsample)
+    # try:
+    #     gal.drawImage(gal_image, scale=pixel_scale, offset=(dx,dy), method='auto')
+    # except:
+    psf_hst = real_galaxy_catalog.getPSF(idx)
+    gal = galsim.Convolve([psf_hst, gal]) # Concolve wth original PSF of HST.
+    gal.drawImage(gal_image, scale=pixel_scale/upsample, offset=(dx,dy), method='auto')
         
-    gal_image = torch.from_numpy(gal_image.array)
+    gal_image = torch.from_numpy(gal_image.array) # Convert to PyTorch.Tensor.
     
     return gal_image
 
 
-class Galaxy_Dataset(Dataset):
-    """Simulated Galaxy Image Dataset inherited from torch.utils.data.Dataset."""
-    def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/', COSMOS_path='/mnt/WD6TB/tianaoli/', 
-                 survey='LSST', I=23.5, fov_pixels=0, gal_max_shear=0.5, 
-                 train=True, train_split=0.7, 
-                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/',
-                 pixel_scale=0.2, atmos_max_shear=0.25, seeing=0.67):
-        """"""
-        """Construction function for the PyTorch Galaxy Dataset.
-
-        Args:
-            survey (str): The telescope to simulate, 'LSST' or 'JWST'.
-            I (float): A keyword argument that can be used to specify the sample to use, "23.5" or "25.2".
-            fov_pixels (int): Width of the simulated images in pixels.
-            gal_max_shear (float): Maximum shear applied to galaxies.
-            train (bool): Whether the dataset is generated for training or testing.
-            train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to 0.7.
-            pixel_scale (float, optional): _description_. Defaults to 0.
-            atmos_max_shear (float, optional): Maximum shear applied to atmospheric PSFs. Defaults to 0.25.
-            seeing (float, optional): Average seeing. Defaults to 0.7.
-            data_path (str, optional): Directory to save the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/'.
-            COSMOS_path (str, optional): Path to the COSMOS data. Defaults to '/mnt/WD6TB/tianaoli/'.
-        """
-        
-        super(Galaxy_Dataset, self).__init__()
-        # logger.info(f'Constructing {survey} Galaxy dataset.')
-        
-        # Initialize parameters
-        train= train # Using train data or test data
-        psf_folder = psf_folder # Path for PSFs
-        obs_folder = obs_folder
-        gt_folder = gt_folder
-        COSMOS_dir = os.path.join(COSMOS_path, f"COSMOS_{I}_training_sample/")
-        train_split = train_split # n_train/n_total
-
-
 def generate_data(data_path, train_split=0.7,
-                  survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2,
+                  survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4,
                   snrs = [10, 15, 20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                   fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]):
@@ -189,6 +155,7 @@ def generate_data(data_path, train_split=0.7,
         I (str, optional): The sample in COSMOS data to use, "23.5" or "25.2". Defaults to '23.5'.
         fov_pixels (int, optional):  Size of the simulated images in pixels.. Defaults to 48.
         pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
+        upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
         snrs (list, optional): The list of SNR to be simulated for testing. Defaults to [10, 15, 20, 40, 60, 80, 100, 150, 200, 300].
         shear_errs (list, optional): The list of systematic PSF shear error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2].
         fwhm_errs (list, optional): The list of systematic PSF FWHM error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3].
@@ -211,8 +178,8 @@ def generate_data(data_path, train_split=0.7,
 
     # Read the catalog.
     try:
-        real_galaxy_catalog = galsim.RealGalaxyCatalog(sample=I)
-        cosmos_catalog = galsim.COSMOSCatalog(sample=I)
+        real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
+        cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         n_total = cosmos_catalog.nobjects
         logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
     except:
@@ -223,7 +190,7 @@ def generate_data(data_path, train_split=0.7,
     n_train = int(train_split * n_total)
     
     info = {'survey':survey, 'I':I, 'fov_pixels':fov_pixels, 'pixel_scale':pixel_scale,
-            'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence}
+            'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence.tolist()}
     info_file = os.path.join(data_path, f'info.json')
     with open(info_file, 'w') as f:
         json.dump(info, f)
@@ -242,7 +209,7 @@ def generate_data(data_path, train_split=0.7,
     freqs = np.array([fwhm_table(fwhm) for fwhm in fwhms]) / fwhm_table.integrate() # Normalization.
     rng_fwhm = galsim.DistDeviate(seed=rng_base, function=galsim.LookupTable(x=fwhms, f=freqs, interpolant='spline'))
     rng_gal_shear = galsim.DistDeviate(seed=rng, function=lambda x: x, x_min=0.01, x_max=0.05)
-    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/x, x_min=10, x_max=300) # Log-uniform Distribution.
+    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.8), x_min=10, x_max=300, npoints=1000) # Log-uniform Distribution.
     
     # Calculate all Webb PSFs and split for train/test
     # if survey == 'JWST':
@@ -287,7 +254,7 @@ def generate_data(data_path, train_split=0.7,
         theta = 2. * np.pi * rng()          # Rotation angle (radians), U(0,2*pi).
         dx = 2 * rng() - 1                  # Offset along x axis, U(-1,1).
         dy = 2 * rng() - 1                  # Offset along y axis, U(-1,1).
-        gal_image = get_COSMOS_Galaxy(catalog=real_galaxy_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
+        gal_image = get_COSMOS_Galaxy(cosmos_catalog=cosmos_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
                                       gal_g=gal_g, gal_beta=gal_beta,
                                       theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
                                       fov_pixels=fov_pixels, pixel_scale=pixel_scale)
@@ -295,14 +262,20 @@ def generate_data(data_path, train_split=0.7,
         read_noise = 0.05 + 0.1 * rng()     # Standrad deviation of Gaussain read noise (ADU/pixel), U(0.05, 0.15).
         sky_level_pixel = 5 + rng() * 40    # Sky level (ADU/pixel), U(5,45).
         snr = rng_snr()
-        alpha = snr * torch.sqrt((sky_level_pixel+read_noise**2)/(gal_image**2).sum()) # Scale the flux of galaxy to meet SNR.
+        gal_image_down = down_sample(gal_image, upsample) # Downsample galaxy image for SNR calculation.
+        alpha = snr * torch.sqrt((sky_level_pixel+read_noise**2)/(gal_image_down**2).sum()) # Scale the flux of galaxy to meet SNR.
         gt = alpha * gal_image + sky_level_pixel 
         
         # Convolution using FFT.
         conv = ifftshift(ifft2(fft2(psf) * fft2(gt))).real
-        conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero.
+        
+        # Downsample images to desired pixel scale.
+        conv = down_sample(conv)
+        psf = down_sample(psf)
+        gt = down_sample(gt)
 
         # Add CCD noise (Poisson + Gaussian).
+        conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero.
         obs = torch.poisson(conv) + torch.normal(mean=torch.zeros_like(conv), std=read_noise*torch.ones_like(conv))
         obs = torch.max(torch.zeros_like(obs), obs) # Set negative pixels to zero.
 
@@ -315,7 +288,7 @@ def generate_data(data_path, train_split=0.7,
             # Simulate images with different SNR levels.
             for snr in snrs:
 
-                alpha = snr * torch.sqrt((sky_level_pixel+read_noise**2)/(gal_image**2).sum()) # Scale the flux of galaxy to meet SNR
+                alpha = snr * torch.sqrt((sky_level_pixel+read_noise**2)/(gal_image_down**2).sum()) # Scale the flux of galaxy to meet SNR
                 gt_snr = alpha * gal_image + sky_level_pixel 
         
                 # Convolution using FFT.
@@ -363,17 +336,17 @@ def generate_data(data_path, train_split=0.7,
             gal_ori_image = real_galaxy_catalog.getGalImage(idx) # Read out original HST image for visualization
             plt.figure(figsize=(10,10))
             plt.subplot(2,2,1)
-            plt.imshow(gal_ori_image.array)
+            plt.imshow(gal_ori_image.array, cmap='magma')
             plt.title('Original Galaxy')
             plt.subplot(2,2,2)
-            plt.imshow(gal_image)
+            plt.imshow(gt, cmap='magma')
             plt.title('Ground Truth')
             plt.subplot(2,2,3)
-            plt.imshow(psf_image)
+            plt.imshow(psf, cmap='magma')
             plt.title('PSF\n($g_1={:.3f}$)'.format(atmos_fwhm) if survey=='LSST' else f'PSF: {psf_name}')
             plt.subplot(2,2,4)
-            plt.imshow(obs)
-            plt.title('Observed Galaxy')
+            plt.imshow(obs, cmap='magma')
+            plt.title('Observed Galaxy (SNR={:.1f})'.format(snr))
             plt.savefig(os.path.join(data_path, 'visualization', f"vis_{k}.jpg"), bbox_inches='tight')
             plt.close()
     
@@ -389,10 +362,11 @@ if __name__ == "__main__":
     parser.add_argument('--I', type=str, default='23.5', choices=['23.5', '25.2'])
     parser.add_argument('--fov_pixels', type=int, default=48)
     parser.add_argument('--pixel_scale', type=float, default=0.2)
+    parser.add_argument('--upsample', type=int, default=4)
     opt = parser.parse_args()
     
     generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train_split=0.7,
-                  survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale,
+                  survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
                   snrs = [10, 15, 20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                   fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
