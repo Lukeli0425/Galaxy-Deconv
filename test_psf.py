@@ -16,7 +16,7 @@ def test_psf_shear_err(result_save_path, methods, n_iters, model_files, n_gal, s
     logger.info(f'Running PSF shear_error={shear_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err{shear_err}/' if shear_err > 0 else 'psf/')
+    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_shear_err_{shear_err}/' if shear_err > 0 else 'psf/')
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         
     psf_delta = np.zeros([48, 48])
@@ -104,7 +104,7 @@ def test_psf_seeing_err(result_save_path, methods, n_iters, model_files, n_gal, 
     logger.info(f'Running PSF seeing_error={seeing_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_seeing_err{seeing_err}/' if seeing_err > 0 else 'psf/')
+    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder=f'psf_fwhm_err_{seeing_err}/' if seeing_err > 0 else 'psf/')
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
     
     psf_delta = np.zeros([48, 48])
@@ -116,7 +116,7 @@ def test_psf_seeing_err(result_save_path, methods, n_iters, model_files, n_gal, 
         result_path = os.path.join(result_save_path, method)
         if not os.path.exists(result_path):
             os.mkdir(result_path)
-        results_file = os.path.join(result_path, 'results_psf_seeing_err.json')
+        results_file = os.path.join(result_path, 'results_psf_fwhm_err.json')
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
