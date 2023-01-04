@@ -5,6 +5,7 @@ import argparse
 from tqdm import tqdm
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.fft import fft2, ifft2, fftshift, ifftshift
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
