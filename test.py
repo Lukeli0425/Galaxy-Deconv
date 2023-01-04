@@ -7,8 +7,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import DataLoader
-from dataset import Galaxy_Dataset
+from utils.utils_data import get_dataloader
 from models.Wiener import Wiener
 from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
@@ -58,6 +57,7 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
     
     test_dataset = Galaxy_Dataset(train=False, survey=survey, I=I)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP)
     model.to(device)
@@ -136,14 +136,14 @@ def test(n_iters, llh, PnP, n_epochs, survey, I):
     return results
 
 
-def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
-    logger = logging.getLogger('shear test')
+def test_shear(methods, n_iters, model_files, n_gal, snr,
+               data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):
+    logger = logging.getLogger('Shear test')
     logger.info(f'Running shear test with {n_gal} SNR={snr} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, 
-                                  obs_folder=f'obs_{snr}', gt_folder=f'gt_{snr}')
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    test_loader = get_dataloader(data_path=data_path, train=False, 
+                                 psf_folder='psf/', obs_folder=f'obs_{snr}', gt_folder=f'gt_{snr}')
     
     psf_delta = np.zeros([48, 48])
     psf_delta[23,23] = 1
@@ -151,10 +151,10 @@ def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join(result_save_path, method)
-        if not os.path.exists(result_path):
-            os.mkdir(result_path)
-        results_file = os.path.join(result_path, f'results.json')
+        result_folder = os.path.join(result_path, method)
+        if not os.path.exists(result_folder):
+            os.mkdir(result_folder)
+        results_file = os.path.join(result_folder, f'results.json')
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
@@ -183,8 +183,8 @@ def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file} model!')   
-            model.eval()     
+                logger.error(f'Failed loading in {model_file} model!')
+            model.eval()
     
         rec_shear = []
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
@@ -220,13 +220,6 @@ def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
                     rec = model(obs, psf, alpha)
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(rec, psf_delta))
-            # logging.info('Estimating shear: [{}/{}]  gt:({:.3f},{:.3f})  obs:({:.3f},{:.3f})  rec:({:.3f},{:.3f})'.format(
-            #     idx+1, len(test_loader),
-            #     gt_shear[idx][0], gt_shear[idx][1],
-            #     obs_shear[idx][0], obs_shear[idx][1],
-            #     rec_shear[idx][0], rec_shear[idx][1]))
-            if idx >= n_gal:
-                break
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
         results[str(snr)]['rec_shear'] = rec_shear.tolist()
@@ -236,11 +229,12 @@ def test_shear(result_save_path, methods, n_iters, model_files, n_gal, snr):
         # Save results to json file
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(f"Test results saved to {results_file}.\n")
+        logger.info(f"Shear test results saved to {results_file}.\n")
     
     return results
 
-def test_time(result_save_path, methods, n_iters, model_files, n_gal):  
+def test_time(methods, n_iters, model_files, n_gal,
+              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):  
     """Test the time of different models."""
     logger = logging.getLogger('time test')
     logger.info(f'Running time test with {n_gal} galaxies.\n')
@@ -251,10 +245,10 @@ def test_time(result_save_path, methods, n_iters, model_files, n_gal):
     
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
-        result_path = os.path.join(result_save_path, method)
-        if not os.path.exists(result_path):
-            os.mkdir(result_path)
-        results_file = os.path.join(result_path, 'results.json')
+        result_folder = os.path.join(result_path, method)
+        if not os.path.exists(result_folder):
+            os.mkdir(result_folder)
+        results_file = os.path.join(result_folder, 'results.json')
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
@@ -272,17 +266,19 @@ def test_time(result_save_path, methods, n_iters, model_files, n_gal):
             model.to(device)
             model.eval() 
         elif 'ADMM' in method:
-            model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+            if 'Gaussian' in method:
+                model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
+            else:
+                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
-            model.eval()  
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file} model!')     
+                logger.error(f'Failed loading in {model_file} model!')
+            model.eval()    
         
-        test_dataset = Galaxy_Dataset(train=False, survey='LSST', I=23.5, psf_folder='psf/')
-        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        test_loader = get_dataloader(data_path=data_path, train=False)
 
         rec_shear = []
         time_start = time.time()
@@ -317,8 +313,7 @@ def test_time(result_save_path, methods, n_iters, model_files, n_gal):
                     rec = model(obs, psf, alpha) 
                     rec = rec.squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     rec_shear.append(estimate_shear(rec, psf_delta))
-            if idx >= n_gal:
-                break
+                    
         time_end = time.time()
         
         logger.info('Tested {} on {} galaxies: Time = {:.3f}s.'.format(method, n_gal, time_end-time_start))
@@ -327,25 +322,19 @@ def test_time(result_save_path, methods, n_iters, model_files, n_gal):
         # Save results to json file
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(f"Test results saved to {results_file}.\n")  
+        logger.info(f"Time test results saved to {results_file}.\n")  
     return results
 
 if __name__ =="__main__":
     logging.basicConfig(level=logging.INFO)
     
     parser = argparse.ArgumentParser(description='Arguments for testing.')
-    # parser.add_argument('--n_iters', type=int, default=8)
-    # parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
-    # parser.add_argument('--PnP', action="store_true")
-    # parser.add_argument('--n_epochs', type=int, default=30)
-    # parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
-    # parser.add_argument('--I', type=float, default=23.5, choices=[23.5, 25.2])
-    # parser.add_argument('--snr', type=int, default=20, choices=[20, 100])
     parser.add_argument('--n_gal', type=int, default=10000)
+    parser.add_argument('--result_path', type=str, default='results/')
     opt = parser.parse_args()
     
-    if not os.path.exists('./results1/'):
-        os.mkdir('./results1/')
+    if not os.path.exists(opt.result_path):
+        os.mkdir(opt.result_path)
     
     methods = ['No_Deconv', 'FPFS', 'Wiener', 'ngmix', 
                'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
@@ -361,9 +350,11 @@ if __name__ =="__main__":
                    "saved_models1/Gaussian_PnP_2iters_LSST23.5_50epochs.pth",
                    "saved_models1/Gaussian_PnP_4iters_LSST23.5_50epochs.pth",
                    "saved_models1/Gaussian_PnP_8iters_LSST23.5_50epochs.pth"]
-    snrs = [5, 10, 20, 40, 60, 80, 100, 150, 200]
+    snrs = [10, 20, 40, 60, 80, 100, 150, 200]
 
-    # for snr in snrs:
-    #     test_shear(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr)
+    for snr in snrs:
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path=opt.result_path)
 
-    test_time(result_save_path='results1/', methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path=opt.result_path)
