@@ -123,5 +123,5 @@ if __name__ =="__main__":
           n_epochs=opt.n_epochs, lr=opt.lr,
           survey=opt.survey, I=opt.I, train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           load_pretrain=opt.load_pretrain,
-          model_save_path='./saved_models1/',
+          model_save_path='./saved_models2/',
           pretrained_file='./saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth')

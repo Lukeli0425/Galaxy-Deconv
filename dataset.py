@@ -117,13 +117,13 @@ def get_COSMOS_Galaxy(catalog, idx, gal_flux, s_hlr, s_n, gal_g, gal_beta, theta
     """
     
     # Read out real galaxy from catalog
-    # gal_ori = galsim.RealGalaxy(catalog, index = idx, flux = gal_flux)
-    # psf_ori = catalog.getPSF(i=idx)
+    gal_ori = galsim.RealGalaxy(catalog, index = idx, flux = gal_flux)
+    psf_ori = catalog.getPSF(i=idx)
     gal_ori_image = catalog.getGalImage(idx)
     # psf_ori_image = catalog.getPSFImage(idx)
-    # gal_ori = galsim.Convolve([psf_ori, gal_ori]) # concolve wth original PSF of HST
+    gal_ori = galsim.Convolve([psf_ori, gal_ori]) # concolve wth original PSF of HST
     
-    gal_ori = galsim.Sersic(n=s_n, half_light_radius=s_hlr, flux=gal_flux)
+    # gal_ori = galsim.Sersic(n=s_n, half_light_radius=s_hlr, flux=gal_flux)
     
     gal = gal_ori.rotate(theta * galsim.radians) # Rotate by a random angle
     gal = gal.shear(g=gal_g, beta=gal_beta * galsim.radians) # Apply the desired shear
@@ -202,8 +202,8 @@ class Galaxy_Dataset(Dataset):
         # Read in real galaxy catalog
         try:
             self.real_galaxy_catalog = galsim.RealGalaxyCatalog(dir=self.COSMOS_dir, sample=str(self.I))
-            self.info = fits.getdata(os.path.join(self.COSMOS_dir, f'real_galaxy_catalog_{self.I}_fits.fits'), 1)
-            self.ind = np.where(self.info['viable_sersic'] == 1)
+            self.cosmos_info = fits.getdata(os.path.join(self.COSMOS_dir, f'real_galaxy_catalog_{self.I}_fits.fits'), 1)
+            self.ind = np.where((self.cosmos_info['viable_sersic']==1))# & (self.cosmos_info['sersicfit'][:,2]>0.3) & (self.cosmos_info['sersicfit'][:,2]<6.2))
             self.n_total = len(self.ind[0])
             logging.info(f'Successfully read in {self.n_total} real galaxies from {self.COSMOS_dir}.')
         except:
@@ -224,7 +224,7 @@ class Galaxy_Dataset(Dataset):
             self.info = {'survey':survey, 'I':I, 'fov_pixels':fov_pixels, 'pixel_scale':pixel_scale, 
                          'gal_max_shear':gal_max_shear, 'atmos_max_shear':atmos_max_shear, 'seeing':seeing}      
             # Generate random sequence for data
-            self.sequence = self.ind[0]
+            self.sequence = self.ind[0].tolist()
             np.random.shuffle(self.sequence)
             self.n_train = int(self.train_split * self.n_total)
             self.info['n_total'] = self.n_total
@@ -242,11 +242,11 @@ class Galaxy_Dataset(Dataset):
         logging.info(f'Simulating {self.survey} images.')
         
         random_seed = 3485
-        psnr_list = []
+        # psnr_list = []
         
-        fluxs = self.info['FLUX'][:,0]
-        s_hlrs = self.info['HLR'][:,0] # In arcsec
-        s_ns = self.info['sersicfit'][:,2] # Sersic index
+        fluxs = self.cosmos_info['FLUX'][:,0]
+        s_hlrs = self.cosmos_info['HLR'][:,0] # In arcsec
+        s_ns = self.cosmos_info['sersicfit'][:,2] # Sersic index
 
         # Random nmber generators for the parameters
         rng_base = galsim.BaseDeviate(seed=random_seed)
@@ -268,7 +268,7 @@ class Galaxy_Dataset(Dataset):
             np.random.shuffle(psf_names)
             train_psfs = psf_names[:int(len(psf_names) * self.train_split)]
             test_psfs = psf_names[int(len(psf_names) * self.train_split):]
-        start_k = self.n_train + 6000
+        # start_k = self.n_train + 6000
         for k, _ in zip(range(start_k, self.n_total), tqdm(range(start_k, self.n_total))):
             idx = self.sequence[k] # index pf galaxy in the catalog
             
@@ -309,11 +309,11 @@ class Galaxy_Dataset(Dataset):
                         g1_err = shear_err if rng() > 0.5 else shear_err
                         g2_err = shear_err if rng() > 0.5 else shear_err
                         psf_noisy, psf_image_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                                 atmos_fwhm, atmos_e, atmos_beta, g1_err, g2_err,
-                                                 self.fov_pixels, pixel_scale=pixel_scale)
+                                              atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, g1_err, g2_err,
+                                              self.fov_pixels, pixel_scale) 
                         # save PSF with error
-                        if not os.path.exists(os.path.join(self.data_path, f'psf_shear_err{shear_err}')):
-                            os.mkdir(os.path.join(self.data_path, f'psf_shear_err{shear_err}'))
+                        if not os.path.exists(os.path.join(self.data_path, f'psf_shear_err_{shear_err}')):
+                            os.mkdir(os.path.join(self.data_path, f'psf_shear_err_{shear_err}'))
                         torch.save(psf_image_noisy.array, os.path.join(self.data_path, f'psf_shear_err_{shear_err}', f"psf_{self.I}_{k}.pth"))
                         
                     # Simulate PSF with seeing error
@@ -322,11 +322,11 @@ class Galaxy_Dataset(Dataset):
                         fwhm = atmos_fwhm + seeing_err if rng() > 0.5 else atmos_fwhm - seeing_err
                         fwhm = fwhm + 2*seeing_err if fwhm < 0 else fwhm
                         psf_noisy, psf_image_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                                 fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0, 
-                                                 self.fov_pixels, pixel_scale)
+                                              atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0,
+                                              self.fov_pixels, pixel_scale) 
                         # save PSF with error
-                        if not os.path.exists(os.path.join(self.data_path, f'psf_seeing_err{seeing_err}')):
-                            os.mkdir(os.path.join(self.data_path, f'psf_seeing_err{seeing_err}'))
+                        if not os.path.exists(os.path.join(self.data_path, f'psf_seeing_err_{seeing_err}')):
+                            os.mkdir(os.path.join(self.data_path, f'psf_seeing_err_{seeing_err}'))
                         torch.save(psf_image_noisy.array, os.path.join(self.data_path, f'psf_seeing_err_{seeing_err}', f"psf_{self.I}_{k}.pth"))
             
             # Galaxy parameters 
@@ -368,8 +368,8 @@ class Galaxy_Dataset(Dataset):
             obs_image.addNoiseSNR(noise=noise, snr=snr, preserve_flux=True)
 
             # Save images
-            psnr = PSNR(obs, gal_image)
-            psnr_list.append(psnr)
+            # psnr = PSNR(obs_image.array, gal_image.array)
+            # psnr_list.append(psnr)
             torch.save(gal_image.array+sky_level_pixel, os.path.join(self.data_path, 'gt', f"gt_{self.I}_{k}.pth"))
             torch.save(psf_image.array, os.path.join(self.data_path, 'psf', f"psf_{self.I}_{k}.pth"))
             torch.save(obs_image.array+sky_level_pixel, os.path.join(self.data_path, 'obs', f"obs_{self.I}_{k}.pth"))
@@ -384,7 +384,6 @@ class Galaxy_Dataset(Dataset):
                                                     gal_g=gal_g, gal_beta=gal_beta, 
                                                     theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
                                                     fov_pixels=self.fov_pixels, pixel_scale=pixel_scale)
-
                     # # Convolution via FFT
                     # conv = ifftshift(ifft2(fft2(psf_image) * fft2(gal_image_snr))).real
                     # conv = torch.max(torch.zeros_like(conv), conv) # set negative pixels to zero
@@ -412,23 +411,23 @@ class Galaxy_Dataset(Dataset):
             if k < 50:
                 plt.figure(figsize=(10,10))
                 plt.subplot(2,2,1)
-                plt.imshow(gal_orig)
+                plt.imshow(gal_orig, cmap='magma')
                 plt.title('Original Galaxy')
                 plt.subplot(2,2,2)
-                plt.imshow(gal_image)
+                plt.imshow(gal_image.array, cmap='magma')
                 plt.title('Simulated Galaxy\n($g_1={:.3f}$, $g_2={:.3f}$)'.format(gal_shear.g1, gal_shear.g2))
                 plt.subplot(2,2,3)
-                plt.imshow(psf_image)
+                plt.imshow(psf_image.array, cmap='magma')
                 plt.title('PSF\n($g_1={:.3f}$, $g_2={:.3f}$, FWHM={:.2f})'.format(atmos_shear.g1, atmos_shear.g2, atmos_fwhm) if self.survey=='LSST' else f'PSF: {psf_name}')
                 plt.subplot(2,2,4)
-                plt.imshow(obs)
-                plt.title('Observed Galaxy\n($PSNR={:.2f}$)'.format(psnr))
+                plt.imshow(obs_image.array, cmap='magma')
+                plt.title('Observed Galaxy')
                 plt.savefig(os.path.join(self.data_path, 'visualization', f"{self.survey}_{self.I}_{k}.jpg"), bbox_inches='tight')
                 plt.close()
         
-        self.info['PSNR'] = psnr_list
-        with open(self.info_file, 'w') as f:
-            json.dump(self.info, f)
+        # self.info['PSNR'] = psnr_list
+        # with open(self.info_file, 'w') as f:
+        #     json.dump(self.info, f)
 
     def __len__(self):
         return self.n_train if self.train else self.n_test
@@ -437,16 +436,16 @@ class Galaxy_Dataset(Dataset):
         idx = i if self.train else i + self.n_train
         
         psf_path = os.path.join(self.data_path, self.psf_folder)
-        psf = torch.load(os.path.join(psf_path, f"psf_{self.I}_{idx}.pth")).unsqueeze(0)
+        psf = torch.from_numpy(torch.load(os.path.join(psf_path, f"psf_{self.I}_{idx}.pth"))).unsqueeze(0)
 
         obs_path = os.path.join(self.data_path, self.obs_folder)
-        obs = torch.load(os.path.join(obs_path, f"obs_{self.I}_{idx}.pth")).unsqueeze(0)
+        obs = torch.from_numpy(torch.load(os.path.join(obs_path, f"obs_{self.I}_{idx}.pth"))).unsqueeze(0)
         # obs = (obs - obs.min())/(obs.max() - obs.min())
         alpha = obs.ravel().mean().float()
 
         
         gt_path = os.path.join(self.data_path, self.gt_folder)
-        gt = torch.load(os.path.join(gt_path, f"gt_{self.I}_{idx}.pth")).unsqueeze(0)
+        gt = torch.from_numpy(torch.load(os.path.join(gt_path, f"gt_{self.I}_{idx}.pth"))).unsqueeze(0)
         # gt = (gt - gt.min())/(gt.max() - gt.min())
 
         alpha = torch.Tensor(alpha).view(1,1,1)
