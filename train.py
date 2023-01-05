@@ -8,7 +8,7 @@ from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils_plot import plot_loss
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 def train(n_iters=8, llh='Poisson', PnP=True,
           n_epochs=10, lr=1e-4, 
@@ -116,8 +116,10 @@ if __name__ =="__main__":
     parser.add_argument('--load_pretrain', action="store_true")
     opt = parser.parse_args()
 
+    # from time import sleep
+    # sleep(3600*2.8)
 
     train(n_iters=opt.n_iters, llh=opt.llh, PnP=True,
           n_epochs=opt.n_epochs, lr=opt.lr,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models1/', load_pretrain=opt.load_pretrain, pretrained_file='./saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth')
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          model_save_path='./saved_models2/', load_pretrain=opt.load_pretrain, pretrained_file='./saved_models1/Gaussian_PnP_8iters_LSST23.5_40epochs.pth')

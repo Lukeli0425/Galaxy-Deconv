@@ -5,9 +5,7 @@ import argparse
 from tqdm import tqdm
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch.fft import fft2, ifft2, fftshift, ifftshift
-from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
 import galsim
 from utils.utils_data import down_sample
@@ -33,14 +31,14 @@ def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt
         spher (float): Spherical aberration in units of incident light wavelength.
         trefoil1 (float): Trefoil along y axis in units of incident light wavelength.
         trefoil2 (float): Trefoil along x axis in units of incident light wavelength.
-        g1_err (float, optional): The first component of extra shear applied to the overall PSF to simulated a erroneously estimated PSF. Defaults to 0.
-        g2_err (float, optional): The second component of extra shear applied to the overall PSF to simulated a erroneously estimated PSF. Defaults to 0.
-        fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to 48.
-        pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to 0.2.
-        upsample (int, optional): Upsampling factor for the PSF image. Defaults to 4.
+        g1_err (float, optional): The first component of extra shear applied to the overall PSF to simulated a erroneously estimated PSF. Defaults to `0`.
+        g2_err (float, optional): The second component of extra shear applied to the overall PSF to simulated a erroneously estimated PSF. Defaults to `0`.
+        fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to `48`.
+        pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to `0.2`.
+        upsample (int, optional): Upsampling factor for the PSF image. Defaults to `4`.
 
     Returns:
-        ```torch.Tensor```: Simulated PSF image with shape (fov_pixels, fov_pixels).
+        `torch.Tensor`: Simulated PSF image with shape `(fov_pixels*upsample, fov_pixels*upsample)`.
     """
 
     # Atmospheric PSF
@@ -103,7 +101,7 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     """Simulate a background galaxy with data from COSMOS Catalog.
 
     Args:
-        cosmos_catalog (```galsim.COSMOSCatalog```): A ```galsim.COSMOSCatalog``` object, from which the parametric galaxies are read out.
+        cosmos_catalog (`galsim.COSMOSCatalog`): A `galsim.COSMOSCatalog` object, from which the parametric galaxies are read out.
         idx (int): Index of the chosen galaxy in the catalog.
         gal_flux (float): Total flux of the galaxy in the simulated image.
         sky_level (float): Skylevel in the simulated image.
@@ -111,12 +109,12 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
         gal_beta (float): Position angle (in radians) of the shear to apply, twice the phase of a complex valued shear.
         theta (float): Rotation angle of the galaxy (in radians, positive means anticlockwise).
         gal_mu (float): The lensing magnification to apply.
-        fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to 48.
-        pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to 0.2.
-        upsample (int, optional): Upsampling factor for galaxy image. Defaults to 4.
+        fov_pixels (int, optional): Width of the simulated images in pixels. Defaults to `48`.
+        pixel_scale (float, optional): Pixel scale of the simulated image determining the resolution. Defaults to `0.2`.
+        upsample (int, optional): Upsampling factor for galaxy image. Defaults to `4`.
 
     Returns:
-        ```torch.Tensor```: Simulated galaxy image of shape (fov_pixels*upsample, fov_pixels*upsample).
+        `torch.Tensor`: Simulated galaxy image of shape `(fov_pixels*upsample, fov_pixels*upsample)`.
     """
 
     # Read out real galaxy from the catalog.
@@ -181,7 +179,7 @@ def generate_data(data_path, train_split=0.7,
     try:
         real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
-        n_total = cosmos_catalog.nobjects
+        n_total = real_galaxy_catalog.nobjects
         logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
     except:
         logger.warning('Failed reading in I=%s galaxies.', I)
@@ -243,10 +241,10 @@ def generate_data(data_path, train_split=0.7,
             opt_obscuration = 0.1 + 0.4 * rng() # Linear dimension of central obscuration as fraction of pupil linear dimension, U(0.1, 0.5).
             lam_over_diam = .013 + 0.07 * rng() # Wavelength over diameter (arcsec), U(0.013, 0.083).
             
-            psf = get_LSST_PSF(lam_over_diam, opt_defocus, 
+            psf_image = get_LSST_PSF(lam_over_diam, opt_defocus, 
                                opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
                                atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0,
-                               fov_pixels, pixel_scale) 
+                               fov_pixels, pixel_scale, upsample) 
 
         # Galaxy parameters .     
         gal_g = rng_gal_shear()             # Shear of the galaxy (magnitude of the shear in the "reduced shear" definition), U(0.01, 0.05).
@@ -258,7 +256,7 @@ def generate_data(data_path, train_split=0.7,
         gal_image = get_COSMOS_Galaxy(cosmos_catalog=cosmos_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
                                       gal_g=gal_g, gal_beta=gal_beta,
                                       theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
-                                      fov_pixels=fov_pixels, pixel_scale=pixel_scale)
+                                      fov_pixels=fov_pixels, pixel_scale=pixel_scale, upsample=upsample)
 
         read_noise = 0.05 + 0.1 * rng()     # Standrad deviation of Gaussain read noise (ADU/pixel), U(0.05, 0.15).
         sky_level_pixel = 5 + rng() * 40    # Sky level (ADU/pixel), U(5,45).
@@ -268,11 +266,11 @@ def generate_data(data_path, train_split=0.7,
         gt = alpha * gal_image + sky_level_pixel 
         
         # Convolution using FFT.
-        conv = ifftshift(ifft2(fft2(psf) * fft2(gt))).real
+        conv = ifftshift(ifft2(fft2(psf_image) * fft2(gt))).real
         
         # Downsample images to desired pixel scale.
         conv = down_sample(conv)
-        psf = down_sample(psf)
+        psf = down_sample(psf_image)
         gt = down_sample(gt)
 
         # Add CCD noise (Poisson + Gaussian).
@@ -293,11 +291,15 @@ def generate_data(data_path, train_split=0.7,
                 gt_snr = alpha * gal_image + sky_level_pixel 
         
                 # Convolution using FFT.
-                conv = ifftshift(ifft2(fft2(psf_image) * fft2(gt_snr))).real
-                conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero
+                conv_snr = ifftshift(ifft2(fft2(psf_image) * fft2(gt_snr))).real
+                
+                # Downsample images to desired pixel scale.
+                conv_snr = down_sample(conv_snr)
+                gt_snr = down_sample(gt_snr)
                 
                 # Add CCD noise (Poisson + Gaussian).
-                obs_snr = torch.poisson(conv) + torch.normal(mean=torch.zeros_like(conv), std=5*torch.ones_like(conv))
+                conv_snr = torch.max(torch.zeros_like(conv_snr), conv_snr) # Set negative pixels to zero
+                obs_snr = torch.poisson(conv_snr) + torch.normal(mean=torch.zeros_like(conv_snr), std=read_noise*torch.ones_like(conv_snr))
                 obs_snr = torch.max(torch.zeros_like(obs_snr), obs_snr) # Set negative pixels to zero
 
                 # Save Images.
@@ -313,11 +315,12 @@ def generate_data(data_path, train_split=0.7,
                 g1_err = shear_err if rng() > 0.5 else -shear_err
                 g2_err = shear_err if rng() > 0.5 else -shear_err
                 psf_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                            atmos_fwhm, atmos_e, atmos_beta, g1_err, g2_err,
-                                            fov_pixels, pixel_scale=pixel_scale)
+                                         atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, g1_err, g2_err,
+                                         fov_pixels, pixel_scale, upsample)
+                psf_noisy = down_sample(psf_noisy)
                 # Save noisy PSFs.
-                if not os.path.exists(os.path.join(data_path, f'psf_shear_err{shear_err}')):
-                    os.mkdir(os.path.join(data_path, f'psf_shear_err{shear_err}'))
+                if not os.path.exists(os.path.join(data_path, f'psf_shear_err_{shear_err}')):
+                    os.mkdir(os.path.join(data_path, f'psf_shear_err_{shear_err}'))
                 torch.save(psf_noisy, os.path.join(data_path, f'psf_shear_err_{shear_err}', f"psf_{k}.pth"))
                     
             # Simulate PSF with FWHM error.
@@ -325,8 +328,9 @@ def generate_data(data_path, train_split=0.7,
                 fwhm = atmos_fwhm + fwhm_err if rng() > 0.5 else atmos_fwhm - fwhm_err
                 fwhm = fwhm + 2*fwhm_err if fwhm < 0 else fwhm # Avoid negative FWHM.
                 psf_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                                            fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0, 
-                                            fov_pixels, pixel_scale)
+                                         fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0,
+                                         fov_pixels, pixel_scale, upsample)
+                psf_noisy = down_sample(psf_noisy)
                 # Save noisy PSFs.
                 if not os.path.exists(os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}')):
                     os.mkdir(os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}'))
@@ -344,7 +348,7 @@ def generate_data(data_path, train_split=0.7,
             plt.title('Ground Truth')
             plt.subplot(2,2,3)
             plt.imshow(psf, cmap='magma')
-            plt.title('PSF\n($g_1={:.3f}$)'.format(atmos_fwhm) if survey=='LSST' else f'PSF: {psf_name}')
+            plt.title('PSF\n($FWHM={:.3f}$)'.format(atmos_fwhm) if survey=='LSST' else f'PSF: {psf_name}')
             plt.subplot(2,2,4)
             plt.imshow(obs, cmap='magma')
             plt.title('Observed Galaxy (SNR={:.1f})'.format(snr))

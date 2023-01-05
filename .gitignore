@@ -6,8 +6,11 @@ galsim-examples/
 ngmix/
 score/
 alpha-transform/
-saved_models2/
-saved_models1/
+
+# fixed parameters and SNR
+saved_models2/ 
+# fix alpha bug
+saved_models1/ 
 saved_models/
 
 # Vscode setting

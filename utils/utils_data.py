@@ -9,6 +9,15 @@ from torch.utils.data import DataLoader, random_split
 
 
 def down_sample(input, rate=4):
+    """Downsample the input image with a factor of 4 using an average filter.
+
+    Args:
+        input (`torch.Tensor`): The input image with shape `[H, W]`.
+        rate (int, optional): Downsampling rate. Defaults to 4.
+
+    Returns:
+        `torch.Tensor`: The downsampled image.
+    """
     weight = torch.ones([1,1,rate,rate]) / (rate**2) # Average filter.
     input = input.unsqueeze(0).unsqueeze(0)
     output = F.conv2d(input=input, weight=weight, stride=rate).squeeze(0).squeeze(0)
@@ -17,7 +26,7 @@ def down_sample(input, rate=4):
 
 
 class Galaxy_Dataset(Dataset):
-    """Simulated Galaxy Image Dataset inherited from ```torch.utils.data.Dataset```."""
+    """Simulated Galaxy Image Dataset inherited from `torch.utils.data.Dataset`."""
     def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=True,
                  psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
         """Construction function for the PyTorch Galaxy Dataset.
@@ -44,7 +53,7 @@ class Galaxy_Dataset(Dataset):
         self.info = {}
 
         # Read in information
-        self.info_file = os.path.join(self.data_path, f'{self.survey}_{self.I}_info.json')
+        self.info_file = os.path.join(self.data_path, 'info.json')
         try:
             with open(self.info_file, 'r') as f:
                 self.info = json.load(f)
@@ -52,7 +61,7 @@ class Galaxy_Dataset(Dataset):
             self.n_train = self.info['n_train']
             self.n_test = self.info['n_test']
             self.sequence = self.info['sequence']
-            self.logger.info(f"Successfully constructed {'train' if self.train else 'test'} dataset.  Total Samples: {self.n_train if self.train else self.n_test}")
+            self.logger.info(f"Successfully constructed {'train' if self.train else 'test'} dataset. Total Samples: {self.n_train if self.train else self.n_test}.")
         except:
             self.logger.critical(f'Failed reading information from {self.info_file}.')
 
@@ -91,9 +100,9 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=Tru
         gt_folder (str, optional): Path to the ground truth image folder. Defaults to 'gt/'.
 
     Returns:
-        train_loader (```torch.utils.data.DataLoader```):  PyTorch dataloader for train dataset.
-        val_loader (```torch.utils.data.DataLoader```): PyTorch dataloader for valid dataset.
-        test_loader (```torch.utils.data.DataLoader```): PyTorch dataloader for test dataset.
+        train_loader (`torch.utils.data.DataLoader`):  PyTorch dataloader for train dataset.
+        val_loader (`torch.utils.data.DataLoader`): PyTorch dataloader for valid dataset.
+        test_loader (`torch.utils.data.DataLoader`): PyTorch dataloader for test dataset.
     """
     if train:
         train_dataset = Galaxy_Dataset(data_path=data_path, train=True)
