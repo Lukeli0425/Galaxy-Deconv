@@ -25,7 +25,7 @@ def PSNR(img1, img2, normalize=True):
     return psnr
 
 
-def estimate_shear(obs, psf_in=False, use_psf=True, beta=0.5):
+def estimate_shear(obs, psf_in, use_psf=True, beta=0.5):
     """Estimate shear from input 2D image."""
     
     # psf = np.zeros(obs.shape)
@@ -48,16 +48,23 @@ def estimate_shear(obs, psf_in=False, use_psf=True, beta=0.5):
         psf[cen[0], cen[1]] = 1.0
     else:
         psf = psf_in
-        
+    obs -= obs.mean()
+    
     fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=beta)
     modes = fpTask.measure(obs)
     ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
     resp = ells['fpfs_RE'][0]
+    
+    # fpTask =  fpfs.image.measure_source(psf, noiFit=None, sigma_arcsec=1.6, pix_scale=0.2, nnord=4)
+    # mms = fpTask.measure(obs)
+    # ells = fpfs.catalog.fpfsM2E(mms,const=2000,noirev=False)
+    # resp = ells['fpfs_R1E'][0]
+    
     g_1 = ells['fpfs_e1'][0] / resp
     g_2 = ells['fpfs_e2'][0] / resp
     g = np.sqrt(g_1 ** 2 + g_2 ** 2)
     
-    g = min(g, 1)
+    # g = min(g, 1)
 
     return (g_1, g_2, g) 
 
