@@ -189,4 +189,4 @@ class Unrolled_ADMM(nn.Module):
 			u2 = u2 + conv_fft_batch(H,x) - v
 			x_list.append(x)
 
-		return x_list[-1] * alpha if self.llh=='Poisson' else x_list[-1]
+		return x_list[-1] if self.llh=='Poisson' else x_list[-1] / alpha
