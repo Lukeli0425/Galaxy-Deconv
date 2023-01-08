@@ -86,7 +86,7 @@ class Galaxy_Dataset(Dataset):
         return (obs, psf, alpha), gt
             
             
-def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=True, train_test_split=0.857, batch_size=32,
+def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.857, batch_size=32,
                    psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 

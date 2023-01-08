@@ -179,7 +179,7 @@ def generate_data(data_path, train_split=0.7,
     try:
         real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
-        n_total = real_galaxy_catalog.nobjects
+        n_total = real_galaxy_catalog.nobjects #- 56030
         logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
     except:
         logger.warning('Failed reading in I=%s galaxies.', I)
@@ -196,7 +196,7 @@ def generate_data(data_path, train_split=0.7,
     logger.info('Dataset information saved to %s.', info_file)
 
     # Random number generators for the parameters.
-    random_seed = 463
+    random_seed = 37347
     rng_base = galsim.BaseDeviate(seed=random_seed)
     rng = galsim.UniformDeviate(seed=random_seed) # U(0,1).
     rng_defocus = galsim.GaussianDeviate(rng_base, mean=0., sigma=0.36) # N(0,0.36).
@@ -208,7 +208,7 @@ def generate_data(data_path, train_split=0.7,
     freqs = np.array([fwhm_table(fwhm) for fwhm in fwhms]) / fwhm_table.integrate() # Normalization.
     rng_fwhm = galsim.DistDeviate(seed=rng_base, function=galsim.LookupTable(x=fwhms, f=freqs, interpolant='spline'))
     rng_gal_shear = galsim.DistDeviate(seed=rng, function=lambda x: x, x_min=0.01, x_max=0.05)
-    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.8), x_min=10, x_max=300, npoints=1000) # Log-uniform Distribution.
+    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.41), x_min=17, x_max=320, npoints=1000) # Log-uniform Distribution.
     
     # Calculate all Webb PSFs and split for train/test
     # if survey == 'JWST':
@@ -259,29 +259,29 @@ def generate_data(data_path, train_split=0.7,
                                       fov_pixels=fov_pixels, pixel_scale=pixel_scale, upsample=upsample)
 
         read_noise = 0.05 + 0.1 * rng()     # Standrad deviation of Gaussain read noise (ADU/pixel), U(0.05, 0.15).
-        sky_level_pixel = 5 + rng() * 40    # Sky level (ADU/pixel), U(5,45).
+        sky_level_pixel = 10 + rng() * 40    # Sky level (ADU/pixel), U(5,55).
         snr = rng_snr()
-        gal_image_down = down_sample(gal_image, upsample) # Downsample galaxy image for SNR calculation.
+        gal_image_down = down_sample(gal_image.clone(), upsample) # Downsample galaxy image for SNR calculation.
         alpha = snr * torch.sqrt((sky_level_pixel+read_noise**2)/(gal_image_down**2).sum()) # Scale the flux of galaxy to meet SNR.
         gt = alpha * gal_image + sky_level_pixel 
         
         # Convolution using FFT.
-        conv = ifftshift(ifft2(fft2(psf_image) * fft2(gt))).real
+        conv = ifftshift(ifft2(fft2(psf_image.clone()) * fft2(gt.clone()))).real
         
         # Downsample images to desired pixel scale.
-        conv = down_sample(conv)
-        psf = down_sample(psf_image)
-        gt = down_sample(gt)
+        conv = down_sample(conv.clone(), upsample)
+        psf = down_sample(psf_image.clone(), upsample)
+        gt = down_sample(gt.clone(), upsample)
 
         # Add CCD noise (Poisson + Gaussian).
         conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero.
-        obs = torch.poisson(conv) + torch.normal(mean=torch.zeros_like(conv), std=read_noise*torch.ones_like(conv))
+        obs = torch.poisson(conv.clone()) + torch.normal(mean=torch.zeros_like(conv), std=read_noise*torch.ones_like(conv))
         obs = torch.max(torch.zeros_like(obs), obs) # Set negative pixels to zero.
 
         # Save images.
-        torch.save(gt, os.path.join(data_path, 'gt', f"gt_{k}.pth"))
-        torch.save(psf, os.path.join(data_path, 'psf', f"psf_{k}.pth"))
-        torch.save(obs, os.path.join(data_path, 'obs', f"obs_{k}.pth"))
+        torch.save(gt.clone(), os.path.join(data_path, 'gt', f"gt_{k}.pth"))
+        torch.save(psf.clone(), os.path.join(data_path, 'psf', f"psf_{k}.pth"))
+        torch.save(obs.clone(), os.path.join(data_path, 'obs', f"obs_{k}.pth"))
 
         if k >= n_train:
             # Simulate images with different SNR levels.
@@ -291,15 +291,15 @@ def generate_data(data_path, train_split=0.7,
                 gt_snr = alpha * gal_image + sky_level_pixel 
         
                 # Convolution using FFT.
-                conv_snr = ifftshift(ifft2(fft2(psf_image) * fft2(gt_snr))).real
+                conv_snr = ifftshift(ifft2(fft2(psf_image.clone()) * fft2(gt_snr.clone()))).real
                 
                 # Downsample images to desired pixel scale.
-                conv_snr = down_sample(conv_snr)
-                gt_snr = down_sample(gt_snr)
+                conv_snr = down_sample(conv_snr.clone(), upsample)
+                gt_snr = down_sample(gt_snr.clone(), upsample)
                 
                 # Add CCD noise (Poisson + Gaussian).
                 conv_snr = torch.max(torch.zeros_like(conv_snr), conv_snr) # Set negative pixels to zero
-                obs_snr = torch.poisson(conv_snr) + torch.normal(mean=torch.zeros_like(conv_snr), std=read_noise*torch.ones_like(conv_snr))
+                obs_snr = torch.poisson(conv_snr.clone()) + torch.normal(mean=torch.zeros_like(conv_snr), std=read_noise*torch.ones_like(conv_snr))
                 obs_snr = torch.max(torch.zeros_like(obs_snr), obs_snr) # Set negative pixels to zero
 
                 # Save Images.
@@ -307,8 +307,8 @@ def generate_data(data_path, train_split=0.7,
                     os.mkdir(os.path.join(data_path, f'gt_{snr}'))
                 if not os.path.exists(os.path.join(data_path, f'obs_{snr}')):
                     os.mkdir(os.path.join(data_path, f'obs_{snr}'))
-                torch.save(gt_snr, os.path.join(data_path, f'gt_{snr}', f"gt_{k}.pth"))
-                torch.save(obs_snr, os.path.join(data_path, f'obs_{snr}', f"obs_{k}.pth"))
+                torch.save(gt_snr.clone(), os.path.join(data_path, f'gt_{snr}', f"gt_{k}.pth"))
+                torch.save(obs_snr.clone(), os.path.join(data_path, f'obs_{snr}', f"obs_{k}.pth"))
                 
             # Simulate PSF with shear error.
             for shear_err in shear_errs:
@@ -317,11 +317,11 @@ def generate_data(data_path, train_split=0.7,
                 psf_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
                                          atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, g1_err, g2_err,
                                          fov_pixels, pixel_scale, upsample)
-                psf_noisy = down_sample(psf_noisy)
+                psf_noisy = down_sample(psf_noisy, upsample)
                 # Save noisy PSFs.
                 if not os.path.exists(os.path.join(data_path, f'psf_shear_err_{shear_err}')):
                     os.mkdir(os.path.join(data_path, f'psf_shear_err_{shear_err}'))
-                torch.save(psf_noisy, os.path.join(data_path, f'psf_shear_err_{shear_err}', f"psf_{k}.pth"))
+                torch.save(psf_noisy.clone(), os.path.join(data_path, f'psf_shear_err_{shear_err}', f"psf_{k}.pth"))
                     
             # Simulate PSF with FWHM error.
             for fwhm_err in fwhm_errs:
@@ -330,11 +330,11 @@ def generate_data(data_path, train_split=0.7,
                 psf_noisy = get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
                                          fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2, 0, 0,
                                          fov_pixels, pixel_scale, upsample)
-                psf_noisy = down_sample(psf_noisy)
+                psf_noisy = down_sample(psf_noisy, upsample)
                 # Save noisy PSFs.
                 if not os.path.exists(os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}')):
                     os.mkdir(os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}'))
-                torch.save(psf_noisy, os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}', f"psf_{k}.pth"))
+                torch.save(psf_noisy.clone(), os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}', f"psf_{k}.pth"))
                 
         # Visualization
         if k < 50:
@@ -370,9 +370,9 @@ if __name__ == "__main__":
     parser.add_argument('--upsample', type=int, default=4)
     opt = parser.parse_args()
     
-    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train_split=0.7,
+    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', train_split=0.7,
                   survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
-                  snrs = [10, 15, 20, 40, 60, 80, 100, 150, 200, 300],
+                  snrs = [20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                   fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
     
