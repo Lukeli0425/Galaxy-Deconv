@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from skimage.measure import label
 import logging
 import fpfs
 import galsim
@@ -69,7 +70,10 @@ def estimate_shear(obs, psf_in=False, use_psf=True, beta=0.5):
     return (g_1, g_2, g) 
 
 def estimate_elli(obs):
-    # obs -= obs.mean()
+    obs -= get_background(obs)
+    mask = bordering_blobs_mask(obs)
+    # obs *= mask
+    
     n_row, n_col = obs.shape
     U = makeUi(n_row, n_col)
     GX = np.array([scal(obs, U_i) for U_i in U])
@@ -79,10 +83,23 @@ def estimate_elli(obs):
     e1 = (mu20-mu02) / (mu20+mu02)
     e2 = 2*(mu11) / (mu20+mu02)
     e = np.sqrt(e1**2 + e2**2)
-    shear = galsim.Shear(e1=e1, e2=e2)
+    # shear = galsim.Shear(e1=e1, e2=e2)
     
-    return (shear.g1, shear.g2, shear.g)
+    # return (shear.g1, shear.g2, shear.g)
+    return (e1, e2, e)
 
+def get_background(img):
+    mask = np.zeros_like(img)
+    mask[0,:] = 1
+    mask[-1,:] = 1
+    mask[:,0] = 1
+    mask[:,-1] = 1
+    
+    mask /= mask.sum()
+    
+    return (img * mask).sum()
+
+#####################################
 
 def makeU1(n,m):
     """This function returns a n x m numpy array with (i)_{i,j} entries where i
@@ -158,3 +175,33 @@ def scal(a,b):
            b, numpy array
     OUTPUT: scalar"""
     return (a*np.conjugate(b)).sum()
+
+
+def bordering_blobs_mask(img):
+    """This function keeps the biggest blob in the image considering the 
+    gradient of the image.
+    INPUT: img, Numpy Array
+    OUTPUT: mask, boolean Numpy Array"""
+    grad = np.abs(img-np.roll(img,1))
+    threshold = np.quantile(grad,0.8)
+    binary_grad = grad>threshold
+    mask = blob_mask(binary_grad)
+    return mask
+
+def blob_mask(img,background=0,connectivity=2):
+    """This function keeps the biggest blob in the image.
+    INPUT: img, Numpy Array
+           background, integer
+           connectivity, integer
+    OUTPUT: mask, boolean Numpy Array"""
+    labels = label(img,background=background,connectivity=connectivity)
+    #find the biggest blob
+    indices = np.unique(labels)
+    sizes = np.zeros(indices.shape)
+    for i in indices[1:]:
+        sizes[i] = (labels==i).sum()
+    main_blob_label = np.argmax(sizes)
+    main_blob_estimate = (labels==main_blob_label)*main_blob_label
+    #extract mask
+    mask = (labels-main_blob_estimate)==0
+    return mask
