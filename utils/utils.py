@@ -70,13 +70,11 @@ def estimate_shear(obs, psf_in=False, use_psf=True, beta=0.5):
     return (g_1, g_2, g) 
 
 def estimate_elli(obs):
-    obs -= get_background(obs)
-    mask = bordering_blobs_mask(obs)
-    # obs *= mask
-    
+    bg_level = get_background(obs)
+    print(bg_level)
     n_row, n_col = obs.shape
     U = makeUi(n_row, n_col)
-    GX = np.array([scal(obs, U_i) for U_i in U])
+    GX = np.array([scal(obs-bg_level, U_i) for U_i in U])
     mu20 = 0.5*(GX[3] + GX[4]) - GX[0]**2 / GX[2]
     mu02 = 0.5*(GX[3] - GX[4]) - GX[1]**2 / GX[2]
     mu11 = GX[5] - GX[0] * GX[1] / GX[2]
