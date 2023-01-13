@@ -26,6 +26,11 @@ def PSNR(img1, img2, normalize=False):
 
     return psnr
 
+def delta_2D(h=48, w=48):
+    delta = np.zeros([h, w])
+    delta[h//2, w//2] = 1
+    return delta
+    
 
 def estimate_shear(obs, psf_in=None, use_psf=True, beta=0.5):
     """Estimate shear from input 2D image using fpfs 2.0.5."""
@@ -45,9 +50,7 @@ def estimate_shear(obs, psf_in=None, use_psf=True, beta=0.5):
     #     psf[obs.shape[0]//2, obs.shape[1]//2] = 1
     
     if psf_in is None:
-        cen = ((np.array(obs.shape)-1.0)/2.0).astype(int)
-        psf = np.zeros(obs.shape)
-        psf[cen[0], cen[1]] = 1.0
+        psf = delta_2D(obs.shape[0], obs.shape[1])
     else:
         psf = psf_in
         
@@ -67,9 +70,7 @@ def estimate_shear_new(obs, psf_in=None, use_psf=True, sigma_arcsec=0.6):
     """Estimate shear from input 2D image using fpfs 2.0.5."""
     
     if psf_in is None:
-        cen = ((np.array(obs.shape)-1.0)/2.0).astype(int)
-        psf = np.zeros(obs.shape)
-        psf[cen[0], cen[1]] = 1.0
+        psf = delta_2D(obs.shape[0], obs.shape[1])
     else:
         psf = psf_in
     

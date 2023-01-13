@@ -5,6 +5,6 @@ torch
 tqdm
 bm3d
 galsim
-fpfs==2.0.4
+fpfs
 ngmix
 scikit-image # score

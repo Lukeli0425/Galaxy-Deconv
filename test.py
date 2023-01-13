@@ -11,9 +11,11 @@ from utils.utils_data import get_dataloader
 from models.Wiener import Wiener
 from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Tikhonet import Tikhonet
 from utils.utils_torch import MultiScaleLoss
-from utils.utils import PSNR, estimate_shear_new
+from utils.utils_test import delta_2D, PSNR, estimate_shear_new
 from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
+
 
 class ADMM_deconvolver:
     """Wrapper class for unrolled ADMM deconvolution."""
@@ -145,8 +147,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
     test_loader = get_dataloader(data_path=data_path, train=False, 
                                  psf_folder='psf/', obs_folder=f'obs_{snr}/', gt_folder=f'gt_{snr}/')
     
-    psf_delta = np.zeros([48, 48])
-    psf_delta[23,23] = 1
+    psf_delta = delta_2D(48, 48)
     
     gt_shear, obs_shear = [], []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
@@ -173,10 +174,12 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        elif 'ADMM' in method:
-            if 'Gaussian' in method:
+        else:
+            if method == 'Tikhonet':
+                model = Tikhonet()
+            elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            else:
+            elif 'Poisson' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
@@ -215,7 +218,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
-                elif 'ADMM' in method:
+                else: # ADMM, Tikhonet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -240,8 +243,7 @@ def test_time(methods, n_iters, model_files, n_gal,
     logger.info(f'Running time test with {n_gal} galaxies.\n')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    psf_delta = np.zeros([48, 48])
-    psf_delta[23,23] = 1
+    psf_delta = delta_2D(48, 48)
     
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
@@ -265,17 +267,19 @@ def test_time(methods, n_iters, model_files, n_gal,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval() 
-        elif 'ADMM' in method:
-            if 'Gaussian' in method:
+        else:
+            if method == 'Tikhonet':
+                model = Tikhonet()
+            elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            else:
+            elif 'Poisson' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file} model!')
+                logger.error(f'Failed loading in {model_file}.')
             model.eval()    
         
         test_loader = get_dataloader(data_path=data_path, train=False)
@@ -285,33 +289,33 @@ def test_time(methods, n_iters, model_files, n_gal,
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
-                    # gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    # gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
-                    psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'Wiener':
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, 20) 
-                    rec = rec.squeeze(dim=0).cpu().numpy()
+                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif method == 'ngmix':
-                    psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = make_data(obs_im=obs, psf_im=psf)
                     res = boot.go(obs)
                     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
-                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
-                elif 'ADMM' in method:
+                else: # ADMM, Tikhonet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) 
-                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
+                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
                     
         time_end = time.time()
@@ -340,6 +344,7 @@ if __name__ =="__main__":
         'No_Deconv', 
         'FPFS', 'Wiener', 'ngmix', 
         'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
+        'Tikhonet',
         'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
         'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
@@ -347,6 +352,7 @@ if __name__ =="__main__":
         0, 
         0, 0, 0, 
         5, 10, 20, 30, 50,  
+        0,
         1, 2, 4, 8, 
         1, 2, 4, 8
     ]
@@ -354,6 +360,7 @@ if __name__ =="__main__":
         None,
         None, None, None,
         None, None, None, None, None,
+        "saved_models2/Tikhonet_20epochs.pth",
         "saved_models2/Poisson_PnP_1iters_50epochs.pth",
         "saved_models2/Poisson_PnP_2iters_50epochs.pth",
         "saved_models2/Poisson_PnP_4iters_50epochs.pth",
@@ -365,11 +372,14 @@ if __name__ =="__main__":
     ]
     
 
+    
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
     for snr in snrs:
-        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+        # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+        #            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
+        test_shear(methods='Tikhonet', n_iters=0, model_files="saved_models2/Tikhonet_20epochs.pth", n_gal=opt.n_gal, snr=snr,
                    data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
 
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', result_path=opt.result_path)
+    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
+    #           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', result_path=opt.result_path)

@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import galsim
-from utils.utils import PSNR
+from utils.utils_test import PSNR
 
 
 def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
