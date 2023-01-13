@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.fft import fft2, ifft2, fftshift, ifftshift, fftn
+from torch.fft import fft2, ifft2, fftshift, ifftshift, fftn, ifftn
 from models.ResUNet import ResUNet
 
 
@@ -12,11 +12,10 @@ class Tikhonov(nn.Module):
     
     def forward(self, y, psf, lam):
         psf = psf/psf.sum() # normalize PSF
-        
-        H = fft2(psf)
-        numerator = torch.conj(H) * fft2(y)
-        divisor = H.abs() ** 2 + lam
-        x = fftshift(ifft2(numerator/divisor)).real
+        H = fftn(psf, dim=[2,3])
+        numerator = torch.conj(H) * fftn(y, dim=[2,3])
+        divisor = H.abs() ** 2 + lam.unsqueeze(dim=1)
+        x = fftshift(ifftn(numerator/divisor, dim=[2,3])).real
         return x
 
 
@@ -64,9 +63,9 @@ class LambdaNet(nn.Module):
 		self.mlp = nn.Sequential(
 			nn.Linear(16*8*8+1, 64),
 			nn.ReLU(inplace=True),
-			nn.Linear(64, 64),
+			nn.Linear(64, 32),
 			nn.ReLU(inplace=True),
-			nn.Linear(64, 1),
+			nn.Linear(32, 1),
 			nn.Softplus())
 		
 	def forward(self, kernel, alpha):
@@ -88,15 +87,17 @@ class Tikhonet(nn.Module):
         super(Tikhonet, self).__init__()
         self.init = LambdaNet()
         self.tikhonov = Tikhonov()
-        self.denoiser = ResUNet()
+        self.denoiser = ResUNet(nc=[16, 32, 64, 128], nb=1)
         
     def forward(self, y, psf, alpha):
         lam = self.init(psf, alpha)
+        
         x = self.tikhonov(y, psf, lam)
         x = self.denoiser(x)
         return x
 
 
 if __name__ == '__main__':
-    Tikhonet()
-    
+    model = Tikhonet()
+    total = sum([param.nelement() for param in model.parameters()])
+    print("Number of parameter: %s" % (total))

@@ -44,7 +44,7 @@ def get_label(method):
         
     return label
 
-def plot_loss(train_loss, val_loss, model_save_path, llh, PnP, n_iters, n_epochs):
+def plot_loss(train_loss, val_loss, model_save_path, model_name):
     n_epochs = len(train_loss)
     plt.figure(figsize=(12,7))
     plt.plot(range(1, n_epochs+1), train_loss, '-o', markersize=3.5, label='Train Loss')
@@ -54,7 +54,7 @@ def plot_loss(train_loss, val_loss, model_save_path, llh, PnP, n_iters, n_epochs
     plt.ylabel('Loss', fontsize=14)
     # plt.yscale("log")
     plt.legend(fontsize=15)
-    file_name = f'./{model_save_path}/{llh}{"_PnP" if PnP else ""}_{n_iters}iters_loss_curve.jpg'
+    file_name = f'./{model_save_path}/{model_name}_loss_curve.jpg'
     plt.savefig(file_name)
     plt.close()
 
