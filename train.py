@@ -8,7 +8,7 @@ from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
 from utils.utils_plot import plot_loss
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+# os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
 def train(n_iters=8, llh='Poisson', PnP=True,
           n_epochs=10, lr=1e-4, 
@@ -45,7 +45,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
             optimizer.zero_grad()
             obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
             rec = model(obs, psf, alpha)
-            loss = loss_fn(gt/alpha, rec)
+            loss = loss_fn(gt, rec)
 
             loss.backward()
             optimizer.step()
@@ -59,7 +59,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
                     for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                         obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
                         rec = model(obs, psf, alpha)
-                        loss = loss_fn(gt/alpha, rec)
+                        loss = loss_fn(gt, rec)
                         val_loss += loss.item()
 
                 logger.info(" [{}: {}/{}]  train_loss={:.4f}  val_loss={:.4f}".format(
@@ -74,7 +74,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
             for _, ((obs, psf, alpha), gt) in enumerate(train_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
                 rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
-                loss = loss_fn(gt/alpha, rec)
+                loss = loss_fn(gt, rec)
                 train_loss += loss.item()
             train_loss_list.append(train_loss/len(train_loader))
         
@@ -84,7 +84,7 @@ def train(n_iters=8, llh='Poisson', PnP=True,
             for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
                 rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
-                loss = loss_fn(gt/alpha, rec)
+                loss = loss_fn(gt, rec)
                 val_loss += loss.item()
             val_loss_list.append(val_loss/len(val_loader))
 

@@ -27,8 +27,8 @@ def PSNR(img1, img2, normalize=False):
     return psnr
 
 
-def estimate_shear(obs, psf_in, use_psf=True, beta=0.5):
-    """Estimate shear from input 2D image."""
+def estimate_shear(obs, psf_in=None, use_psf=True, beta=0.5):
+    """Estimate shear from input 2D image using fpfs 2.0.5."""
     
     # psf = np.zeros(obs.shape)
     # if use_psf: # Crop out PSF
@@ -44,23 +44,17 @@ def estimate_shear(obs, psf_in, use_psf=True, beta=0.5):
     # else: # Use delta for PSF if not given, equivalent to no deconvolution
     #     psf[obs.shape[0]//2, obs.shape[1]//2] = 1
     
-    if not use_psf:
+    if psf_in is None:
         cen = ((np.array(obs.shape)-1.0)/2.0).astype(int)
         psf = np.zeros(obs.shape)
         psf[cen[0], cen[1]] = 1.0
     else:
         psf = psf_in
         
-    # fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=beta)
-    # modes = fpTask.measure(obs)
-    # ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
-    # resp = ells['fpfs_RE'][0]
-    
-    fpTask =  fpfs.image.measure_source(psf, noiFit=None, sigma_arcsec=0.7, pix_scale=0.2, nnord=4)
-    mms = fpTask.measure(obs-obs.min())
-    ells = fpfs.catalog.fpfsM2E(mms,const=2000,noirev=False)
-    resp = ells['fpfs_R1E'][0]
-    
+    fpTask = fpfs.fpfsBase.fpfsTask(psf, beta=beta)
+    modes = fpTask.measure(obs)
+    ells = fpfs.fpfsBase.fpfsM2E(modes, const=1, noirev=False)
+    resp = ells['fpfs_RE'][0]
     g_1 = ells['fpfs_e1'][0] / resp
     g_2 = ells['fpfs_e2'][0] / resp
     g = np.sqrt(g_1 ** 2 + g_2 ** 2)
@@ -68,6 +62,28 @@ def estimate_shear(obs, psf_in, use_psf=True, beta=0.5):
     # g = min(g, 1)
 
     return (g_1, g_2, g) 
+
+def estimate_shear_new(obs, psf_in=None, use_psf=True, sigma_arcsec=0.6):
+    """Estimate shear from input 2D image using fpfs 2.0.5."""
+    
+    if psf_in is None:
+        cen = ((np.array(obs.shape)-1.0)/2.0).astype(int)
+        psf = np.zeros(obs.shape)
+        psf[cen[0], cen[1]] = 1.0
+    else:
+        psf = psf_in
+    
+    fpTask =  fpfs.image.measure_source(psf, noiFit=None, sigma_arcsec=sigma_arcsec, pix_scale=0.2)
+    mms = fpTask.measure(obs-obs.min())
+    ells = fpfs.catalog.fpfsM2E(mms,const=1,noirev=False)
+    resp = ells['fpfs_R1E'][0]
+    g_1 = ells['fpfs_e1'][0] / resp
+    g_2 = ells['fpfs_e2'][0] / resp
+    g = np.sqrt(g_1 ** 2 + g_2 ** 2)
+
+    return (g_1, g_2, g) 
+
+######################################################
 
 def estimate_elli(obs):
     bg_level = get_background(obs)

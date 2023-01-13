@@ -12,7 +12,7 @@ from models.Wiener import Wiener
 from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
 from utils.utils_torch import MultiScaleLoss
-from utils.utils import PSNR, estimate_shear
+from utils.utils import PSNR, estimate_shear_new
 from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
 
 class ADMM_deconvolver:
@@ -183,7 +183,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file} model!')
+                logger.error(f'Failed loading in {model_file}.')
             model.eval()
     
         rec_shear = []
@@ -192,13 +192,13 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    gt_shear.append(estimate_shear(gt, psf_delta, use_psf=True))
-                    obs_shear.append(estimate_shear(obs, psf_delta, use_psf=True))
-                    rec_shear.append(estimate_shear(obs, psf_delta, use_psf=True))
+                    gt_shear.append(estimate_shear_new(gt, psf_delta))
+                    obs_shear.append(estimate_shear_new(obs, psf_delta))
+                    rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'ngmix':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -209,17 +209,17 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, snr) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta, use_psf=True))
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta, use_psf=True))
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
-                    output = model(obs, psf, alpha)
-                    rec = (output * alpha).cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta, use_psf=True))
+                    rec = model(obs, psf, alpha)
+                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
         
         gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
         results[str(snr)]['rec_shear'] = rec_shear.tolist()
@@ -287,16 +287,16 @@ def test_time(methods, n_iters, model_files, n_gal,
                 if method == 'No_Deconv':
                     # gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(obs, psf_delta))
+                    rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(obs, psf, use_psf=True))
+                    rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'Wiener':
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, 20) 
                     rec = rec.squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta))
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif method == 'ngmix':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
@@ -307,12 +307,12 @@ def test_time(methods, n_iters, model_files, n_gal,
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta))
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'ADMM' in method:
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).cpu().numpy()
-                    rec_shear.append(estimate_shear(rec, psf_delta))
+                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                     
         time_end = time.time()
         
@@ -330,36 +330,46 @@ if __name__ =="__main__":
     
     parser = argparse.ArgumentParser(description='Arguments for testing.')
     parser.add_argument('--n_gal', type=int, default=10000)
-    parser.add_argument('--result_path', type=str, default='results2/')
+    parser.add_argument('--result_path', type=str, default='results3/')
     opt = parser.parse_args()
     
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = ['No_Deconv', 'FPFS', 'Wiener', 'ngmix', 
-               'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-            #    'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
-            #    'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
-               ]
-    n_iters = [0, 0, 0, 0, 10, 20, 30, 50,  
-            #    1, 2, 4, 8, 
-            #    1, 2, 4, 8
-               ]
-    model_files = [None, None, None, None, None, None, None, None, #None,
-                #    "saved_models2/Poisson_PnP_1iters_35epochs.pth",
-                #    "saved_models2/Poisson_PnP_2iters_30epochs.pth",
-                #    "saved_models2/Poisson_PnP_4iters_20epochs.pth",
-                #    "saved_models2/Poisson_PnP_8iters_15epochs.pth",
-                #    "saved_models1/Gaussian_PnP_1iters_LSST23.5_50epochs.pth",
-                #    "saved_models1/Gaussian_PnP_2iters_LSST23.5_50epochs.pth",
-                #    "saved_models1/Gaussian_PnP_4iters_LSST23.5_50epochs.pth",
-                #    "saved_models1/Gaussian_PnP_8iters_LSST23.5_50epochs.pth"
-                   ]
+    methods = [
+        'No_Deconv', 
+        'FPFS', 'Wiener', 'ngmix', 
+        'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
+        'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
+        'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+    ]
+    n_iters = [
+        0, 
+        0, 0, 0, 
+        5, 10, 20, 30, 50,  
+        1, 2, 4, 8, 
+        1, 2, 4, 8
+    ]
+    model_files = [
+        None,
+        None, None, None,
+        None, None, None, None, None,
+        "saved_models2/Poisson_PnP_1iters_50epochs.pth",
+        "saved_models2/Poisson_PnP_2iters_50epochs.pth",
+        "saved_models2/Poisson_PnP_4iters_50epochs.pth",
+        "saved_models2/Poisson_PnP_8iters_50epochs.pth",
+        "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
+        "saved_models2/Gaussian_PnP_2iters_50epochs.pth",
+        "saved_models2/Gaussian_PnP_4iters_50epochs.pth",
+        "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
+    ]
+    
+
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
                    data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
 
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-    #           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', result_path=opt.result_path)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
+              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', result_path=opt.result_path)

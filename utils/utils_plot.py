@@ -10,7 +10,7 @@ def get_color(method):
     
     if 'Gaussian' in method:
         color = 'xkcd:purple'
-    if 'Unrolled_ADMM' in method:
+    elif 'Unrolled_ADMM' in method:
         color = 'xkcd:blue'
     elif 'Richard-Lucy' in method:
         color = 'xkcd:green' 

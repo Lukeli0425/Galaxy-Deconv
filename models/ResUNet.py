@@ -1,28 +1,6 @@
 import models.resnet_basicblock as B
-import torch
 import torch.nn as nn
 import numpy as np
-
-"""
-# Code from the following paper
-# --------------------------------------------
-# Kai Zhang (cskaizhang@gmail.com)
-# @inproceedings{zhang2020deep,
-  # title={Deep unfolding network for image super-resolution},
-  # author={Zhang, Kai and Van Gool, Luc and Timofte, Radu},
-  # booktitle={IEEE Conference on Computer Vision and Pattern Recognition},
-  # pages={0--0},
-  # year={2020}
-}
-# --------------------------------------------
-"""
-
-"""
-# --------------------------------------------
-# (1) Prior module; ResUNet: act as a non-blind denoiser
-# x_k = P(z_k, beta_k)
-# --------------------------------------------
-"""
 
 
 class ResUNet(nn.Module):
