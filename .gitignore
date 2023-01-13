@@ -6,12 +6,20 @@ galsim-examples/
 ngmix/
 score/
 alpha-transform/
+PnP-ADMM/
+ShapeDeconv/
 
 # fixed parameters and SNR
 saved_models2/ 
 # fix alpha bug
 saved_models1/ 
 saved_models/
+
+# # LSST_new1 results with old fpfs 2.0.5
+results2/ 
+
+# LSST_new1 results with updated fpfs 3.0.2
+# results3/
 
 # Vscode setting
 .vscode/
