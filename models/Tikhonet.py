@@ -137,7 +137,8 @@ class Tikhonet(nn.Module):
 		self.denoiser = UNet()
 		
 	def forward(self, y, psf, alpha):
-		lam = torch.Tensor(0.05, requires_grad=True)	
+		device = torch.device("cuda:0" if y.is_cuda else "cpu")
+		lam = torch.Tensor(0.05, requires_grad=True, device=device)	
 		x = self.tikhonov(y, psf, lam)
 		x = self.denoiser(x)
 		return x
