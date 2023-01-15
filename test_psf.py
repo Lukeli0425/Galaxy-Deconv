@@ -50,12 +50,12 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        else:
+        elif method == 'Tikhonet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet()
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            elif 'Poisson' in method:
+            else:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
@@ -72,7 +72,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    obs_shear.append(estimate_shear_new(obs, psf_delta))
+                    # obs_shear.append(estimate_shear_new(obs, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -100,10 +100,9 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results[str(shear_err)]['rec_shear'] = rec_shear.tolist()
-        results[str(shear_err)]['gt_shear'] = gt_shear.tolist()
-        results[str(shear_err)]['obs_shear'] = obs_shear
+        results[str(shear_err)]['rec_shear'] = rec_shear
+        results[str(shear_err)]['gt_shear'] = gt_shear
+        
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -135,8 +134,8 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
                 results = json.load(f)
         except:
             results = {} # dictionary to record the test results
-        if not str(shear_err) in results:
-            results[str(shear_err)] = {}
+        if not str(fwhm_err) in results:
+            results[str(fwhm_err)] = {}
         
         if method == 'ngmix':
             boot = get_ngmix_Bootstrapper(psf_ngauss=1, ntry=2)
@@ -148,12 +147,12 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        else:
+        elif method == 'Tikhonet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet()
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            elif 'Poisson' in method:
+            else:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
@@ -198,10 +197,8 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results[str(fwhm_err)]['rec_shear'] = rec_shear.tolist()
-        results[str(fwhm_err)]['gt_shear'] = gt_shear.tolist()
-        results[str(fwhm_err)]['obs_shear'] = obs_shear
+        results[str(fwhm_err)]['rec_shear'] = rec_shear
+        results[str(fwhm_err)]['gt_shear'] = gt_shear
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -212,7 +209,7 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
-    parser = argparse.ArgumentParser(description='Arguments for noist PSF test.')
+    parser = argparse.ArgumentParser(description='Arguments for noisy PSF test.')
     parser.add_argument('--n_gal', type=int, default=10000)
     parser.add_argument('--result_path', type=str, default='results3/')
     opt = parser.parse_args()
@@ -224,30 +221,30 @@ if __name__ == "__main__":
         'No_Deconv', 
         'FPFS', 'Wiener', 'ngmix', 
         'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-        'Tikhonet',
-        'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
-        'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        # 'Tikhonet',
+        'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)', 'Unrolled_ADMM(8)',
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
         0, 
         0, 0, 0, 
         5, 10, 20, 30, 50,  
-        0,
-        1, 2, 4, 8, 
-        1, 2, 4, 8
+        # 0,
+        2, 4, 6, 8, 
+        2, 4, 6, 8
     ]
     model_files = [
         None,
         None, None, None,
         None, None, None, None, None,
-        "saved_models2/Tikhonet_40epochs.pth",
-        "saved_models2/Poisson_PnP_1iters_50epochs.pth",
+        # "saved_models2/Tikhonet_10epochs.pth",
         "saved_models2/Poisson_PnP_2iters_50epochs.pth",
         "saved_models2/Poisson_PnP_4iters_50epochs.pth",
+        "saved_models2/Poisson_PnP_6iters_50epochs.pth",
         "saved_models2/Poisson_PnP_8iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
         "saved_models2/Gaussian_PnP_2iters_50epochs.pth",
         "saved_models2/Gaussian_PnP_4iters_50epochs.pth",
+        "saved_models2/Gaussian_PnP_6iters_50epochs.pth",
         "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
     ]
 
@@ -258,5 +255,5 @@ if __name__ == "__main__":
     
     fwhm_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
     for fwhm_err in fwhm_errs:
-        test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, fwhm_err=fwhm_err,
+        test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, fwhm_err=fwhm_err,
                            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)

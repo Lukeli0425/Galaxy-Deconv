@@ -15,7 +15,7 @@ class Richard_Lucy(nn.Module):
         _, H = psf_to_otf(psf, y.size())
         H = H.to(device)
         Ht = torch.conj(H).to(device)
-        x = torch.ones_like(y) # initial guess
+        x = y.clone() # initial guess
         for i in range(self.n_iters):
             Hx = conv_fft_batch(H, x).to(device)
             numerator = conv_fft_batch(Ht, y/Hx)

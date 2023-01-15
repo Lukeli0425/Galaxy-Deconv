@@ -149,7 +149,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
     
     psf_delta = delta_2D(48, 48)
     
-    gt_shear, obs_shear = [], []
+    gt_shear = []
     for method, model_file, n_iter in zip(methods, model_files, n_iters):
         logger.info(f'Tesing method: {method}')
         result_folder = os.path.join(result_path, method)
@@ -174,12 +174,12 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        else:
+        elif method == 'Tikhonet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet()
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            elif 'Poisson' in method:
+            else:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
@@ -196,7 +196,7 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    obs_shear.append(estimate_shear_new(obs, psf_delta))
+                    # obs_shear.append(estimate_shear_new(obs, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -224,10 +224,10 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
-        results[str(snr)]['rec_shear'] = rec_shear.tolist()
-        results[str(snr)]['gt_shear'] = gt_shear.tolist()
-        results[str(snr)]['obs_shear'] = obs_shear
+        # gt_shear, rec_shear = np.array(gt_shear), np.array(rec_shear)
+        results[str(snr)]['rec_shear'] = rec_shear
+        results[str(snr)]['gt_shear'] = gt_shear
+        # results[str(snr)]['obs_shear'] = obs_shear
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -272,7 +272,7 @@ def test_time(methods, n_iters, model_files, n_gal,
                 model = Tikhonet()
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            elif 'Poisson' in method:
+            else:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
             model.to(device)
             try: # Load the model
@@ -342,33 +342,35 @@ if __name__ =="__main__":
     
     methods = [
         'No_Deconv', 
-        'FPFS', 'Wiener', 'ngmix', 
-        'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
+        # 'FPFS', 'Wiener', 'ngmix', 
+        # 'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
         'Tikhonet',
-        'Unrolled_ADMM(1)', 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)',
-        'Unrolled_ADMM_Gaussian(1)', 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        # 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)','Unrolled_ADMM(8)',
+        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
         0, 
-        0, 0, 0, 
-        5, 10, 20, 30, 50,  
+        # 0, 0, 0, 
+        # 5, 10, 20, 30, 50,  
         0,
-        1, 2, 4, 8, 
-        1, 2, 4, 8
+        # 2, 4, 6, 8, 
+        # 2, 4, 6, 8, 
     ]
     model_files = [
         None,
-        None, None, None,
-        None, None, None, None, None,
-        "saved_models2/Tikhonet_20epochs.pth",
-        "saved_models2/Poisson_PnP_1iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_2iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_4iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_8iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_4iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
+        # None, None, None,
+        # None, None, None, None, None,
+        "saved_models2/Tikhonet_50epochs.pth",
+        # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_2iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_4iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_6iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_8iters_50epochs.pth",
+        # "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
+        # "saved_models2/Gaussian_PnP_2iters_50epochs.pth",
+        # "saved_models2/Gaussian_PnP_4iters_50epochs.pth",
+        # "saved_models2/Gaussian_PnP_6iters_50epochs.pth",
+        # "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
     ]
     
 
@@ -376,9 +378,7 @@ if __name__ =="__main__":
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
     for snr in snrs:
-        # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
-        #            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
-        test_shear(methods='Tikhonet', n_iters=0, model_files="saved_models2/Tikhonet_20epochs.pth", n_gal=opt.n_gal, snr=snr,
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
                    data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
 
     # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,

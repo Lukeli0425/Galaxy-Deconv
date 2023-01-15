@@ -17,7 +17,8 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
           model_save_path='./saved_models/', pretrained_epochs=0):
 
     logger = logging.getLogger('Train')
-    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size)
+    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size,
+                                              normalize=False)
     
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
@@ -48,6 +49,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
     
     optimizer = Adam(params=model.parameters(), lr = lr)
     loss_fn = MultiScaleLoss()
+    # loss_fn = torch.nn.MSELoss()
 
     train_loss_list = []
     val_loss_list = []
