@@ -31,10 +31,10 @@ def conv_fft(H, x):
 	return y.real
 
 def conv_fft_batch(H, x):
-	# Batched version of convolution
-	Y_fft = fftn(x)*H
-	y = ifftn(Y_fft)
-	return y.real
+	"""Batched version of FFT convolution using PyTorch."""
+	Y_fft = fftn(x) * H
+	y = ifftn(Y_fft).real
+	return y
 
 def img_to_tens(x):
 	return torch.from_numpy(np.expand_dims( np.expand_dims(x,0),0))
@@ -43,7 +43,6 @@ def scalar_to_tens(x):
 	return  torch.Tensor([x]).view(1,1,1,1)
 
 def conv_kernel(k, x, mode='cyclic'):
-
 	_ , h, w = x.size()
 	h1, w1 = np.shape(k)
 	k = torch.from_numpy(np.expand_dims(k,0))
@@ -69,15 +68,21 @@ def psf_to_otf(ker, size):
 	psf = torch.zeros(size)
 	# circularly shift
 
-	center = ker.shape[2]//2 
+	center = (ker.shape[2] + 1) // 2
 	psf[:, :, :center, :center] = ker[:, :, center:, center:]
 	psf[:, :, :center, -center:] = ker[:, :, center:, :center]
-	psf[:, :, -center:, :center] = ker[:, :, : center, center:]
+	psf[:, :, -center:, :center] = ker[:, :, :center, center:]
 	psf[:, :, -center:, -center:] = ker[:, :, :center, :center]
 	# compute the otf
 	# otf = torch.rfft(psf, 3, onesided=False)
 	otf = torch.fft.fftn(psf, dim=[2,3])
 	return psf, otf
+
+def laplacian_kernel():
+    lap = torch.Tensor([[[[0, 1, 0], 
+                        [1, -4, 1], 
+                        [0, 1, 0]]]])
+    return lap
 
 
 class MultiScaleLoss(torch.nn.Module):
@@ -106,3 +111,9 @@ def rename_state_dict_keys(state_dict):
 		new_key = key.partition('.')[2]
 		new_state_dict[new_key] = item
 	return new_state_dict
+
+if __name__ == "__main__":
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    lap = laplacian_kernel()
+    _, L = psf_to_otf(lap, [1,1,48,48])
+    print(lap.shape, L.shape)

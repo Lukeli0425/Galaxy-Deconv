@@ -11,14 +11,13 @@ from utils.utils_plot import plot_loss
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
-def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
-          n_epochs=10, lr=1e-4, 
+def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Identity',
+          n_epochs=10, lr=1e-4, loss='MultiScale',
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.857, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
 
     logger = logging.getLogger('Train')
-    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size,
-                                              normalize=False)
+    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size)
     
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
@@ -36,8 +35,8 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
     elif 'Tikhonet' in model_name:
-        logger.info(f'Start training Tikhonet on {data_path} data for {n_epochs} epochs.')
-        model = Tikhonet()
+        logger.info(f'Start training Tikhonet with {filter} filter on {data_path} data for {n_epochs} epochs.')
+        model = Tikhonet(filter=filter)
         model.to(device)
         if pretrained_epochs > 0:
             try:
@@ -48,8 +47,10 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
                 logger.critical(f'Failed loading in {pretrained_file}')
     
     optimizer = Adam(params=model.parameters(), lr = lr)
-    loss_fn = MultiScaleLoss()
-    # loss_fn = torch.nn.MSELoss()
+    if loss == 'MultiScale':
+        loss_fn = MultiScaleLoss()
+    elif loss == 'MSE':
+        loss_fn = torch.nn.MSELoss()
 
     train_loss_list = []
     val_loss_list = []
@@ -109,7 +110,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True,
                         val_loss/len(val_loader)))
 
         if (epoch + 1) % 5 == 0:
-            model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else model_name
+            model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
             model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
             logger.info(f'Model saved to {os.path.join(model_save_path, model_file_name)}')
@@ -125,10 +126,12 @@ if __name__ =="__main__":
 
     parser = argparse.ArgumentParser(description='Arguments for training.')
     parser.add_argument('--n_iters', type=int, default=8)
-    parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet'])
+    parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet', 'ShapeNet'])
     parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
+    parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'ShapeConstraint'])
     parser.add_argument('--train_val_split', type=float, default=0.857)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
@@ -137,7 +140,7 @@ if __name__ =="__main__":
     # from time import sleep
     # sleep(3600*2.8)
 
-    train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True,
+    train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr,
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           model_save_path='./saved_models2/', pretrained_epochs=opt.pretrained_epochs)

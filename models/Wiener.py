@@ -1,19 +1,23 @@
 import torch
 import torch.nn as nn
-from torch.fft import fft2, ifft2, fftshift, ifftshift
+from torch.fft import fftn, ifftn
+from utils.utils_torch import conv_fft_batch, psf_to_otf
 
 class Wiener(nn.Module):
-    def __init__(self):
-        super(Wiener, self).__init__()
-        
-    def forward(self, y, psf, snr):
-        psf = psf/psf.sum() # normalize PSF
-        # x = fftshift(ifft2(fft2(y) / fft2(psf) / (1+1/(fft2(psf).abs()**2 * snr)) )).real
-        H = fft2(psf)
-        numerator = torch.conj(H) * fft2(y)
-        divisor = 1/snr + H.abs() ** 2
-        x = fftshift(ifft2(numerator/divisor)).real
-        return x
-    
+	def __init__(self):
+		super(Wiener, self).__init__()
+		
+	def forward(self, y, psf, snr):
+		device = torch.device("cuda:0" if y.is_cuda else "cpu")
+  
+		_, H = psf_to_otf(psf, y.size())
+		H = H.to(device)
+		Ht, HtH = torch.conj(H), torch.abs(H)**2
+		numerator = fftn(conv_fft_batch(Ht, y), dim=[2,3])
+		divisor = HtH + 1/snr
+		x = torch.real(ifftn(numerator/divisor, dim=[2,3]))
+  
+		return x
+	
 if __name__ == "__main__":
-    model = Wiener()
+	model = Wiener()

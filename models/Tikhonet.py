@@ -1,29 +1,28 @@
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.fft import fftn, ifftn
-from utils.utils_torch import conv_fft_batch, psf_to_otf
+from utils.utils_torch import conv_fft_batch, psf_to_otf, laplacian_kernel
 
 class Tikhonov(nn.Module):
-	def __init__(self):
+	def __init__(self, filter='Identity'):
 		super(Tikhonov, self).__init__()
-	
-	# def forward(self, y, psf, lam):
-	# 	psf = psf/psf.sum() # normalize PSF
-	# 	_, H = psf_to_otf(psf, y.size())
-	# 	numerator = torch.conj(H) * fft2(y)
-	# 	divisor = H.abs() ** 2 + lam
-	# 	x = fftshift(ifft2(numerator/divisor)).real
-	# 	return x
-	def forward(self, y, psf, alpha):
+		self.filter = filter
+        
+	def forward(self, y, psf, alpha, lam):
 		device = torch.device("cuda:0" if y.is_cuda else "cpu")
   
-		psf = psf/psf.sum() # normalize PSF
 		_, H = psf_to_otf(psf, y.size())
 		H = H.to(device)
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
-		numerator = fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
-		divisor = HtH + (1/alpha)
+		# numerator = fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
+		numerator = Ht * fftn(y/alpha, dim=[2,3])
+		if self.filter == 'Identity':
+			divisor = HtH + lam/alpha
+		elif self.filter == 'Laplacian':
+			lap = laplacian_kernel()
+			_, L = psf_to_otf(lap, y.size())
+			LtL = torch.abs(L.to(device)) ** 2
+			divisor = HtH + lam * LtL / alpha
 		x = torch.real(ifftn(numerator/divisor, dim=[2,3]))
 
 		return x
@@ -86,7 +85,7 @@ class Up(nn.Module):
 	def __init__(self, in_channels, out_channels):
 		super(Up, self).__init__()
 		self.net = nn.Sequential(
-            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, bias=False),
+            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, bias=True),
             nn.Upsample(scale_factor=(2,2), mode='nearest')
         )
 
@@ -124,7 +123,7 @@ class UNet(nn.Module):
         ) # [B,60,48,48]
         self.output = nn.Sequential(
             DenseBlock(num_layers=4, in_channels=172, growth_rate=12, kernel_size=3, skip_connection=False),
-            nn.Conv2d(in_channels=220, out_channels=1, kernel_size=1, padding=0, bias=False)
+            nn.Conv2d(in_channels=220, out_channels=1, kernel_size=1, padding=0, bias=True)
         ) # [B,1,48,48]
         
     def forward(self, x):
@@ -132,28 +131,29 @@ class UNet(nn.Module):
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.body(x3)
-        x4 = torch.cat((x3, x4), dim=1)
+        x4 = torch.cat((x3, x4), dim=1) # Skip connection.
         x5 = self.up1(x4)
-        x5 = torch.cat((x2, x5), dim=1)
+        x5 = torch.cat((x2, x5), dim=1) # Skip connection.
         x6 = self.up2(x5)
-        x6 = torch.cat((x1, x6), dim=1)
+        x6 = torch.cat((x1, x6), dim=1) # Skip connection.
         y = self.output(x6)
         return y
 
 
 class Tikhonet(nn.Module):
-	def __init__(self):
+	def __init__(self, filter='Identity'):
 		super(Tikhonet, self).__init__()
-		self.tikhonov = Tikhonov()
+		self.tikhonov = Tikhonov(filter=filter)
 		self.denoiser = UNet()
 		
 	def forward(self, y, psf, alpha):
 		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-		lam = torch.tensor(1., requires_grad=True, device=device)	
-		x = self.tikhonov(y, psf, lam*alpha)
+		lam = torch.tensor(1., requires_grad=True, device=device) # Learnable parameter.
+		x = self.tikhonov(y, psf, alpha, lam)
 		x = self.denoiser(x)
   
 		return x * alpha
+
 
 if __name__ == '__main__':
 	model = Tikhonet()
