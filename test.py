@@ -344,7 +344,7 @@ if __name__ =="__main__":
         'No_Deconv', 
         # 'FPFS', 'Wiener', 'ngmix', 
         # 'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-        'Tikhonet',
+        'Tikhonet', 'Tikhonet_Laplacian',
         # 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)','Unrolled_ADMM(8)',
         # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
     ]
@@ -352,7 +352,7 @@ if __name__ =="__main__":
         0, 
         # 0, 0, 0, 
         # 5, 10, 20, 30, 50,  
-        0,
+        0, 0,
         # 2, 4, 6, 8, 
         # 2, 4, 6, 8, 
     ]
@@ -360,7 +360,8 @@ if __name__ =="__main__":
         None,
         # None, None, None,
         # None, None, None, None, None,
-        "saved_models2/Tikhonet_50epochs.pth",
+        "saved_models2/Tikhonet_Identity_10epochs.pth",
+        "saved_models2/Tikhonet_Laplacian_10epochs.pth",
         # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_2iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_4iters_50epochs.pth",

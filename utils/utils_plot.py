@@ -14,7 +14,7 @@ def get_color(method):
         color = 'xkcd:blue'
     elif 'Richard-Lucy' in method:
         color = 'xkcd:green' 
-    elif method == 'Tikhonet':
+    elif 'Tikhonet' in method:
         color = 'xkcd:orange'
     elif method == 'FPFS':
         color = 'xkcd:red'
@@ -37,6 +37,8 @@ def get_label(method):
         label = 'Wiener'
     elif method == 'Tikhonet':
         label = 'Tikhonet'
+    elif 'Tikhonet' in method:
+        label = 'Tikhonet (Laplacian)'
     elif method == 'FPFS':
         label = 'Fourier Division'
     elif method == 'ngmix':

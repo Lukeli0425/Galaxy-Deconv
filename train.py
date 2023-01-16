@@ -46,6 +46,8 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
     
+    model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
+    
     optimizer = Adam(params=model.parameters(), lr = lr)
     if loss == 'MultiScale':
         loss_fn = MultiScaleLoss()
@@ -110,7 +112,6 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
                         val_loss/len(val_loader)))
 
         if (epoch + 1) % 5 == 0:
-            model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
             model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
             logger.info(f'Model saved to {os.path.join(model_save_path, model_file_name)}')

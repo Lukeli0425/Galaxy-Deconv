@@ -10,7 +10,6 @@ class Richard_Lucy(nn.Module):
     def forward(self, y, psf):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
-        psf = psf/psf.sum() # normalize PSF
         ones = torch.ones_like(y)
         _, H = psf_to_otf(psf, y.size())
         H = H.to(device)
