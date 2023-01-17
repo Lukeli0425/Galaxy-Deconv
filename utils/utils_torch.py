@@ -85,14 +85,14 @@ def laplacian_kernel():
     return lap
 
 
-class MultiScaleLoss(torch.nn.Module):
+class MultiScaleLoss(nn.Module):
 	def __init__(self, scales=3, norm='L1'):
 		super(MultiScaleLoss, self).__init__()
 		self.scales = scales
 		if norm == 'L1':
-			self.loss = torch.nn.L1Loss()
+			self.loss = nn.L1Loss()
 		if norm == 'L2':
-			self.loss = torch.nn.MSELoss()
+			self.loss = nn.MSELoss()
 
 		self.weights = torch.FloatTensor([1/(2**scale) for scale in range(self.scales)])
 		self.multiscales = [nn.AvgPool2d(2**scale, 2**scale) for scale in range(self.scales)]
@@ -104,6 +104,17 @@ class MultiScaleLoss(torch.nn.Module):
 			loss += self.weights[i]*self.loss(output_i, target_i)
 			
 		return loss
+
+
+class ShapeConstraint(nn.Module):
+    def __init__(self):
+        super(ShapeConstraint, self).__init__()
+        self.mse = nn.MSELoss()
+        
+    def forward(self, output, target):
+        
+        loss = self.mse(output, target)
+        return loss
 
 def rename_state_dict_keys(state_dict):
 	new_state_dict = OrderedDict()
