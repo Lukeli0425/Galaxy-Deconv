@@ -1,9 +1,11 @@
 import numpy as np
-from utils.utils_deblur import gauss_kernel, pad, crop
 import torch
 import torch.fft
 import torch.nn as nn
+import torch.nn.functional as F
 from collections import OrderedDict
+from utils.utils_deblur import gauss_kernel, pad, crop
+import utils.cadmos_lib as cl 
 
 # functionName implies a torch version of the function
 def fftn(x):
@@ -107,13 +109,23 @@ class MultiScaleLoss(nn.Module):
 
 
 class ShapeConstraint(nn.Module):
-    def __init__(self):
+    def __init__(self, device, fov_pixels=48, n_shearlet=2):
         super(ShapeConstraint, self).__init__()
         self.mse = nn.MSELoss()
+        self.gamma = 1
+        U = cl.makeUi(fov_pixels, fov_pixels)
+        shearlets, shearlets_adj = cl.get_shearlets(fov_pixels, fov_pixels, n_shearlet)
+        # shealret adjoint of U, i.e Psi^{Star}(U)
+        self.psu = np.array([cl.convolve_stack(ui, shearlets_adj) for ui in U])
+        self.mu = torch.Tensor(cl.comp_mu(self.psu))
+        self.mu = torch.Tensor(self.mu).to(device)
+        self.psu = torch.Tensor(self.psu).to(device)
         
     def forward(self, output, target):
-        
         loss = self.mse(output, target)
+        for i in range(6):
+            for j in range(self.psu.shape[1]):
+                loss += self.gamma * self.mu[i,j] * (F.l1_loss(output*self.psu[i,j], target*self.psu[i,j]) ** 2) / 2.
         return loss
 
 def rename_state_dict_keys(state_dict):
@@ -124,7 +136,9 @@ def rename_state_dict_keys(state_dict):
 	return new_state_dict
 
 if __name__ == "__main__":
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    lap = laplacian_kernel()
-    _, L = psf_to_otf(lap, [1,1,48,48])
-    print(lap.shape, L.shape)
+    loss_fc = ShapeConstraint()
+    output = torch.rand([32,1,48,48])
+    target = torch.zeros([32,1,48,48])
+    loss = loss_fc(output, target)
+    print(loss)
+    

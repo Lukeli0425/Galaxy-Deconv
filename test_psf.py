@@ -32,13 +32,6 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
         if not os.path.exists(result_folder):
             os.mkdir(result_folder)
         results_file = os.path.join(result_folder, f'results_psf_shear_err.json')
-        try:
-            with open(results_file, 'r') as f:
-                results = json.load(f)
-        except:
-            results = {} # dictionary to record the test results
-        if not str(shear_err) in results:
-            results[str(shear_err)] = {}
         
         if method == 'ngmix':
             boot = get_ngmix_Bootstrapper(psf_ngauss=1, ntry=2)
@@ -52,7 +45,9 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
             model.eval()
         elif method == 'Tikhonet' or 'ADMM' in method:
             if method == 'Tikhonet':
-                model = Tikhonet()
+                model = Tikhonet(filter='Identity')
+            elif 'Laplacian' in method:
+                model = Tikhonet(filter='Laplacian')
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
             else:
@@ -100,9 +95,15 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
+        try:
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+        except:
+            results = {} # dictionary to record the test results
+        if not str(shear_err) in results:
+            results[str(shear_err)] = {}
         results[str(shear_err)]['rec_shear'] = rec_shear
         results[str(shear_err)]['gt_shear'] = gt_shear
-        
         
         # Save results to json file
         with open(results_file, 'w') as f:
@@ -129,13 +130,6 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
         if not os.path.exists(result_folder):
             os.mkdir(result_folder)
         results_file = os.path.join(result_folder, f'results_psf_fwhm_err.json')
-        try:
-            with open(results_file, 'r') as f:
-                results = json.load(f)
-        except:
-            results = {} # dictionary to record the test results
-        if not str(fwhm_err) in results:
-            results[str(fwhm_err)] = {}
         
         if method == 'ngmix':
             boot = get_ngmix_Bootstrapper(psf_ngauss=1, ntry=2)
@@ -149,7 +143,9 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
             model.eval()
         elif method == 'Tikhonet' or 'ADMM' in method:
             if method == 'Tikhonet':
-                model = Tikhonet()
+                model = Tikhonet(filter='Identity')
+            elif 'Laplacian' in method:
+                model = Tikhonet(filter='Laplacian')
             elif 'Gaussian' in method:
                 model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
             else:
@@ -197,6 +193,13 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
+        try:
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+        except:
+            results = {}
+        if not str(fwhm_err) in results:
+            results[str(fwhm_err)] = {}
         results[str(fwhm_err)]['rec_shear'] = rec_shear
         results[str(fwhm_err)]['gt_shear'] = gt_shear
         
@@ -221,7 +224,7 @@ if __name__ == "__main__":
         'No_Deconv', 
         'FPFS', 'Wiener', 'ngmix', 
         'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-        # 'Tikhonet',
+        'Tikhonet', 'Tikhonet_Laplacian',
         'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)', 'Unrolled_ADMM(8)',
         'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
     ]
@@ -229,7 +232,7 @@ if __name__ == "__main__":
         0, 
         0, 0, 0, 
         5, 10, 20, 30, 50,  
-        # 0,
+        0, 0,
         2, 4, 6, 8, 
         2, 4, 6, 8
     ]
@@ -237,7 +240,8 @@ if __name__ == "__main__":
         None,
         None, None, None,
         None, None, None, None, None,
-        # "saved_models2/Tikhonet_10epochs.pth",
+        "saved_models2/Tikhonet_Identity_50epochs.pth",
+        "saved_models2/Tikhonet_Laplacian_50epochs.pth",
         "saved_models2/Poisson_PnP_2iters_50epochs.pth",
         "saved_models2/Poisson_PnP_4iters_50epochs.pth",
         "saved_models2/Poisson_PnP_6iters_50epochs.pth",

@@ -93,9 +93,9 @@ class Up(nn.Module):
 		return self.net(x)
 
 
-class UNet(nn.Module):
+class XDenseUNet(nn.Module):
     def __init__(self):
-        super(UNet, self).__init__()
+        super(XDenseUNet, self).__init__()
         self.input = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding='same', bias=False),
             DenseBlock(num_layers=4, in_channels=32, growth_rate=12, kernel_size=3, skip_connection=True)
@@ -144,12 +144,12 @@ class Tikhonet(nn.Module):
 	def __init__(self, filter='Identity'):
 		super(Tikhonet, self).__init__()
 		self.tikhonov = Tikhonov(filter=filter)
-		self.denoiser = UNet()
+		self.denoiser = XDenseUNet()
+		self.lam = torch.tensor(1., requires_grad=True) # Learnable parameter.
 		
 	def forward(self, y, psf, alpha):
-		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-		lam = torch.tensor(1., requires_grad=True, device=device) # Learnable parameter.
-		x = self.tikhonov(y, psf, alpha, lam)
+		# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+		x = self.tikhonov(y, psf, alpha, self.lam)
 		x = self.denoiser(x)
   
 		return x * alpha

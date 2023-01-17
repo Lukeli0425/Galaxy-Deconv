@@ -6,7 +6,7 @@ from torch.optim import Adam
 from utils.utils_data import get_dataloader
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Tikhonet import Tikhonet
-from utils.utils_torch import MultiScaleLoss
+from utils.utils_torch import MultiScaleLoss, ShapeConstraint
 from utils.utils_plot import plot_loss
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = '2'
@@ -34,25 +34,35 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
                 logger.info(f'Successfully loaded in {pretrained_file}')
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
+        loss_fn = MultiScaleLoss()
     elif 'Tikhonet' in model_name:
         logger.info(f'Start training Tikhonet with {filter} filter on {data_path} data for {n_epochs} epochs.')
         model = Tikhonet(filter=filter)
         model.to(device)
         if pretrained_epochs > 0:
             try:
-                pretrained_file = os.path.join(model_save_path, f'Tikhonet_{pretrained_epochs}epochs.pth')
+                pretrained_file = os.path.join(model_save_path, f'Tikhonet_{filter}_{pretrained_epochs}epochs.pth')
                 model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {pretrained_file}')
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
-    
+        loss_fn = torch.nn.MSELoss()
+    elif model_name == 'ShapeNet':
+        logger.info(f'Start training ShapeNet on {data_path} data for {n_epochs} epochs.')
+        model = Tikhonet(filter='Laplacian')
+        model.to(device)
+        if pretrained_epochs > 0:
+            try:
+                pretrained_file = os.path.join(model_save_path, f'ShapeNet_{pretrained_epochs}epochs.pth')
+                model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
+                logger.info(f'Successfully loaded in {pretrained_file}')
+            except:
+                logger.critical(f'Failed loading in {pretrained_file}')
+        loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2)
+        
     model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
     
     optimizer = Adam(params=model.parameters(), lr = lr)
-    if loss == 'MultiScale':
-        loss_fn = MultiScaleLoss()
-    elif loss == 'MSE':
-        loss_fn = torch.nn.MSELoss()
 
     train_loss_list = []
     val_loss_list = []
@@ -132,7 +142,7 @@ if __name__ =="__main__":
     parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
-    parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'ShapeConstraint'])
+    # parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'ShapeConstraint'])
     parser.add_argument('--train_val_split', type=float, default=0.857)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
