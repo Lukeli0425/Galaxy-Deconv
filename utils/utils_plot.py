@@ -16,6 +16,8 @@ def get_color(method):
         color = 'xkcd:green' 
     elif 'Tikhonet' in method:
         color = 'xkcd:orange'
+    elif method == 'ShapeNet':
+        color = 'xkcd:pink'
     elif method == 'FPFS':
         color = 'xkcd:red'
     elif method == 'ngmix':
@@ -37,8 +39,10 @@ def get_label(method):
         label = 'Wiener'
     elif method == 'Tikhonet':
         label = 'Tikhonet'
-    elif 'Tikhonet' in method:
+    elif 'Laplacian' in method:
         label = 'Tikhonet (Laplacian)'
+    elif method == 'ShapeNet':
+        label = 'ShapeNet'
     elif method == 'FPFS':
         label = 'Fourier Division'
     elif method == 'ngmix':

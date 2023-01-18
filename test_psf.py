@@ -43,9 +43,11 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        elif method == 'Tikhonet' or 'ADMM' in method:
+        elif method == 'Tikhonet' or method == 'ShapeNet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet(filter='Identity')
+            elif method == 'ShapeNet':
+                model = Tikhonet(filter='Laplacian')
             elif 'Laplacian' in method:
                 model = Tikhonet(filter='Laplacian')
             elif 'Gaussian' in method:
@@ -141,9 +143,11 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        elif method == 'Tikhonet' or 'ADMM' in method:
+        elif method == 'Tikhonet' or method == 'ShapeNet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet(filter='Identity')
+            elif method == 'ShapeNet':
+                model = Tikhonet(filter='Laplacian')
             elif 'Laplacian' in method:
                 model = Tikhonet(filter='Laplacian')
             elif 'Gaussian' in method:
@@ -222,26 +226,27 @@ if __name__ == "__main__":
     
     methods = [
         'No_Deconv', 
-        'FPFS', 'Wiener', 'ngmix', 
+        'FPFS', 'Wiener', #'ngmix', 
         'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-        'Tikhonet', 'Tikhonet_Laplacian',
+        'Tikhonet', 'ShapeNet', # 'Tikhonet_Laplacian',
         'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)', 'Unrolled_ADMM(8)',
         'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
         0, 
-        0, 0, 0, 
+        0, 0, #0, 
         5, 10, 20, 30, 50,  
-        0, 0,
+        0, 0, # 0,
         2, 4, 6, 8, 
         2, 4, 6, 8
     ]
     model_files = [
         None,
-        None, None, None,
+        None, None, #None,
         None, None, None, None, None,
         "saved_models2/Tikhonet_Identity_50epochs.pth",
-        "saved_models2/Tikhonet_Laplacian_50epochs.pth",
+        "saved_models2/ShapeNet_50epochs.pth",
+        # "saved_models2/Tikhonet_Laplacian_50epochs.pth",
         "saved_models2/Poisson_PnP_2iters_50epochs.pth",
         "saved_models2/Poisson_PnP_4iters_50epochs.pth",
         "saved_models2/Poisson_PnP_6iters_50epochs.pth",
@@ -252,6 +257,14 @@ if __name__ == "__main__":
         "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
     ]
 
+    # methods = [
+    #     'No_Deconv',
+    #     'ShapeNet']
+    # n_iters = [
+    #         0, 0]
+    # model_files = [
+    #     None,
+    #     "saved_models2/ShapeNet_50epochs.pth"]
     shear_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     for shear_err in shear_errs:
         test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
@@ -259,5 +272,5 @@ if __name__ == "__main__":
     
     fwhm_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
     for fwhm_err in fwhm_errs:
-        test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, fwhm_err=fwhm_err,
+        test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
                            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
