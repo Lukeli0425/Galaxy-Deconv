@@ -6,6 +6,7 @@ from torch.autograd import Variable
 import math
 import numpy as np
 from models.ResUNet import ResUNet
+from models.XDenseUNet import XDenseUNet
 from utils.utils_torch import conv_fft, conv_fft_batch, psf_to_otf
 
 
@@ -136,16 +137,28 @@ class Z_Update_ResUNet(nn.Module):
 		return z_out
 
 
+class Z_Update_XDenseUNet(nn.Module):
+	"""Updating Z with ResUNet as denoiser."""
+	def __init__(self):
+		super(Z_Update_XDenseUNet, self).__init__()		
+		self.net = XDenseUNet()
+
+	def forward(self, z):
+		z_out = self.net(z.float())
+		return z_out
+
+
 class Unrolled_ADMM(nn.Module):
-	def __init__(self, n_iters=8, llh='Poisson', PnP=True):
+	def __init__(self, n_iters=8, llh='Poisson', denoiser='XDenseUNet', PnP=True):
 		super(Unrolled_ADMM, self).__init__()
 		self.n = n_iters # Number of iterations.
 		self.llh = llh
 		self.PnP = PnP
+		self.denoiser = denoiser
 		self.init = InitNet(self.n)
 		self.X = X_Update() # FFT based quadratic solution.
 		self.V = V_Update_Poisson() if llh=='Poisson' else V_Update_Gaussian() # Poisson/Gaussian MLE.
-		self.Z = Z_Update_ResUNet() if PnP else Z_Update() # Denoiser.
+		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.
 	
 	def init_l2(self, y, H, alpha):
 		Ht, HtH = torch.conj(H), torch.abs(H)**2

@@ -336,7 +336,7 @@ if __name__ == "__main__":
     parser.add_argument('--upsample', type=int, default=4)
     opt = parser.parse_args()
     
-    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', train_split=0.7,
+    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', train_split=0.7,
                   survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
                   snrs = [20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],

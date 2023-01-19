@@ -149,9 +149,9 @@ if __name__ =="__main__":
     opt = parser.parse_args()
 
     # from time import sleep
-    # sleep(3600*2.8)
+    # sleep(3600*2)
 
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models2/', pretrained_epochs=opt.pretrained_epochs)
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          model_save_path='./saved_models3/', pretrained_epochs=opt.pretrained_epochs)
