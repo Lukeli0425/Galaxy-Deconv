@@ -112,7 +112,7 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     return gal_image
 
 
-def generate_data(data_path, train_split=0.7,
+def generate_data(data_path, n_train=40000, load_info=False,
                   survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4,
                   snrs=[20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
@@ -155,17 +155,20 @@ def generate_data(data_path, train_split=0.7,
         logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
     except:
         logger.warning('Failed reading in I=%s galaxies.', I)
-          
-    sequence = np.arange(0, n_total) # Generate random sequence for dataset.
-    np.random.shuffle(sequence)
-    n_train = 45000
     
-    info = {'survey':survey, 'I':I, 'fov_pixels':fov_pixels, 'pixel_scale':pixel_scale,
-            'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence.tolist()}
     info_file = os.path.join(data_path, f'info.json')
-    with open(info_file, 'w') as f:
-        json.dump(info, f)
-    logger.info('Dataset information saved to %s.', info_file)
+    if load_info:
+        with open(info_file, 'r') as f:
+            info = json.load(f)
+        logger.info('Successfully loaded dataset informatio from %s.', info_file)
+    else:
+        sequence = np.arange(0, n_total) # Generate random sequence for dataset.
+        np.random.shuffle(sequence)
+        info = {'survey':survey, 'I':I, 'fov_pixels':fov_pixels, 'pixel_scale':pixel_scale,
+                'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence.tolist()}
+        with open(info_file, 'w') as f:
+            json.dump(info, f)
+        logger.info('Dataset information saved to %s.', info_file)
 
     # Random number generators for the parameters.
     random_seed = 31415
