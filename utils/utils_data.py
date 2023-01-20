@@ -98,15 +98,15 @@ class Galaxy_Dataset(Dataset):
         gt_path = os.path.join(self.data_path, self.gt_folder)
         gt = torch.load(os.path.join(gt_path, f"gt_{idx}.pth")).unsqueeze(0)
 
-        alpha = obs.ravel().mean().float()
+        alpha = obs.abs().ravel().mean().float()
         alpha = torch.Tensor(alpha).view(1,1,1)
-        if self.normalize:
-            obs = obs - gt.mean() / torch.abs(gt - gt.mean()).max()
-            gt = gt - gt.mean() / torch.abs(gt - gt.mean()).max()
+        # if self.normalize:
+        #     obs = obs - gt.mean() / torch.abs(gt - gt.mean()).max()
+        #     gt = gt - gt.mean() / torch.abs(gt - gt.mean()).max()
         return (obs, psf, alpha), gt
             
             
-def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.8888889, batch_size=32,
+def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.8, batch_size=32,
                    psf_folder='psf/', obs_folder='obs/', gt_folder='gt/', normalize=False):
     """Generate PyTorch dataloaders for training or testing.
 

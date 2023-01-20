@@ -138,7 +138,7 @@ class Z_Update_ResUNet(nn.Module):
 
 
 class Z_Update_XDenseUNet(nn.Module):
-	"""Updating Z with ResUNet as denoiser."""
+	"""Updating Z with XDenseUNet as denoiser."""
 	def __init__(self):
 		super(Z_Update_XDenseUNet, self).__init__()		
 		self.net = XDenseUNet()
@@ -149,7 +149,7 @@ class Z_Update_XDenseUNet(nn.Module):
 
 
 class Unrolled_ADMM(nn.Module):
-	def __init__(self, n_iters=8, llh='Poisson', denoiser='XDenseUNet', PnP=True):
+	def __init__(self, n_iters=8, llh='Poisson', denoiser='ResUNet', PnP=True):
 		super(Unrolled_ADMM, self).__init__()
 		self.n = n_iters # Number of iterations.
 		self.llh = llh
@@ -190,7 +190,7 @@ class Unrolled_ADMM(nn.Module):
 			rho1 = rho1_iters[:,:,:,n].view(N,1,1,1)
 			rho2 = rho2_iters[:,:,:,n].view(N,1,1,1)
 			# V, Z and X updates
-			v = self.V(conv_fft_batch(H,x) + u2, y, rho2, alpha) if self.llh=='Poisson' else self.V(conv_fft_batch(H,x) + u2, y, rho2)
+			v = self.V(conv_fft_batch(H,x) + u2, y, rho2, alpha) if self.llh=='Poisson' else self.V(conv_fft_batch(H,x) + u2, y/alpha, rho2)
 			z = self.Z(x + u1) if self.PnP else self.Z(x + u1, lam, rho1)
 			x = self.X(z - u1, conv_fft_batch(Ht,v - u2), HtH, rho1, rho2)
 			# Lagrangian updates
@@ -198,4 +198,4 @@ class Unrolled_ADMM(nn.Module):
 			u2 = u2 + conv_fft_batch(H,x) - v
 			x_list.append(x)
 
-		return x_list[-1] * alpha if self.llh=='Poisson' else x_list[-1]
+		return x_list[-1] * alpha # if self.llh=='Poisson' else x_list[-1]

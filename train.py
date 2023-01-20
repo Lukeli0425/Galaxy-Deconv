@@ -13,7 +13,7 @@ from utils.utils_plot import plot_loss
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Identity',
           n_epochs=10, lr=1e-4, loss='MultiScale',
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.857, batch_size=32,
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.8, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
 
     logger = logging.getLogger('Train')
@@ -138,12 +138,12 @@ if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Arguments for training.')
     parser.add_argument('--n_iters', type=int, default=8)
     parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet', 'ShapeNet'])
-    parser.add_argument('--llh', type=str, default='Poisson', choices=['Poisson', 'Gaussian'])
+    parser.add_argument('--llh', type=str, default='Gaussian', choices=['Poisson', 'Gaussian'])
     parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
     # parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'ShapeConstraint'])
-    parser.add_argument('--train_val_split', type=float, default=0.857)
+    parser.add_argument('--train_val_split', type=float, default=0.8)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
     opt = parser.parse_args()
