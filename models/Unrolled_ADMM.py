@@ -172,6 +172,8 @@ class Unrolled_ADMM(nn.Module):
 		device = torch.device("cuda:0" if y.is_cuda else "cpu")
 		x_list = []
 		N, _, _, _ = y.size()
+		y = torch.max(y, torch.zeros_like(y))
+  
 		# Generate auxiliary variables for convolution
 		k_pad, H = psf_to_otf(kernel, y.size())
 		H = H.to(device)

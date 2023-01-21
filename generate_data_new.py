@@ -108,6 +108,7 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     gal.drawImage(gal_image, scale=pixel_scale/upsample, offset=(dx,dy), method='auto')
         
     gal_image = torch.from_numpy(gal_image.array) # Convert to PyTorch.Tensor.
+    gal_image = torch.max(gal_image, torch.zeros_like(gal_image))
     
     return gal_image
 
@@ -246,7 +247,7 @@ def generate_data(data_path, n_train=40000, load_info=False,
         gt = down_sample(gt.clone(), upsample)
 
         # Add CCD noise (Poisson + Gaussian).
-        # conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero.
+        conv = torch.max(torch.zeros_like(conv), conv) # Set negative pixels to zero.
         obs = conv + torch.normal(mean=torch.zeros_like(conv), std=sigma*torch.ones_like(conv))
         # obs = torch.max(torch.zeros_like(obs), obs) # Set negative pixels to zero.
 
@@ -270,7 +271,7 @@ def generate_data(data_path, n_train=40000, load_info=False,
                 gt_snr = down_sample(gt_snr.clone(), upsample)
                 
                 # Add CCD noise (Poisson + Gaussian).
-                # conv_snr = torch.max(torch.zeros_like(conv_snr), conv_snr) # Set negative pixels to zero
+                conv_snr = torch.max(torch.zeros_like(conv_snr), conv_snr) # Set negative pixels to zero
                 obs_snr = conv_snr + torch.normal(mean=torch.zeros_like(conv_snr), std=sigma*torch.ones_like(conv_snr))
                 # obs_snr = torch.max(torch.zeros_like(obs_snr), obs_snr) # Set negative pixels to zero
 

@@ -98,7 +98,7 @@ class Galaxy_Dataset(Dataset):
         gt_path = os.path.join(self.data_path, self.gt_folder)
         gt = torch.load(os.path.join(gt_path, f"gt_{idx}.pth")).unsqueeze(0)
 
-        alpha = obs.abs().ravel().mean().float()
+        alpha = obs.ravel().mean().float()
         alpha = torch.Tensor(alpha).view(1,1,1)
         # if self.normalize:
         #     obs = obs - gt.mean() / torch.abs(gt - gt.mean()).max()

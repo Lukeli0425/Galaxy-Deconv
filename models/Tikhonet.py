@@ -19,12 +19,12 @@ class Tikhonov(nn.Module):
 		# numerator = fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
 		numerator = Ht * fftn(y/alpha, dim=[2,3])
 		if self.filter == 'Identity':
-			divisor = HtH + lam/alpha
+			divisor = HtH + lam# / alpha
 		elif self.filter == 'Laplacian':
 			lap = laplacian_kernel()
 			_, L = psf_to_otf(lap, y.size())
 			LtL = torch.abs(L.to(device)) ** 2
-			divisor = HtH + lam * LtL / alpha
+			divisor = HtH + lam * LtL# / alpha
 		x = torch.real(ifftn(numerator/divisor, dim=[2,3]))
 
 		return x
@@ -39,6 +39,7 @@ class Tikhonet(nn.Module):
 		
 	def forward(self, y, psf, alpha):
 		# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+		y = torch.max(y, torch.zeros_like(y))
 		x = self.tikhonov(y, psf, alpha, self.lam)
 		x = self.denoiser(x)
   
