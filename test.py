@@ -371,7 +371,7 @@ if __name__ == "__main__":
         # "saved_models2/Poisson_PnP_4iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_6iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_8iters_50epochs.pth",
-        # "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_1iters_20epochs.pth",
         "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
         "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
         # "saved_models3/Gaussian_PnP_6iters_20epochs.pth",
