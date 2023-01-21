@@ -161,6 +161,11 @@ def generate_data(data_path, n_train=40000, load_info=False,
     if load_info:
         with open(info_file, 'r') as f:
             info = json.load(f)
+        survey = info['survey']
+        sequence = info['sequence']
+        I = info['I']
+        pixel_scale = info['pixel_scale']
+        n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
         logger.info('Successfully loaded dataset informatio from %s.', info_file)
     else:
         sequence = np.arange(0, n_total) # Generate random sequence for dataset.
@@ -340,7 +345,7 @@ if __name__ == "__main__":
     parser.add_argument('--upsample', type=int, default=4)
     opt = parser.parse_args()
     
-    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', n_train=45000, load_info=True,
+    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', n_train=45000, load_info=False,
                   survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
                   snrs = [20, 40, 60, 80, 100, 150, 200, 300],
                   shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
