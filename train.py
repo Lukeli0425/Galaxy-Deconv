@@ -132,7 +132,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
     return
 
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(description='Arguments for training.')

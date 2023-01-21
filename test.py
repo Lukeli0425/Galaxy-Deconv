@@ -331,7 +331,7 @@ def test_time(methods, n_iters, model_files, n_gal,
         logger.info(f"Time test results saved to {results_file}.\n")  
     return results
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
     parser = argparse.ArgumentParser(description='Arguments for testing.')
@@ -362,8 +362,8 @@ if __name__ =="__main__":
         None,
         None,# None, None,
         None, None, None, None, None,
-        "saved_models2/Tikhonet_Identity_15epochs.pth",
-        "saved_models2/ShapeNet_10epochs.pth",
+        "saved_models2/Tikhonet_Identity_20epochs.pth",
+        "saved_models2/ShapeNet_20epochs.pth",
         # "saved_models2/Tikhonet_Laplacian_50epochs.pth",
         # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_2iters_50epochs.pth",
@@ -371,10 +371,10 @@ if __name__ =="__main__":
         # "saved_models2/Poisson_PnP_6iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_8iters_50epochs.pth",
         # "saved_models2/Gaussian_PnP_1iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_10epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_10epochs.pth",
-        "saved_models3/Gaussian_PnP_6iters_10epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_10epochs.pth"
+        "saved_models3/Gaussian_PnP_2iters_20epochs.pth",
+        "saved_models3/Gaussian_PnP_4iters_20epochs.pth",
+        "saved_models3/Gaussian_PnP_6iters_20epochs.pth",
+        "saved_models3/Gaussian_PnP_8iters_15epochs.pth"
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
@@ -383,5 +383,5 @@ if __name__ =="__main__":
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
                    data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
 
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-    #           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
+              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
