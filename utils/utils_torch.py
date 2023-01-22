@@ -109,10 +109,10 @@ class MultiScaleLoss(nn.Module):
 
 
 class ShapeConstraint(nn.Module):
-    def __init__(self, device, fov_pixels=48, n_shearlet=2):
+    def __init__(self, device, fov_pixels=48, gamma=1, n_shearlet=2):
         super(ShapeConstraint, self).__init__()
         self.mse = nn.MSELoss()
-        self.gamma = 1
+        self.gamma = gamma
         U = cl.makeUi(fov_pixels, fov_pixels)
         shearlets, shearlets_adj = cl.get_shearlets(fov_pixels, fov_pixels, n_shearlet)
         # shealret adjoint of U, i.e Psi^{Star}(U)
