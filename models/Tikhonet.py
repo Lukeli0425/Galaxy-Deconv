@@ -9,6 +9,8 @@ class Tikhonov(nn.Module):
 	def __init__(self, filter='Identity'):
 		super(Tikhonov, self).__init__()
 		self.filter = filter
+		if self.filter == 'Laplacian':
+			self.lap = laplacian_kernel()
         
 	def forward(self, y, psf, alpha, lam):
 		device = torch.device("cuda:0" if y.is_cuda else "cpu")
@@ -21,8 +23,7 @@ class Tikhonov(nn.Module):
 		if self.filter == 'Identity':
 			divisor = HtH + lam# / alpha
 		elif self.filter == 'Laplacian':
-			lap = laplacian_kernel()
-			_, L = psf_to_otf(lap, y.size())
+			_, L = psf_to_otf(self.lap, y.size())
 			LtL = torch.abs(L.to(device)) ** 2
 			divisor = HtH + lam * LtL# / alpha
 		x = torch.real(ifftn(numerator/divisor, dim=[2,3]))
