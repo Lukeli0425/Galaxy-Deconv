@@ -190,25 +190,25 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
-                    obs = torch.max(0, obs)
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
-                    obs = torch.max(0, obs)
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'ngmix':
-                    obs = torch.max(0, obs)
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
                     res = boot.go(obs)
                     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif method == 'Wiener':
-                    obs = torch.max(0, obs)
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, snr) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
