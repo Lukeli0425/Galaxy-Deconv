@@ -190,22 +190,25 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
+                    obs = torch.max(0, obs)
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    # obs_shear.append(estimate_shear_new(obs, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
+                    obs = torch.max(0, obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'ngmix':
+                    obs = torch.max(0, obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
                     res = boot.go(obs)
                     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif method == 'Wiener':
+                    obs = torch.max(0, obs)
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf, snr) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -346,25 +349,25 @@ if __name__ == "__main__":
         'No_Deconv', 
         'FPFS', 'ngmix', 
         'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-        'Tikhonet', 'ShapeNet', # 'Tikhonet_Laplacian',
+        # 'Tikhonet', 'ShapeNet', # 'Tikhonet_Laplacian',
         # 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)', 'Unrolled_ADMM(6)',
         # 'Unrolled_ADMM_Gaussian(6)',
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
         0, 
         0, 0, 
         10, 20, 30, 50, 100,
-        0, 0, # 0,
+        # 0, 0, # 0,
         # 2, 4, 6, 8, 
-        2, 4, 8, 
+        # 2, 4, 8, 
     ]
     model_files = [
         None,
         None, None,
         None, None, None, None, None,
-        "saved_models3/Tikhonet_Identity_60epochs.pth",
-        "saved_models3/ShapeNet_60epochs.pth",
+        # "saved_models3/Tikhonet_Identity_60epochs.pth",
+        # "saved_models3/ShapeNet_60epochs.pth",
         # "saved_models2/Tikhonet_Laplacian_50epochs.pth",
         # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_2iters_50epochs.pth",
@@ -372,10 +375,10 @@ if __name__ == "__main__":
         # "saved_models2/Poisson_PnP_6iters_50epochs.pth",
         # "saved_models2/Poisson_PnP_8iters_50epochs.pth",
         # "saved_models3/Gaussian_PnP_1iters_20epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
         # "saved_models3/Gaussian_PnP_6iters_20epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_30epochs.pth"
+        # "saved_models3/Gaussian_PnP_8iters_30epochs.pth"
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
