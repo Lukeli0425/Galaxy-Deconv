@@ -105,12 +105,12 @@ class XDenseUNet(nn.Module):
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.body(x3)
-        x4 = torch.cat((x3, x4), dim=1) # Skip connection.
-        x5 = self.up1(x4)
-        x5 = torch.cat((x2, x5), dim=1) # Skip connection.
-        x6 = self.up2(x5)
-        x6 = torch.cat((x1, x6), dim=1) # Skip connection.
-        y = self.output(x6)
+        # x4 = torch.cat((x3, x4), dim=1) # Skip connection.
+        x5 = self.up1(torch.cat((x3, x4), dim=1))
+        # x5 = torch.cat((x2, x5), dim=1) # Skip connection.
+        x6 = self.up2(torch.cat((x2, x5), dim=1))
+        # x6 = torch.cat((x1, x6), dim=1) # Skip connection.
+        y = self.output(torch.cat((x1, x6), dim=1))
         return y
     
     

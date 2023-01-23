@@ -381,7 +381,7 @@ if __name__ == "__main__":
         "saved_models3/Gaussian_PnP_8iters_15epochs.pth"
     ]
     
-    snrs = [300]
+    snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
