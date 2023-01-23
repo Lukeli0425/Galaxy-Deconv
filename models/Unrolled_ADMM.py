@@ -162,8 +162,8 @@ class Unrolled_ADMM(nn.Module):
 		self.V = V_Update_Poisson() if llh=='Poisson' else V_Update_Gaussian() # Poisson/Gaussian MLE.
 		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.	
 		##### Ablation test #####
-		self.rho1_iters = torch.ones(size=[1,self.n], requires_grad=True)
-		self.rho2_iters = torch.ones(size=[1,self.n], requires_grad=True)
+		self.rho1_iters = torch.ones(size=[self.n,], requires_grad=True)
+		self.rho2_iters = torch.ones(size=[self.n,], requires_grad=True)
 		##### End Ablation test #####
   
 	def init_l2(self, y, H, alpha):
