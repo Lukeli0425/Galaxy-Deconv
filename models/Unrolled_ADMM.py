@@ -1,10 +1,12 @@
+import math
+
+import numpy as np
 import torch
 import torch.fft as tfft
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import math
-import numpy as np
+
 from models.ResUNet import ResUNet
 from models.XDenseUNet import XDenseUNet
 from utils.utils_torch import conv_fft, conv_fft_batch, psf_to_otf
@@ -158,8 +160,12 @@ class Unrolled_ADMM(nn.Module):
 		self.init = InitNet(self.n)
 		self.X = X_Update() # FFT based quadratic solution.
 		self.V = V_Update_Poisson() if llh=='Poisson' else V_Update_Gaussian() # Poisson/Gaussian MLE.
-		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.
-	
+		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.	
+		##### Ablation test #####
+		self.rho1_iters = torch.ones(size=[1,self.n], requires_grad=True)
+		self.rho2_iters = torch.ones(size=[1,self.n], requires_grad=True)
+		##### End Ablation test #####
+  
 	def init_l2(self, y, H, alpha):
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
 		rhs = tfft.fftn( conv_fft_batch(Ht, y/alpha), dim=[2,3] )
@@ -178,7 +184,7 @@ class Unrolled_ADMM(nn.Module):
 		k_pad, H = psf_to_otf(kernel, y.size())
 		H = H.to(device)
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
-		rho1_iters, rho2_iters = self.init(kernel, alpha) 	# Hyperparameters
+		# rho1_iters, rho2_iters = self.init(kernel, alpha) 	# Hyperparameters
 		x = self.init_l2(y, H, alpha) # Initialization using Wiener Deconvolution
 		x_list.append(x)
 		# Other ADMM variables
@@ -189,8 +195,11 @@ class Unrolled_ADMM(nn.Module):
 		
         # ADMM iterations
 		for n in range(self.n):
-			rho1 = rho1_iters[:,:,:,n].view(N,1,1,1)
-			rho2 = rho2_iters[:,:,:,n].view(N,1,1,1)
+			# rho1 = rho1_iters[:,:,:,n].view(N,1,1,1)
+			# rho2 = rho2_iters[:,:,:,n].view(N,1,1,1)
+			##### Ablation test #####
+			rho1, rho2 = self.rho1_iters[n], self.rho2_iters[n]
+   			##### End Ablation test #####
 			# V, Z and X updates
 			v = self.V(conv_fft_batch(H,x) + u2, y, rho2, alpha) if self.llh=='Poisson' else self.V(conv_fft_batch(H,x) + u2, y/alpha, rho2)
 			z = self.Z(x + u1) if self.PnP else self.Z(x + u1, lam, rho1)
@@ -201,3 +210,9 @@ class Unrolled_ADMM(nn.Module):
 			x_list.append(x)
 
 		return x_list[-1] * alpha # if self.llh=='Poisson' else x_list[-1]
+
+
+if __name__ == '__main__':
+	model = Unrolled_ADMM()
+	total = sum([param.nelement() for param in model.parameters()])
+	print("Number of parameter: %s" % (total))
