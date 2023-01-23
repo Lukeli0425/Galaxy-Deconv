@@ -1,13 +1,15 @@
-import os
-import logging
 import argparse
+import logging
+import os
+
 import torch
 from torch.optim import Adam
-from utils.utils_data import get_dataloader
-from models.Unrolled_ADMM import Unrolled_ADMM
+
 from models.Tikhonet import Tikhonet
-from utils.utils_torch import MultiScaleLoss, ShapeConstraint
+from models.Unrolled_ADMM import Unrolled_ADMM
+from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
+from utils.utils_torch import MultiScaleLoss, ShapeConstraint
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
@@ -122,7 +124,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
                         val_loss/len(val_loader)))
 
         if (epoch + 1) % 5 == 0:
-            model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
+            model_file_name = f'{model_name}_abl_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
             logger.info(f'Model saved to {os.path.join(model_save_path, model_file_name)}')
 
