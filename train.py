@@ -7,6 +7,7 @@ from torch.optim import Adam
 
 from models.Tikhonet import Tikhonet
 from models.Unrolled_ADMM import Unrolled_ADMM
+from models.ResUNet import ResUNet
 from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_torch import MultiScaleLoss, ShapeConstraint
@@ -61,6 +62,18 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
         loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2)
+    elif model_name == 'ResUNet':
+        logger.info(f'Start training ResUNet on {data_path} data for {n_epochs} epochs.')
+        model = ResUNet()
+        model.to(device)
+        if pretrained_epochs > 0:
+            try:
+                pretrained_file = os.path.join(model_save_path, f'ResUNet_{pretrained_epochs}epochs.pth')
+                model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
+                logger.info(f'Successfully loaded in {pretrained_file}')
+            except:
+                logger.critical(f'Failed loading in {pretrained_file}')
+        loss_fn = MultiScaleLoss()
         
     model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
     
@@ -74,6 +87,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
         for idx, ((obs, psf, alpha), gt) in enumerate(train_loader):
             optimizer.zero_grad()
             obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
+            # rec = model(obs/alpha) * alpha
             rec = model(obs, psf, alpha)
             loss = loss_fn(gt, rec)
 
@@ -139,7 +153,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Arguments for training.')
     parser.add_argument('--n_iters', type=int, default=8)
-    parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet', 'ShapeNet'])
+    parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet', 'ShapeNet', 'ResUNet'])
     parser.add_argument('--llh', type=str, default='Gaussian', choices=['Poisson', 'Gaussian'])
     parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
@@ -155,5 +169,5 @@ if __name__ == "__main__":
 
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models3/', pretrained_epochs=opt.pretrained_epochs)
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          model_save_path='./saved_models4/', pretrained_epochs=opt.pretrained_epochs)

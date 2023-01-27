@@ -113,12 +113,12 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     return gal_image
 
 
-def generate_data(data_path, n_train=40000, load_info=False,
-                  survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4,
-                  snrs=[20, 40, 60, 80, 100, 150, 200, 300],
-                  shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
-                  fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]):
-    """Generate simulated galaxy images and corresponding PSFs for train and test dataset.
+def generate_data_deconv(data_path, n_train=40000, load_info=True,
+                         survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4,
+                         snrs=[20, 40, 60, 80, 100, 150, 200, 300],
+                         shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
+                         fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]):
+    """Generate simulated galaxy images and corresponding PSFs for deconvolution.
 
     Args:
         data_path (str): Path to save the dataset. 
@@ -134,7 +134,7 @@ def generate_data(data_path, n_train=40000, load_info=False,
     """
     
     logger = logging.getLogger('DataGenerator')
-    logger.info('Simulating %s images using I=%s COSMOS data.', survey, I)
+    logger.info('Simulating %s images for deconvolution using I=%s COSMOS data.', survey, I)
     
     # Create directory for the dataset.
     if not os.path.exists(data_path):
@@ -333,11 +333,131 @@ def generate_data(data_path, n_train=40000, load_info=False,
             plt.savefig(os.path.join(data_path, 'visualization', f"vis_{k}.jpg"), bbox_inches='tight')
             plt.close()
 
+          
+def generate_data_denoise(data_path, n_train=40000, load_info=True,
+                          survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4):
+    """Generate simulated galaxy images for denoising.
+
+    Args:
+        data_path (str): Path to save the dataset. 
+        train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to 0.7.
+        survey (str, optional): _description_. Defaults to 'LSST'.
+        I (str, optional): The sample in COSMOS data to use, "23.5" or "25.2". Defaults to '23.5'.
+        fov_pixels (int, optional):  Size of the simulated images in pixels.. Defaults to 48.
+        pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
+        upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
+    """
+    
+    logger = logging.getLogger('DataGenerator')
+    logger.info('Simulating %s images for denoising using I=%s COSMOS data.', survey, I)
+    
+    # Create directory for the dataset.
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
+    if not os.path.exists(os.path.join(data_path, 'obs')):
+        os.mkdir(os.path.join(data_path, 'obs'))
+    if not os.path.exists(os.path.join(data_path, 'gt')):
+        os.mkdir(os.path.join(data_path, 'gt'))
+    if not os.path.exists(os.path.join(data_path, 'visualization')): 
+        os.mkdir(os.path.join(data_path, 'visualization'))
+
+    # Read the catalog.
+    try:
+        real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
+        cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
+        n_total = real_galaxy_catalog.nobjects #- 56030
+        logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
+    except:
+        logger.warning('Failed reading in I=%s galaxies.', I)
+    
+    info_file = os.path.join(data_path, f'info.json')
+    if load_info:
+        with open(info_file, 'r') as f:
+            info = json.load(f)
+        survey = info['survey']
+        sequence = info['sequence']
+        I = info['I']
+        pixel_scale = info['pixel_scale']
+        n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
+        logger.info('Successfully loaded dataset informatio from %s.', info_file)
+    else:
+        sequence = np.arange(0, n_total) # Generate random sequence for dataset.
+        np.random.shuffle(sequence)
+        info = {'survey':survey, 'I':I, 'fov_pixels':fov_pixels, 'pixel_scale':pixel_scale,
+                'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence.tolist()}
+        with open(info_file, 'w') as f:
+            json.dump(info, f)
+        logger.info('Dataset information saved to %s.', info_file)
+
+    # Random number generators for the parameters.
+    random_seed = 31415
+    rng = galsim.UniformDeviate(seed=random_seed) # U(0,1).
+    rng_gal_shear = galsim.DistDeviate(seed=rng, function=lambda x: x, x_min=0.01, x_max=0.05)
+    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.44), x_min=18, x_max=320, npoints=1000) # Log-uniform Distribution.
+    
+    # CCD and sky parameters.
+    exp_time = 30.                      # Exposure time (2*15 seconds).
+    sky_brightness = 20.48              # Sky brightness (absolute magnitude) in i band.
+    zero_point = 27.85                  # Instrumental zero point, i.e. asolute magnitude that would produce one e- per second.
+    gain = 2.3                          # CCD Gain (e-/ADU).
+    qe = 0.94                           # CCD Quantum efficiency.
+    read_noise = 8.8                    # Standrad deviation of Gaussain read noise (e-/pixel).
+    sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
+    sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
+
+    for k, _ in zip(range(0, n_total), tqdm(range(0, n_train))):
+        idx = sequence[k] # Index of galaxy in the catalog.
+
+        # Galaxy parameters .     
+        gal_g = rng_gal_shear()             # Shear of the galaxy (magnitude of the shear in the "reduced shear" definition), U(0.01, 0.05).
+        gal_beta = 2. * np.pi * rng()       # Shear position angle (radians), N(0,2*pi).
+        gal_mu = 1 + rng() * 0.1            # Magnification, U(1.,1.1).
+        theta = 2. * np.pi * rng()          # Rotation angle (radians), U(0,2*pi).
+        dx = 2 * rng() - 1                  # Offset along x axis, U(-1,1).
+        dy = 2 * rng() - 1                  # Offset along y axis, U(-1,1).
+        gal_image = get_COSMOS_Galaxy(cosmos_catalog=cosmos_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
+                                      gal_g=gal_g, gal_beta=gal_beta,
+                                      theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
+                                      fov_pixels=fov_pixels, pixel_scale=pixel_scale, upsample=upsample)
+        
+        snr = rng_snr()
+        gal_image_down = down_sample(gal_image.clone(), upsample) # Downsample galaxy image for SNR calculation.
+        alpha = snr * sigma / torch.sqrt((gal_image_down**2).sum()) # Scale the flux of galaxy to meet SNR.
+        gt = alpha * gal_image
+        
+        # Downsample images to desired pixel scale.
+        gt = down_sample(gt.clone(), upsample)
+
+        # Add CCD noise (Poisson + Gaussian).
+        obs = gt + torch.normal(mean=torch.zeros_like(gt), std=sigma*torch.ones_like(gt))
+        # obs = torch.max(torch.zeros_like(obs), obs) # Set negative pixels to zero.
+
+        # Save images.
+        torch.save(gt.clone(), os.path.join(data_path, 'gt', f"gt_{k}.pth"))
+        torch.save(obs.clone(), os.path.join(data_path, 'obs', f"obs_{k}.pth"))
+                
+        # Visualization
+        if k < 50:
+            gal_ori_image = real_galaxy_catalog.getGalImage(idx) # Read out original HST image for visualization
+            plt.figure(figsize=(10,10))
+            plt.subplot(1,3,1)
+            plt.imshow(gal_ori_image.array, cmap='magma')
+            plt.title('Original Galaxy')
+            plt.subplot(1,3,2)
+            plt.imshow(gt, cmap='magma')
+            plt.title('Ground Truth')
+            plt.subplot(1,3,3)
+            plt.imshow(obs, cmap='magma')
+            plt.title('Observed Galaxy (SNR={:.1f})'.format(snr))
+            plt.savefig(os.path.join(data_path, 'visualization', f"vis_{k}.jpg"), bbox_inches='tight')
+            plt.close()
+          
             
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
     parser = argparse.ArgumentParser(description='Arguments for dataset.')
+    parser.add_argument('--task', type=str, default='Deconv', choices=['Deconv', 'Denoise'])
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=str, default='23.5', choices=['23.5', '25.2'])
     parser.add_argument('--fov_pixels', type=int, default=48)
@@ -345,9 +465,15 @@ if __name__ == "__main__":
     parser.add_argument('--upsample', type=int, default=4)
     opt = parser.parse_args()
     
-    generate_data(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', n_train=45000, load_info=False,
-                  survey='LSST', I='23.5', fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
-                  snrs = [20, 40, 60, 80, 100, 150, 200, 300],
-                  shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
-                  fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
+    if opt.task == 'Deconv':
+        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', n_train=45000, load_info=True,
+                             survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
+                             snrs = [20, 40, 60, 80, 100, 150, 200, 300],
+                             shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
+                             fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
+    elif opt.task == 'Denoise':
+        generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=45000, load_info=True,
+                              survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample)
+    else:
+        raise ValueError('Invalid task.')
     

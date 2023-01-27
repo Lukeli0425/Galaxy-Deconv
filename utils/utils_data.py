@@ -91,6 +91,7 @@ class Galaxy_Dataset(Dataset):
         
         psf_path = os.path.join(self.data_path, self.psf_folder)
         psf = torch.load(os.path.join(psf_path, f"psf_{idx}.pth")).unsqueeze(0)
+        # psf = torch.tensor(1.)
 
         obs_path = os.path.join(self.data_path, self.obs_folder)
         obs = torch.load(os.path.join(obs_path, f"obs_{idx}.pth")).unsqueeze(0)
@@ -100,9 +101,7 @@ class Galaxy_Dataset(Dataset):
 
         alpha = obs.ravel().mean().float()
         alpha = torch.Tensor(alpha).view(1,1,1)
-        # if self.normalize:
-        #     obs = obs - gt.mean() / torch.abs(gt - gt.mean()).max()
-        #     gt = gt - gt.mean() / torch.abs(gt - gt.mean()).max()
+        
         return (obs, psf, alpha), gt
             
             

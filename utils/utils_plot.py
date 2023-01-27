@@ -24,6 +24,8 @@ def get_color(method):
         color = 'xkcd:pink'
     elif method == 'No_Deconv':
         color = 'black'
+    else:
+        color = 'xkcd:brown'
         
     return color
 
@@ -49,6 +51,8 @@ def get_label(method):
         label = 'ngmix'
     elif method == 'No_Deconv':
         label = 'No Deconv'
+    else:
+        label = ''
         
     return label
 

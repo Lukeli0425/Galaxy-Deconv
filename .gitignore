@@ -9,6 +9,8 @@ alpha-transform/
 PnP-ADMM/
 ShapeDeconv/
 
+# Ablation study
+saved_models4
 # ShapeNet dataset
 saved_models3/ 
 # fixed parameters and SNR
