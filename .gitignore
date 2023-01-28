@@ -11,7 +11,7 @@ ShapeDeconv/
 
 # Ablation study
 saved_models_abl/
-# ShapeNet dataset
+# Full revision models
 saved_models3/ 
 # fixed parameters and SNR
 saved_models2/ 
