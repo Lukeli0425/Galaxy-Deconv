@@ -1,20 +1,22 @@
+import argparse
+import json
+import logging
 import os
 import time
-import logging
-import argparse
-from tqdm import tqdm
-import json
+
 import numpy as np
 import torch
-from utils.utils_data import get_dataloader
-from models.Wiener import Wiener
-from models.Richard_Lucy import Richard_Lucy
-from models.Unrolled_ADMM import Unrolled_ADMM
+from tqdm import tqdm
+
 from models.ADMMNet import ADMMNet
+from models.Richard_Lucy import Richard_Lucy
 from models.Tikhonet import Tikhonet
+from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Wiener import Wiener
 from score import score
+from utils.utils_data import get_dataloader
+from utils.utils_ngmix import get_ngmix_Bootstrapper, make_data
 from utils.utils_test import delta_2D, estimate_shear_new
-from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
 
 
 def test_shear(methods, n_iters, model_files, n_gal, snr,
@@ -252,23 +254,23 @@ if __name__ == "__main__":
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = [ 
+    methods = [ 'Tikhonet', 
         'No_Deconv', 'FPFS', # 'SCORE', # 'ngmix', 
-        # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-        'ShapeNet', 'Tikhonet_Laplacian', # 'Tikhonet', 
+        'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
+        'ShapeNet', 'Tikhonet_Laplacian', 
         'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)',
     ]
-    n_iters = [
+    n_iters = [0,
         0, 0, # 0, 0, 
-        # 10, 20, 30, 50, 100,
+        10, 20, 30, 50, 100,
         0, 0, # 0,
         2, 4, 8, 
     ]
     model_files = [
+        "saved_models3/Tikhonet_Identity_50epochs.pth",
         None, None,
         # None, # None,
-        # None, None, None, None, None,
-        # "saved_models3/Tikhonet_Identity_50epochs.pth",
+        None, None, None, None, None,
         "saved_models3/ShapeNet_50epochs.pth",
         "saved_models3/Tikhonet_Laplacian_50epochs.pth",
         "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
