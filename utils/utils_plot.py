@@ -52,7 +52,7 @@ def get_label(method):
     elif method == 'No_Deconv':
         label = 'No Deconv'
     else:
-        label = ''
+        label = method
         
     return label
 

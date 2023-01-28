@@ -11,6 +11,7 @@ from utils.utils_data import get_dataloader
 from models.Wiener import Wiener
 from models.Richard_Lucy import Richard_Lucy
 from models.Unrolled_ADMM import Unrolled_ADMM
+from models.ADMMNet import ADMMNet
 from models.Tikhonet import Tikhonet
 from score import score
 from utils.utils_torch import MultiScaleLoss
@@ -171,6 +172,11 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
+        elif 'ADMMNet' in method:
+            model = ADMMNet(n_iters=8, model_file="saved_models4/ResUNet_50epochs.pth", llh='Gaussian')
+            model.to(device)
+            model.eval()
+            print("######")
         elif 'Tikhonet' in method or method == 'ShapeNet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet(filter='Identity')
@@ -356,29 +362,32 @@ if __name__ == "__main__":
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = [
+    methods = [ 
         'No_Deconv', # 'SCORE',
-        # 'FPFS', # 'ngmix', 
+        'FPFS', # 'ngmix', 
         # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-        'Tikhonet', 'ShapeNet', 
-        'Tikhonet_Laplacian',
+        # 'Tikhonet', 
+        'ShapeNet', 'Tikhonet_Laplacian',
         # 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)', 'Unrolled_ADMM(6)',
         # 'Unrolled_ADMM_Gaussian(6)',
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)',
+        # 'Unrolled_ADMM_Gaussian(4)_Shape', 'Unrolled_ADMM_Gaussian(8)_Shape',
+        # 'ADMMNet(8)'
     ]
     n_iters = [
-        0, # 0,
+        0, 0,
         # 0, # 0, 
         # 10, 20, 30, 50, 100,
-        0, 0, 0,
+        0, 0, #0,
         # 2, 4, 6, 8, 
         2, 4, 8, 
+        # 4,8
     ]
     model_files = [
-        None, # None,
+        None, None,
         # None, # None,
         # None, None, None, None, None,
-        "saved_models3/Tikhonet_Identity_50epochs.pth",
+        # "saved_models3/Tikhonet_Identity_50epochs.pth",
         "saved_models3/ShapeNet_50epochs.pth",
         "saved_models3/Tikhonet_Laplacian_50epochs.pth",
         # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
@@ -391,6 +400,8 @@ if __name__ == "__main__":
         "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
         # "saved_models3/Gaussian_PnP_6iters_20epochs.pth",
         "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
+        # "saved_models4/Gaussian_PnP_Shape_4iters_50epochs.pth",
+        # "saved_models4/Gaussian_PnP_Shape_8iters_30epochs.pth"
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]

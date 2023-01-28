@@ -10,20 +10,26 @@ PnP-ADMM/
 ShapeDeconv/
 
 # Ablation study
-saved_models4
+saved_models_abl/
 # ShapeNet dataset
 saved_models3/ 
 # fixed parameters and SNR
 saved_models2/ 
 # fix alpha bug
 saved_models1/ 
-saved_models/
+saved_models_first/
 
-# # LSST_new1 results with old fpfs 2.0.5
+# first draft results
+results_first/
+
+# LSST_new1 results with old fpfs 2.0.5
 results2/ 
 
 # LSST_new1 results with updated fpfs 3.0.2
-# results3/
+results3/
+
+# LSST_new2 results with fpfs 2.0.5
+results4_old/
 
 # Vscode setting
 .vscode/

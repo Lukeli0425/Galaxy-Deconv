@@ -56,7 +56,10 @@ class Z_Update_ResUNet(nn.Module):
 		super(Z_Update_ResUNet, self).__init__()
 		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")	
 		self.net = ResUNet()
-		self.net.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+		try:
+			self.net.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+		except:
+			raise ValueError('Please provide a valid model file for ResUNet denoiser.')
 
 	def forward(self, z):
 		z_out = self.net(z.float())
