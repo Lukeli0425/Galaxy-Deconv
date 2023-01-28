@@ -16,7 +16,7 @@ from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
 
 def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):
-    logger = logging.getLogger('Noisy PSF test (shear)')
+    logger = logging.getLogger('Noisy PSF Test (shear)')
     logger.info(f'Running PSF shear_error={shear_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
@@ -59,33 +59,30 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {model_file}.')
             except:
-                logger.error(f'Failed loading in {model_file}.')
+                logger.exception(f'Failed loading in {model_file}.')
             model.eval()    
     
         rec_shear = []
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
+                    # obs = torch.max(torch.zeros_like(obs), obs)
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    # obs_shear.append(estimate_shear_new(obs, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
+                    # obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'ngmix':
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
                     res = boot.go(obs)
                     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
-                elif method == 'Wiener':
-                    obs, psf = obs.to(device), psf.to(device)
-                    rec = model(obs, psf, 20) 
-                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -116,7 +113,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err,
     
 def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
                       data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):
-    logger = logging.getLogger('Noisy PSF test (FWHM)')
+    logger = logging.getLogger('Noisy PSF Test (FWHM)')
     logger.info(f'Running PSF fwhm_error={fwhm_err} test with {n_gal} galaxies.\n')   
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -166,26 +163,23 @@ def test_psf_fwhm_err(methods, n_iters, model_files, n_gal, fwhm_err,
         for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
+                    # obs = torch.max(torch.zeros_like(obs), obs)
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    obs_shear.append(estimate_shear_new(obs, psf_delta))
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
+                    # obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
                 elif method == 'ngmix':
+                    obs = torch.max(torch.zeros_like(obs), obs)
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
                     res = boot.go(obs)
                     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
-                elif method == 'Wiener':
-                    obs, psf = obs.to(device), psf.to(device)
-                    rec = model(obs, psf, 20) 
-                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -218,53 +212,55 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Arguments for noisy PSF test.')
     parser.add_argument('--n_gal', type=int, default=10000)
-    parser.add_argument('--result_path', type=str, default='results3/')
+    parser.add_argument('--result_path', type=str, default='results/')
     opt = parser.parse_args()
     
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = [
-        'No_Deconv', 
-        'FPFS', 'Wiener', #'ngmix', 
-        'Richard-Lucy(5)', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', #'Richard-Lucy(100)', 
-        'Tikhonet', 'ShapeNet', # 'Tikhonet_Laplacian',
-        'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(6)', 'Unrolled_ADMM(8)',
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(6)', 'Unrolled_ADMM_Gaussian(8)'
+    methods = [ 
+        'No_Deconv', # 'SCORE',
+        'FPFS', # 'ngmix', 
+        'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
+        # 'Tikhonet', 
+        'ShapeNet', 'Tikhonet_Laplacian',
+        # 'Unrolled_ADMM(2)', 'Unrolled_ADMM(4)', 'Unrolled_ADMM(8)', 'Unrolled_ADMM(6)',
+        # 'Unrolled_ADMM_Gaussian(6)',
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)',
+        # 'Unrolled_ADMM_Gaussian(4)_Shape', 'Unrolled_ADMM_Gaussian(8)_Shape',
+        # 'ADMMNet(8)'
     ]
     n_iters = [
-        0, 
-        0, 0, #0, 
-        5, 10, 20, 30, 50,  
-        0, 0, # 0,
-        2, 4, 6, 8, 
-        2, 4, 6, 8
+        0, 0,
+        # 0, # 0, 
+        10, 20, 30, 50, 100,
+        0, 0, #0,
+        # 2, 4, 6, 8, 
+        2, 4, 8, 
+        # 4,8
     ]
     model_files = [
-        None,
-        None, None, #None,
+        None, None,
+        # None, # None,
         None, None, None, None, None,
-        "saved_models2/Tikhonet_Identity_50epochs.pth",
-        "saved_models2/ShapeNet_50epochs.pth",
-        # "saved_models2/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models2/Poisson_PnP_2iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_4iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_6iters_50epochs.pth",
-        "saved_models2/Poisson_PnP_8iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_4iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_6iters_50epochs.pth",
-        "saved_models2/Gaussian_PnP_8iters_50epochs.pth"
+        # "saved_models3/Tikhonet_Identity_50epochs.pth",
+        "saved_models3/ShapeNet_50epochs.pth",
+        "saved_models3/Tikhonet_Laplacian_50epochs.pth",
+        # "saved_models2/Poisson_PnP_1iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_2iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_4iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_6iters_50epochs.pth",
+        # "saved_models2/Poisson_PnP_8iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_1iters_20epochs.pth",
+        "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
+        "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_6iters_20epochs.pth",
+        "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
+        # "saved_models4/Gaussian_PnP_Shape_4iters_50epochs.pth",
+        # "saved_models4/Gaussian_PnP_Shape_8iters_30epochs.pth"
     ]
-
-    # methods = [
-    #     'No_Deconv',
-    #     'ShapeNet']
-    # n_iters = [
-    #         0, 0]
-    # model_files = [
-    #     None,
-    #     "saved_models2/ShapeNet_50epochs.pth"]
+    
+    
     shear_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     for shear_err in shear_errs:
         test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
