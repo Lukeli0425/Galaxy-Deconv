@@ -84,7 +84,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
 
                 logger.info(" [{}: {}/{}]  train_loss={:.4f}  val_loss={:.4f}".format(
                                 epoch+1, idx+1, len(train_loader),
-                                train_loss/25,
+                                train_loss,
                                 val_loss/len(val_loader)))
     
         # Evaluate on train & valid dataset after every epoch.
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Arguments for training.')
     parser.add_argument('--n_iters', type=int, default=8)
-    parser.add_argument('--model', type=str, default='Unrolled ADMM', choices=['Unrolled ADMM', 'Tikhonet', 'ShapeNet', 'ResUNet'])
+    parser.add_argument('--model', type=str, default='Unrolled_ADMM', choices=['Unrolled_ADMM', 'Tikhonet', 'ShapeNet', 'ResUNet'])
     parser.add_argument('--llh', type=str, default='Gaussian', choices=['Poisson', 'Gaussian'])
     parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
