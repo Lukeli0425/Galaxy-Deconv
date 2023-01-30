@@ -19,7 +19,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.8, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
     
-    model_name = get_model_name(model_name=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP)
+    model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP)
     logger = logging.getLogger('Train')
     logger.info(f'Start training {model_name} on {data_path} data for {n_epochs} epochs.')
     
