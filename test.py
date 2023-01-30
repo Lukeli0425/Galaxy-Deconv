@@ -197,7 +197,7 @@ def test_time(methods, n_iters, model_files, n_gal,
             with torch.no_grad():
                 if method == 'No_Deconv':
                     # obs = torch.max(torch.zeros_like(obs), obs)
-                    gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    # gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'FPFS':
@@ -205,13 +205,13 @@ def test_time(methods, n_iters, model_files, n_gal,
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(obs, psf))
-                elif method == 'ngmix':
-                    obs = torch.max(torch.zeros_like(obs), obs)
-                    psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
-                    res = boot.go(obs)
-                    rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
+                # elif method == 'ngmix':
+                #     obs = torch.max(torch.zeros_like(obs), obs)
+                #     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                #     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                #     obs = make_data(obs_im=obs-obs.mean(), psf_im=psf)
+                #     res = boot.go(obs)
+                #     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
@@ -254,28 +254,30 @@ if __name__ == "__main__":
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = [ 'Tikhonet', 
-        'No_Deconv', 'FPFS', # 'SCORE', # 'ngmix', 
-        'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-        'ShapeNet', 'Tikhonet_Laplacian', 
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)',
+    methods = [
+        'No_Deconv', # 'FPFS', # 'SCORE', # 'ngmix', 
+        # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
+        # 'ShapeNet', 'Tikhonet_Laplacian', 
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(2)', 
+        'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)', 
+        'Unrolled_ADMM_Gaussian(8)', 'Unrolled_ADMM_Gaussian(8)',
     ]
-    n_iters = [0,
-        0, 0, # 0, 0, 
-        10, 20, 30, 50, 100,
-        0, 0, # 0,
-        2, 4, 8, 
+    n_iters = [
+        0, # 0, 0, 0, 
+        # 10, 20, 30, 50, 100,
+        # 0, 0, # 0,
+        2, 2, 4,4, 8, 8
     ]
     model_files = [
-        "saved_models3/Tikhonet_Identity_50epochs.pth",
-        None, None,
+        # "saved_models3/Tikhonet_Identity_50epochs.pth",
+        None, # None,
         # None, # None,
-        None, None, None, None, None,
-        "saved_models3/ShapeNet_50epochs.pth",
-        "saved_models3/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
+        # None, None, None, None, None,
+        # "saved_models3/ShapeNet_50epochs.pth",
+        # "saved_models3/Tikhonet_Laplacian_50epochs.pth",
+        "saved_models3/Gaussian_PnP_2iters_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
+        "saved_models3/Gaussian_PnP_4iters_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
+        "saved_models3/Gaussian_PnP_8iters_50epochs.pth", "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]

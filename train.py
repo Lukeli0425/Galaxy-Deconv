@@ -15,7 +15,7 @@ from utils.utils_torch import MultiScaleLoss, ShapeConstraint
 # os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Identity',
-          n_epochs=10, lr=1e-4, loss='MultiScale',
+          n_epochs=10, lr=1e-4, loss='Default',
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.8, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
 
@@ -32,7 +32,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
         model.to(device)
         if pretrained_epochs > 0:
             try:
-                pretrained_file = os.path.join(model_save_path, f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters_{pretrained_epochs}epochs.pth')
+                pretrained_file = os.path.join(model_save_path, f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters_MSE_{pretrained_epochs}epochs.pth')
                 model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
                 logger.info(f'Successfully loaded in {pretrained_file}')
             except:
@@ -74,8 +74,15 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
             except:
                 logger.critical(f'Failed loading in {pretrained_file}')
         loss_fn = MultiScaleLoss()
-        
-    model_name = f'{llh}{"_PnP" if PnP else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
+
+    if loss == 'MSE':
+        loss_fn = torch.nn.MSELoss()
+    elif loss == 'MultiScale':
+        loss_fn = MultiScaleLoss()
+    elif loss == 'ShapeConstraint':
+        loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2)
+
+    model_name = f'{llh}{"_PnP" if PnP else ""}_{loss if not loss=="Default" else ""}_{n_iters}iters' if 'ADMM' in model_name else (f'{model_name}_{filter}' if model_name=='Tikhonet' else model_name)
     
     optimizer = Adam(params=model.parameters(), lr = lr)
 
@@ -158,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('--filter', type=str, default='Identity', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
-    # parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'ShapeConstraint'])
+    parser.add_argument('--loss', type=str, default='MultiScale', choices=['Default', 'MultiScale', 'MSE', 'ShapeConstraint'])
     parser.add_argument('--train_val_split', type=float, default=0.8)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
@@ -168,6 +175,6 @@ if __name__ == "__main__":
     # sleep(3600*2)
 
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
-          n_epochs=opt.n_epochs, lr=opt.lr,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models4/', pretrained_epochs=opt.pretrained_epochs)
+          n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          model_save_path='./saved_models_abl/', pretrained_epochs=opt.pretrained_epochs)

@@ -3,7 +3,7 @@ from numpy.linalg import norm
 # from modopt.signal.wavelet import filter_convolve
 from scipy.signal import convolve
 from skimage.measure import label
-from utils.AlphaTransform import AlphaShearletTransform as AST
+from AlphaTransform import AlphaShearletTransform as AST
 
 
 def makeU1(n,m):
