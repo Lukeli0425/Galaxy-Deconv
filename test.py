@@ -213,7 +213,7 @@ def test_time(methods, n_iters, model_files, n_gal,
                 #     res = boot.go(obs)
                 #     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif method == 'Wiener':
-                    obs, psf = obs.to(device), psf.to(device)
+                    obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))

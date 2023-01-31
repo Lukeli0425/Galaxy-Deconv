@@ -238,21 +238,21 @@ if __name__ == "__main__":
         # None, # None,
         None, None, None, None, None,
         None,
-        "saved_models3/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models3/ShapeNet_50epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
+        "saved_models/Tikhonet_Laplacian_50epochs.pth",
+        "saved_models/ShapeNet_Laplacian_50epochs.pth",
+        "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth",
+        "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+        "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth"
     ]
     
     
     # shear_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    shear_errs = [0]
-    for shear_err in shear_errs:
-        test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
-                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
+    # shear_errs = [0]
+    # for shear_err in shear_errs:
+    #     test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
+    #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new1/', result_path=opt.result_path)
     
-    fwhm_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
+    # fwhm_errs = [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
     fwhm_errs = [0]
     for fwhm_err in fwhm_errs:
         test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
