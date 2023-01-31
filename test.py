@@ -214,7 +214,7 @@ def test_time(methods, n_iters, model_files, n_gal,
                 #     rec_shear.append((res['g'][0], res['g'][1], np.sqrt(res['g'][0]**2 + res['g'][1]**2)))
                 elif method == 'Wiener':
                     obs, psf = obs.to(device), psf.to(device)
-                    rec = model(obs, psf, snr) 
+                    rec = model(obs, psf, alpha) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
@@ -283,12 +283,12 @@ if __name__ == "__main__":
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
-    for snr in snrs:
-        test_shear(methods=['No_Deconv', 'Wiener'], n_iters=[0,0], model_files=[None,None], n_gal=opt.n_gal, snr=snr,
-                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    # for snr in snrs:
+    #     test_shear(methods=['No_Deconv', 'Wiener'], n_iters=[0,0], model_files=[None,None], n_gal=opt.n_gal, snr=snr,
+    #                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
         # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
         #            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
 
-    # for i in range(3):
-    #     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-    #             data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    for i in range(3):
+        test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
+                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
