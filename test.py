@@ -274,11 +274,11 @@ if __name__ == "__main__":
         None, # None,
         # None, # None,
         # None, None, None, None, None,
-        # "saved_models3/ShapeNet_50epochs.pth",
+        # "saved_models3/ShapeNet_Laplacian_50epochs.pth",
         # "saved_models3/Tikhonet_Laplacian_50epochs.pth",
-        # "saved_models3/Gaussian_PnP_2iters_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
-        # "saved_models3/Gaussian_PnP_4iters_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_50epochs.pth", "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
+        "saved_models3/Gaussian_PnP_2iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_MultiScale_50epochs.pth",
+        "saved_models3/Gaussian_PnP_4iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_MultiScale_50epochs.pth",
+        "saved_models3/Gaussian_PnP_8iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_8iters_MultiScale_50epochs.pth"
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
