@@ -258,15 +258,16 @@ if __name__ == "__main__":
         'No_Deconv', # 'FPFS', # 'SCORE', # 'ngmix', 
         # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
         # 'ShapeNet', 'Tikhonet_Laplacian', 
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(2)', 
-        'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)', 
+        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(2)', 
+        # 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)', 
         'Unrolled_ADMM_Gaussian(8)', 'Unrolled_ADMM_Gaussian(8)',
     ]
     n_iters = [
         0, # 0, 0, 0, 
         # 10, 20, 30, 50, 100,
         # 0, 0, # 0,
-        2, 2, 4,4, 8, 8
+        # 2, 2, 4,4, 
+        8, 8
     ]
     model_files = [
         # "saved_models3/Tikhonet_Identity_50epochs.pth",
@@ -275,8 +276,8 @@ if __name__ == "__main__":
         # None, None, None, None, None,
         # "saved_models3/ShapeNet_50epochs.pth",
         # "saved_models3/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_2iters_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_50epochs.pth",
+        # "saved_models3/Gaussian_PnP_4iters_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_50epochs.pth",
         "saved_models3/Gaussian_PnP_8iters_50epochs.pth", "saved_models3/Gaussian_PnP_8iters_50epochs.pth"
     ]
     
