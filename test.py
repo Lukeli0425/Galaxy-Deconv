@@ -104,9 +104,9 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
                     rec = g1.solution
                     rec_shear.append(estimate_shear_new(obs, psf_delta))
                 elif method == 'Wiener':
-                    obs = torch.max(torch.zeros_like(obs), obs)
-                    obs, psf = obs.to(device), psf.to(device)
-                    rec = model(obs, psf, snr) 
+                    # obs = torch.max(torch.zeros_like(obs), obs)
+                    obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
+                    rec = model(obs, psf, alpha) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
