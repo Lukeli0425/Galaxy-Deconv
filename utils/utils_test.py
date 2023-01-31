@@ -1,9 +1,11 @@
-import os
-import numpy as np
-from skimage.measure import label
 import logging
+import os
+
 import fpfs
 import galsim
+import numpy as np
+from skimage.measure import label
+
 # import score.cadmos_lib as cl
 
 def PSNR(img1, img2, normalize=False):
@@ -87,11 +89,10 @@ def estimate_shear_new(obs, psf_in=None, use_psf=True, sigma_arcsec=0.6):
 ######################################################
 
 def estimate_elli(obs):
-    bg_level = get_background(obs)
-    print(bg_level)
+    obs = np.maximum(0,obs)
     n_row, n_col = obs.shape
     U = makeUi(n_row, n_col)
-    GX = np.array([scal(obs-bg_level, U_i) for U_i in U])
+    GX = np.array([scal(obs, U_i) for U_i in U])
     mu20 = 0.5*(GX[3] + GX[4]) - GX[0]**2 / GX[2]
     mu02 = 0.5*(GX[3] - GX[4]) - GX[1]**2 / GX[2]
     mu11 = GX[5] - GX[0] * GX[1] / GX[2]

@@ -1,11 +1,12 @@
+from collections import OrderedDict
+
 import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
-import torch.nn.functional as F
-from collections import OrderedDict
-from utils.utils_deblur import gauss_kernel, pad, crop
-import utils.cadmos_lib as cl 
+
+from utils.utils_deblur import crop, gauss_kernel, pad
+
 
 # functionName implies a torch version of the function
 def fftn(x):
@@ -87,46 +88,7 @@ def laplacian_kernel():
     return lap
 
 
-class MultiScaleLoss(nn.Module):
-	def __init__(self, scales=3, norm='L1'):
-		super(MultiScaleLoss, self).__init__()
-		self.scales = scales
-		if norm == 'L1':
-			self.loss = nn.L1Loss()
-		if norm == 'L2':
-			self.loss = nn.MSELoss()
 
-		self.weights = torch.FloatTensor([1/(2**scale) for scale in range(self.scales)])
-		self.multiscales = [nn.AvgPool2d(2**scale, 2**scale) for scale in range(self.scales)]
-
-	def forward(self, output, target):
-		loss = 0
-		for i in range(self.scales):
-			output_i, target_i = self.multiscales[i](output), self.multiscales[i](target)
-			loss += self.weights[i]*self.loss(output_i, target_i)
-			
-		return loss
-
-
-class ShapeConstraint(nn.Module):
-    def __init__(self, device, fov_pixels=48, gamma=1, n_shearlet=2):
-        super(ShapeConstraint, self).__init__()
-        self.mse = nn.MSELoss()
-        self.gamma = gamma
-        U = cl.makeUi(fov_pixels, fov_pixels)
-        shearlets, shearlets_adj = cl.get_shearlets(fov_pixels, fov_pixels, n_shearlet)
-        # shealret adjoint of U, i.e Psi^{Star}(U)
-        self.psu = np.array([cl.convolve_stack(ui, shearlets_adj) for ui in U])
-        self.mu = torch.Tensor(cl.comp_mu(self.psu))
-        self.mu = torch.Tensor(self.mu).to(device)
-        self.psu = torch.Tensor(self.psu).to(device)
-        
-    def forward(self, output, target):
-        loss = self.mse(output, target)
-        for i in range(6):
-            for j in range(self.psu.shape[1]):
-                loss += self.gamma * self.mu[i,j] * (F.l1_loss(output*self.psu[i,j], target*self.psu[i,j]) ** 2) / 2.
-        return loss
 
 def rename_state_dict_keys(state_dict):
 	new_state_dict = OrderedDict()
@@ -135,10 +97,3 @@ def rename_state_dict_keys(state_dict):
 		new_state_dict[new_key] = item
 	return new_state_dict
 
-if __name__ == "__main__":
-    loss_fc = ShapeConstraint()
-    output = torch.rand([32,1,48,48])
-    target = torch.zeros([32,1,48,48])
-    loss = loss_fc(output, target)
-    print(loss)
-    

@@ -1,8 +1,9 @@
-import os
-import numpy as np
 import json
 import logging
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import gaussian_kde
 
 
@@ -31,18 +32,18 @@ def get_color(method):
 
 def get_label(method):
     
-    if 'Gaussian' in method:
-        label = 'Unrolled ADMM (Gaussian)'
-    elif 'Unrolled_ADMM' in method:
+    if 'Poisson' in method:
         label = 'Unrolled ADMM (Poisson)'
+    elif 'Unrolled_ADMM' in method:
+        label = 'Unrolled ADMM'
     elif 'Richard-Lucy' in method:
         label = 'Richardson-Lucy'
     elif method == 'Wiener':
         label = 'Wiener'
-    elif method == 'Tikhonet':
+    elif 'Tikhonet' in method:
         label = 'Tikhonet'
-    elif 'Laplacian' in method:
-        label = 'Tikhonet (Laplacian)'
+    elif 'Identity' in method:
+        label = 'Tikhonet (Identity)'
     elif method == 'ShapeNet':
         label = 'ShapeNet'
     elif method == 'FPFS':
