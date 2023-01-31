@@ -14,7 +14,7 @@ class Wiener(nn.Module):
 		H = H.to(device)
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
 		numerator = Ht * fftn(y, dim=[2,3])
-		divisor = HtH + 1/snr
+		divisor = HtH + 350/snr
 		x = torch.real(ifftn(numerator/divisor, dim=[2,3]))
   
 		return x
