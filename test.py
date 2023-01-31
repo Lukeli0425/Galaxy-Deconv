@@ -255,37 +255,35 @@ if __name__ == "__main__":
         os.mkdir(opt.result_path)
     
     methods = [
-        'No_Deconv', # 'FPFS', # 'SCORE', # 'ngmix', 
+        'No_Deconv', 'FPFS', # 'SCORE', # 'ngmix', 
         # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)', 
-        # 'ShapeNet', 'Tikhonet_Laplacian', 
-        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(2)', 
-        # 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)', 
-        'Unrolled_ADMM_Gaussian(8)', 'Unrolled_ADMM_Gaussian(8)',
+        'Wiener', 'Tikhonet_Laplacian', 'ShapeNet', 
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)', 
     ]
     n_iters = [
-        0, # 0, 0, 0, 
+        0, 0,# 0, 0, 
         # 10, 20, 30, 50, 100,
-        # 0, 0, # 0,
-        # 2, 2, 4,4, 
-        8, 8
+        0, 0, 0,
+        2, 4, 8
     ]
     model_files = [
-        # "saved_models3/Tikhonet_Identity_50epochs.pth",
-        None, # None,
-        # None, # None,
+        None, None, None,
         # None, None, None, None, None,
-        # "saved_models3/ShapeNet_Laplacian_50epochs.pth",
-        # "saved_models3/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models3/Gaussian_PnP_2iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_2iters_MultiScale_50epochs.pth",
-        "saved_models3/Gaussian_PnP_4iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_4iters_MultiScale_50epochs.pth",
-        "saved_models3/Gaussian_PnP_8iters_MultiScale_50epochs.pth", "saved_models3/Gaussian_PnP_8iters_MultiScale_50epochs.pth"
+        "saved_models/Tikhonet_Laplacian_50epochs.pth",
+        "saved_models/ShapeNet_Laplacian_50epochs.pth",
+        "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
+        "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+        "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
-    # for snr in snrs:
-    #     test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
-    #                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    for snr in snrs:
+        test_shear(methods=['No_Deconv', 'Wiener'], n_iters=[0,0], model_files=[None,None], n_gal=opt.n_gal, snr=snr,
+                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+        # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+        #            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
 
-    test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-              data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    # for i in range(3):
+    #     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
+    #             data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)

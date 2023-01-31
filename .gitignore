@@ -26,7 +26,7 @@ results_first/
 results2/ 
 
 # LSST_new1 results with updated fpfs 3.0.2
-results3/
+results3_temp/
 
 # LSST_new2 results with fpfs 2.0.5
 results4_old/
