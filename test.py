@@ -283,6 +283,7 @@ if __name__ == "__main__":
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
+    # Ablation Test.
     methods = ['No_Deconv', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)_MSE', 'Unrolled_ADMM_Gaussian(4)_Shape']
     n_iters = [0, 4, 4, 4]
     model_files = [None, 
