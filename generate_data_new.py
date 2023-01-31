@@ -115,7 +115,7 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
 
 def generate_data_deconv(data_path, n_train=40000, load_info=True,
                          survey='LSST', I='23.5', fov_pixels=48, pixel_scale=0.2, upsample=4,
-                         snrs=[20, 40, 60, 80, 100, 150, 200, 300],
+                         snrs=[20, 40, 60, 80, 100, 150, 200],
                          shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                          fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]):
     """Generate simulated galaxy images and corresponding PSFs for deconvolution.
@@ -128,7 +128,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
         fov_pixels (int, optional):  Size of the simulated images in pixels.. Defaults to 48.
         pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
         upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
-        snrs (list, optional): The list of SNR to be simulated for testing. Defaults to [10, 15, 20, 40, 60, 80, 100, 150, 200, 300].
+        snrs (list, optional): The list of SNR to be simulated for testing. Defaults to [10, 15, 20, 40, 60, 80, 100, 150, 200].
         shear_errs (list, optional): The list of systematic PSF shear error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2].
         fwhm_errs (list, optional): The list of systematic PSF FWHM error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3].
     """
@@ -189,7 +189,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     freqs = np.array([fwhm_table(fwhm) for fwhm in fwhms]) / fwhm_table.integrate() # Normalization.
     rng_fwhm = galsim.DistDeviate(seed=rng_base, function=galsim.LookupTable(x=fwhms, f=freqs, interpolant='spline'))
     rng_gal_shear = galsim.DistDeviate(seed=rng, function=lambda x: x, x_min=0.01, x_max=0.05)
-    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.44), x_min=18, x_max=320, npoints=1000) # Log-uniform Distribution.
+    rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.7), x_min=18, x_max=220, npoints=1000) # Log-uniform Distribution.
     
     # CCD and sky parameters.
     exp_time = 30.                      # Exposure time (2*15 seconds).
@@ -466,9 +466,9 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     
     if opt.task == 'Deconv':
-        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', n_train=45000, load_info=True,
+        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', n_train=40000, load_info=False,
                              survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
-                             snrs = [20, 40, 60, 80, 100, 150, 200, 300],
+                             snrs = [20, 40, 60, 80, 100, 150, 200],
                              shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                              fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
     elif opt.task == 'Denoise':
