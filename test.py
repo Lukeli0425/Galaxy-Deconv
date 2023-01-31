@@ -253,7 +253,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Arguments for testing.')
     parser.add_argument('--n_gal', type=int, default=10000)
-    parser.add_argument('--result_path', type=str, default='results/')
+    parser.add_argument('--result_path', type=str, default='results_abl/')
     opt = parser.parse_args()
     
     if not os.path.exists(opt.result_path):
@@ -283,12 +283,19 @@ if __name__ == "__main__":
     
     snrs = [20, 40, 60, 80, 100, 150, 200, 300]
 
-    # for snr in snrs:
-    #     test_shear(methods=['No_Deconv', 'Wiener'], n_iters=[0,0], model_files=[None,None], n_gal=opt.n_gal, snr=snr,
-    #                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
-        # test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+    methods = ['No_Deconv', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(4)_MSE', 'Unrolled_ADMM_Gaussian(4)_Shape']
+    n_iters = [0, 4, 4, 4]
+    model_files = [None, 
+                   "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+                   "saved_models_abl/Gaussian_PnP_ADMM_4iters_MSE_50epochs.pth",
+                   "saved_models_abl/Gaussian_PnP_ADMM_4iters_Shape_50epochs.pth"]
+    
+    
+    for snr in snrs:
+        # test_shear(methods=['No_Deconv'], n_iters=[0], model_files=[None], n_gal=opt.n_gal, snr=snr,
         #            data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
 
-    for i in range(3):
-        test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal,
-                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, 
+    #           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
