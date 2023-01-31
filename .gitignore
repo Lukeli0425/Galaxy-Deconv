@@ -22,11 +22,14 @@ saved_models_first/
 # first draft results
 results_first/
 
+# Removed [0,1] normalization
+results1_temp/
+
 # LSST_new1 results with old fpfs 2.0.5
 results2/ 
 
 # LSST_new1 results with updated fpfs 3.0.2
-results3_temp/
+results3/
 
 # LSST_new2 results with fpfs 2.0.5
 results4_old/
