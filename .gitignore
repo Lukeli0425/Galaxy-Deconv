@@ -23,7 +23,7 @@ saved_models_first/
 results_first/
 
 # Removed [0,1] normalization
-results1_temp/
+results1/
 
 # LSST_new1 results with old fpfs 2.0.5
 results2/ 
