@@ -472,7 +472,7 @@ if __name__ == "__main__":
                              shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                              fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
     elif opt.task == 'Denoise':
-        generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=45000, load_info=True,
+        generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=40000, load_info=True,
                               survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample)
     else:
         raise ValueError('Invalid task.')
