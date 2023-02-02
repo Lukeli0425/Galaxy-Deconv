@@ -166,7 +166,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
         I = info['I']
         pixel_scale = info['pixel_scale']
         n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
-        logger.info('Successfully loaded dataset informatio from %s.', info_file)
+        logger.info('Successfully loaded dataset information from %s.', info_file)
     else:
         sequence = np.arange(0, n_total) # Generate random sequence for dataset.
         np.random.shuffle(sequence)
@@ -201,7 +201,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(n_train+2000, n_total), tqdm(range(n_train+2000, n_total))):
+    for k, _ in zip(range(n_train+13000, n_total), tqdm(range(n_train+13000, n_total))):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Atmospheric PSF
@@ -315,7 +315,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
                 torch.save(psf_noisy.clone(), os.path.join(data_path, f'psf_fwhm_err_{fwhm_err}', f"psf_{k}.pth"))
                 
         # Visualization
-        if k < 50:
+        if k < 20:
             gal_ori_image = real_galaxy_catalog.getGalImage(idx) # Read out original HST image for visualization
             plt.figure(figsize=(10,10))
             plt.subplot(2,2,1)
@@ -379,7 +379,7 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
         I = info['I']
         pixel_scale = info['pixel_scale']
         n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
-        logger.info('Successfully loaded dataset informatio from %s.', info_file)
+        logger.info('Successfully loaded dataset information from %s.', info_file)
     else:
         sequence = np.arange(0, n_total) # Generate random sequence for dataset.
         np.random.shuffle(sequence)
@@ -437,7 +437,7 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
         torch.save(obs.clone(), os.path.join(data_path, 'obs', f"obs_{k}.pth"))
                 
         # Visualization
-        if k < 50:
+        if k < 20:
             gal_ori_image = real_galaxy_catalog.getGalImage(idx) # Read out original HST image for visualization
             plt.figure(figsize=(10,10))
             plt.subplot(1,3,1)
