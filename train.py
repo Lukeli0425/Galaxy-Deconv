@@ -12,7 +12,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
@@ -34,7 +34,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
         model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
-    elif model_name == 'ShapeNet':
+    elif 'ShapeNet' in model_name:
         model = Tikhonet(filter=filter)
     elif model_name == 'ResUNet':
         model = ResUNet()
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'Shape'])
-    parser.add_argument('--train_val_split', type=float, default=0.8)
+    parser.add_argument('--train_val_split', type=float, default=0.9)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
     opt = parser.parse_args()
@@ -143,5 +143,5 @@ if __name__ == "__main__":
 
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models_abl/', pretrained_epochs=opt.pretrained_epochs)
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          model_save_path='./saved_models_200/', pretrained_epochs=opt.pretrained_epochs)
