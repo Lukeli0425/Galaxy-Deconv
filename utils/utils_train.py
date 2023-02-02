@@ -7,9 +7,9 @@ import torch.nn.functional as F
 import utils.cadmos_lib as cl
 
 
-def get_model_name(method, loss, filter='Laplacian', n_iters=8, llh='Gaussian', PnP=True):
+def get_model_name(method, loss, filter='Laplacian', n_iters=8, llh='Gaussian', PnP=True, remove_SubNet=False):
     if method == 'Unrolled_ADMM':
-        model_name = f'{llh}{"_PnP" if PnP else ""}_ADMM_{n_iters}iters' 
+        model_name = f'{llh}{"_PnP" if PnP else ""}_ADMM_{n_iters}iters{"_No_SubNet" if remove_SubNet else ""}' 
     elif method == 'Tikhonet' or method == 'ShapeNet':
         model_name = f'{method}_{filter}'
     else:

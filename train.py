@@ -14,12 +14,12 @@ from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
-def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Laplacian',
+def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.8, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
     
-    model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP)
+    model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP, remove_SubNet=remove_SubNet)
     logger = logging.getLogger('Train')
     logger.info(f'Start training {model_name} on {data_path} data for {n_epochs} epochs.')
     
@@ -31,7 +31,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     if 'ADMM' in model_name:
-        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP)
+        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, SubNet=not remove_SubNet)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
     elif 'ShapeNet' in model_name:
@@ -131,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_iters', type=int, default=8)
     parser.add_argument('--model', type=str, default='Unrolled_ADMM', choices=['Unrolled_ADMM', 'Tikhonet', 'ShapeNet', 'ResUNet'])
     parser.add_argument('--llh', type=str, default='Gaussian', choices=['Gaussian', 'Poisson'])
+    parser.add_argument('--remove_SubNet', type=bool, default=False)
     parser.add_argument('--filter', type=str, default='Laplacian', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     opt = parser.parse_args()
 
 
-    train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, filter=opt.filter,
+    train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           model_save_path='./saved_models_200/', pretrained_epochs=opt.pretrained_epochs)
