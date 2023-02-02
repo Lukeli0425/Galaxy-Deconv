@@ -247,12 +247,12 @@ if __name__ == "__main__":
     ]
     
     
-    shear_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    for shear_err in shear_errs:
-        test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
-                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
-    
-    # fwhm_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
-    # for fwhm_err in fwhm_errs:
-    #     test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
+    # shear_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
+    # for shear_err in shear_errs:
+    #     test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
     #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    
+    fwhm_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]
+    for fwhm_err in fwhm_errs:
+        test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
+                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)

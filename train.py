@@ -12,7 +12,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
