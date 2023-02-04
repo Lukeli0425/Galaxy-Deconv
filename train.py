@@ -12,7 +12,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
@@ -82,7 +82,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
                         loss = loss_fn(gt, rec)
                         val_loss += loss.item()
 
-                logger.info(" [{}: {}/{}]  train_loss={:.4f}  val_loss={:.4f}".format(
+                logger.info(" [{}: {}/{}]  train_loss={:.4g}  val_loss={:.4g}".format(
                                 epoch+1, idx+1, len(train_loader),
                                 train_loss,
                                 val_loss/len(val_loader)))
@@ -108,7 +108,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
                 val_loss += loss.item()
             val_loss_list.append(val_loss/len(val_loader))
 
-        logger.info(" [{}: {}/{}]  train_loss={:.4f}  val_loss={:.4f}".format(
+        logger.info(" [{}: {}/{}]  train_loss={:.4g}  val_loss={:.4g}".format(
                         epoch+1, len(train_loader), len(train_loader),
                         train_loss/len(train_loader),
                         val_loss/len(val_loader)))
