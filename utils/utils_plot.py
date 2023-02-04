@@ -9,9 +9,11 @@ from scipy.stats import gaussian_kde
 
 def get_color(method):
     
-    if 'Gaussian' in method:
-        color = 'xkcd:purple'
+    if 'Poisson' in method:
+        color = 'xkcd:blue'
     elif 'Unrolled_ADMM' in method:
+        color = 'xkcd:purple'
+    elif 'ADMMNet' in method:
         color = 'xkcd:blue'
     elif 'Richard-Lucy' in method:
         color = 'xkcd:green' 
@@ -47,7 +49,7 @@ def get_label(method):
     elif method == 'ShapeNet':
         label = 'ShapeNet'
     elif method == 'FPFS':
-        label = 'Fourier Division'
+        label = 'FPFS'
     elif method == 'ngmix':
         label = 'ngmix'
     elif method == 'No_Deconv':
