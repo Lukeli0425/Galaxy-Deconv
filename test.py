@@ -64,9 +64,10 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
             elif 'Laplacian' in method:
                 model = Tikhonet(filter='Laplacian')
             elif 'Gaussian' in method:
-                model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            else:
-                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+                model = Unrolled_ADMM(n_iters=n_iter,
+                                      llh='Gaussian' if 'Gaussian' in method else 'Poisson', 
+                                      SubNet='No_SubNet' not in method,
+                                      PnP=True)
             model.to(device)
             try: # Load the model
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
@@ -259,30 +260,34 @@ if __name__ == "__main__":
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
-    methods = ['No_Deconv', 
-            #    'FPFS', # 'SCORE', # 'ngmix', 
-            #    'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)',
-            #    'Tikhonet_Laplacian', 'ShapeNet', 
-            #    'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
-               ]
-    n_iters = [0, 
-        # 0,# 0, 0, 
-        # 0, 10, 20, 30, 50, 100,
-        # 0, 0,
-        # 2, 4, 8
+    methods = [
+        'No_Deconv', 
+        'FPFS', # 'SCORE', # 'ngmix', 
+        'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)',
+        'Tikhonet_Laplacian', 'ShapeNet', 
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
-    
-    # model_files = [None, 
-    #     # None, 
-    #     None, None, None, None, None, None,
-    #     # "saved_models/Tikhonet_Laplacian_50epochs.pth",
-    #     # "saved_models/ShapeNet_Laplacian_50epochs.pth",
-    #     # "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
-    #     # "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
-    #     # "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
+    # n_iters = [
+    #     0, 
+    #     0,# 0, 0, 
+    #     0, 10, 20, 30, 50, 100,
+    #     0, 0,
+    #     2, 4, 8
     # ]
     
-    model_files = [None, 
+    # model_files = [
+    #     None, 
+    #     None, 
+    #     None, None, None, None, None, None,
+    #     "saved_models/Tikhonet_Laplacian_50epochs.pth",
+    #     "saved_models/ShapeNet_Laplacian_50epochs.pth",
+    #     "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
+    #     "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+    #     "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
+    # ]
+    
+    model_files = [
+        None, 
         # None, 
         # None, None, None, None, None, None,
         # "saved_models_200/Tikhonet_Laplacian_MSE_30epochs.pth",
@@ -295,17 +300,21 @@ if __name__ == "__main__":
     snrs = [20, 40, 60, 80, 100, 150, 200]
 
     # Ablation Test.
-    # methods = ['No_Deconv', 
-    #         #    'Unrolled_ADMM_Gaussian(8)', 
-    #         #    'Unrolled_ADMM_Gaussian(8)_MSE', 
-    #            'Unrolled_ADMM_Gaussian(8)_Shape'
-    #            ]
-    # n_iters = [0, 8]
-    # model_files = [None, 
-    #             #    "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_35epochs.pth",
-    #             #    "saved_models_200/Gaussian_PnP_ADMM_8iters_MSE_20epochs.pth",
-    #                "saved_models_200/Gaussian_PnP_ADMM_8iters_Shape_30epochs.pth"
-    #                ]
+    methods = [
+        # 'No_Deconv', 
+        # 'Unrolled_ADMM_Gaussian(8)', 
+        # 'Unrolled_ADMM_Gaussian(8)_MSE',
+        # 'Unrolled_ADMM_Gaussian(8)_Shape',
+        'Unrolled_ADMM_Gaussian(8)_No_SubNet'
+    ]
+    n_iters = [8]
+    model_files = [
+        # None, 
+        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_35epochs.pth",
+        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MSE_20epochs.pth",
+        # "saved_models_200/Gaussian_PnP_ADMM_8iters_Shape_30epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_8iters_No_SubNet_MultiScale_20epochs.pth",
+    ]
     
     
     for snr in snrs:
