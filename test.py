@@ -261,20 +261,19 @@ if __name__ == "__main__":
         os.mkdir(opt.result_path)
     
     methods = [
-        'No_Deconv', 
-        'FPFS', # 'SCORE', # 'ngmix', 
+        # 'No_Deconv', 
+        # 'FPFS', # 'SCORE', # 'ngmix', 
         # 'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 
-        'Richard-Lucy(100)',
+        # 'Richard-Lucy(100)',
         'Tikhonet_Laplacian', 'ShapeNet', 
-        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
-        0, 
-        0,# 0, 0, 
+        # 0, 
+        # 0,# 0, 0, 
         # 0, 10, 20, 30, 50, 100,
-        100,
         0, 0,
-        2, 4, 8
+        # 2, 4, 8
     ]
     
     # model_files = [
@@ -289,15 +288,15 @@ if __name__ == "__main__":
     # ]
     
     model_files = [
-        None, 
-        None, 
+        # None, 
+        # None, 
         # None, None, None, None, None, 
-        None,
-        "saved_models_200/Tikhonet_Laplacian_MSE_30epochs.pth",
-        "saved_models_200/ShapeNet_Laplacian_50epochs.pth",
-        "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
-        "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
-        "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
+        # None,
+        "saved_models_200/Tikhonet_Laplacian_MSE_40epochs.pth",
+        # "saved_models_200/ShapeNet_Laplacian_20epochs.pth",
+        # "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
+        # "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
+        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200]
