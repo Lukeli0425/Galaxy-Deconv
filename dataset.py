@@ -1,23 +1,24 @@
-import os
+import argparse
 import json
 import logging
-import argparse
-from tqdm import tqdm
+import os
+
+import galsim
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import fft2, ifft2, fftshift, ifftshift
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader, random_split
-import matplotlib.pyplot as plt
 from astropy.io import fits
-import galsim
+from torch.fft import fft2, fftshift, ifft2, ifftshift
+from torch.utils.data import DataLoader, Dataset, random_split
+from tqdm import tqdm
+
 from utils.utils_test import PSNR
 
 
 def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt_obscuration,
-                  atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2,
-                  g1_err, g2_err,
-                  fov_pixels, pixel_scale):
+                 atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2,
+                 g1_err, g2_err,
+                 fov_pixels, pixel_scale):
     """Simulate a PSF from a ground-based observation.
 
     Args:
