@@ -213,7 +213,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Arguments for noisy PSF test.')
     parser.add_argument('--n_gal', type=int, default=10000)
-    parser.add_argument('--result_path', type=str, default='results/')
+    parser.add_argument('--result_path', type=str, default='results_200/')
     opt = parser.parse_args()
     
     if not os.path.exists(opt.result_path):
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         'No_Deconv', 
         'FPFS', # 'SCORE', # 'ngmix', 
         # 'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 
-        'Richard-Lucy(100)',
+        'Richard-Lucy(10)',
         'Tikhonet_Laplacian', 'ShapeNet', 
         'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
@@ -231,45 +231,45 @@ if __name__ == "__main__":
         0, 
         0,# 0, 0, 
         # 0, 10, 20, 30, 50, 100,
-        100,
+        10,
         0, 0,
         2, 4, 8
     ]
-    
-    # model_files = [
-    #     None, 
-    #     None, 
-    #     # None, None, None, None, None, 
-    #     None,
-    #     "saved_models_200/Tikhonet_Laplacian_MSE_30epochs.pth",
-    #     "saved_models_200/ShapeNet_Laplacian_50epochs.pth",
-    #     "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
-    #     "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
-    #     "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
-    # ]
-    
     
     model_files = [
         None, 
         None, 
         # None, None, None, None, None, 
         None,
-        "saved_models/Tikhonet_Laplacian_50epochs.pth",
-        "saved_models/ShapeNet_Laplacian_50epochs.pth",
-        "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
-        "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
-        "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
+        "saved_models_200/Tikhonet_Laplacian_MSE_30epochs.pth",
+        "saved_models_200/ShapeNet_Laplacian_10epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
+        "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     ]
     
     
+    # model_files = [
+    #     None, 
+    #     None, 
+    #     # None, None, None, None, None, 
+    #     None,
+    #     "saved_models/Tikhonet_Laplacian_50epochs.pth",
+    #     "saved_models/ShapeNet_Laplacian_50epochs.pth",
+    #     "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
+    #     "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+    #     "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
+    # ]
+    
+    
     # shear_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    shear_errs = [0.01]
+    shear_errs = [0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     for shear_err in shear_errs:
         test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
-                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
     
     # fwhm_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    # fwhm_errs = [0.01]
+    # fwhm_errs = [0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     # for fwhm_err in fwhm_errs:
     #     test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
-    #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
