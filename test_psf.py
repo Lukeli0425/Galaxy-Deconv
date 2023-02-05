@@ -224,14 +224,14 @@ if __name__ == "__main__":
         # 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 
         # 'Richard-Lucy(100)', 
         # 'Wiener', 
-        'Tikhonet_Laplacian', 
+        # 'Tikhonet_Laplacian', 
         # 'ShapeNet',
-        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 
         # 'Unrolled_ADMM_Gaussian(8)',
         # 'Unrolled_ADMM_Gaussian(4)_Shape', 'Unrolled_ADMM_Gaussian(8)_Shape',
         # 'ADMMNet(8)'
     ]
-    n_iters = [8
+    n_iters = [2,4
         # 0, 0,
         # 0, # 0, 
         # 10, 20, 30, 50, 
@@ -244,10 +244,10 @@ if __name__ == "__main__":
         # None, # None,
         # None, None, None, None, None,
         # None,
-        "saved_models/Tikhonet_Laplacian_50epochs.pth",
+        # "saved_models/Tikhonet_Laplacian_50epochs.pth",
         # "saved_models/ShapeNet_Laplacian_50epochs.pth",
-        # "saved_models3/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth",
-        # "saved_models3/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
+        "saved_models3/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth",
+        "saved_models3/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
         # "saved_models3/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth"
     ]
     
