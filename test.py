@@ -51,11 +51,11 @@ def test_shear(methods, n_iters, model_files, n_gal, snr,
             model = Richard_Lucy(n_iters=n_iter)
             model.to(device)
             model.eval()
-        # elif 'ADMMNet' in method:
-        #     model = ADMMNet(n_iters=8, model_file="saved_models4/ResUNet_50epochs.pth", llh='Gaussian')
-        #     model.to(device)
-        #     model.eval()
-        #     print("######")
+        elif 'ADMMNet' in method:
+            model = ADMMNet(n_iters=8, model_file="saved_models_abl/ResUNet_50epochs.pth", llh='Gaussian')
+            model.to(device)
+            model.eval()
+            print("######")
         elif 'Tikhonet' in method or method == 'ShapeNet' or 'ADMM' in method:
             if method == 'Tikhonet':
                 model = Tikhonet(filter='Identity')
@@ -261,20 +261,20 @@ if __name__ == "__main__":
         os.mkdir(opt.result_path)
     
     methods = [
-        # 'No_Deconv', 
-        # 'FPFS', # 'SCORE', # 'ngmix', 
-        # 'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 
-        # 'Richard-Lucy(100)',
-        # 'Tikhonet_Laplacian', 
-        'ShapeNet', 
-        # 'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
+        'No_Deconv', 
+        'FPFS', # 'SCORE', # 'ngmix', 
+        # 'Wiener', 
+        'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)',
+        'Tikhonet_Laplacian', 'ShapeNet', 
+        # 'ADMMNet'
+        'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
     n_iters = [
-        # 0, 
-        # 0,# 0, 0, 
-        # 0, 10, 20, 30, 50, 100,
         0, 
-        # 2, 4, 8
+        0,# 0, 0, 
+        10, 20, 30, 50, 100,
+        0, 0,
+        2, 4, 8
     ]
     
     # model_files = [
@@ -289,15 +289,15 @@ if __name__ == "__main__":
     # ]
     
     model_files = [
-        # None, 
-        # None, 
-        # None, None, None, None, None, 
+        None, 
+        None, 
+        None, None, None, None, None, 
         # None,
-        # "saved_models_200/Tikhonet_Laplacian_MSE_40epochs.pth",
+        "saved_models_200/Tikhonet_Laplacian_MSE_40epochs.pth",
         "saved_models_200/ShapeNet_Laplacian_35epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
-        # "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
+        "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200]
@@ -318,9 +318,10 @@ if __name__ == "__main__":
     # ]
     
     
-    for snr in snrs:
-        test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
-                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
+    # for snr in snrs:
+    #     test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
+    #                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
 
-    # test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, 
-    #           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new2/', result_path=opt.result_path)
+    for i in range(0, 3):
+        test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, 
+                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
