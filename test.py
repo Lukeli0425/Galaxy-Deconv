@@ -294,7 +294,7 @@ if __name__ == "__main__":
         # None, None, None, None, None, 
         # None,
         # "saved_models_200/Tikhonet_Laplacian_MSE_40epochs.pth",
-        "saved_models_200/ShapeNet_Laplacian_30epochs.pth",
+        "saved_models_200/ShapeNet_Laplacian_35epochs.pth",
         # "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
         # "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
         # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",

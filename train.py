@@ -12,7 +12,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
@@ -49,7 +49,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
             logger.critical(f' Failed loading in {pretrained_file}!')
 
     if 'ShapeNet' in model_name or loss == 'Shape':
-        loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2)
+        loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2, gamma=1)
     elif loss == 'MSE':
         loss_fn = torch.nn.MSELoss()
     elif loss == 'MultiScale':
