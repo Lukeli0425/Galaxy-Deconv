@@ -12,7 +12,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
@@ -21,7 +21,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     
     model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP, remove_SubNet=remove_SubNet)
     logger = logging.getLogger('Train')
-    logger.info(f'Start training {model_name} on {data_path} data for {n_epochs} epochs.')
+    logger.info(f' Start training {model_name} on {data_path} data for {n_epochs} epochs.')
     
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
@@ -44,9 +44,9 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         try:
             pretrained_file = os.path.join(model_save_path, f'{model_name}_{pretrained_epochs}epochs.pth')
             model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
-            logger.info(f'Successfully loaded in {pretrained_file}.')
+            logger.info(f' Successfully loaded in {pretrained_file}.')
         except:
-            logger.critical(f'Failed loading in {pretrained_file}!')
+            logger.critical(f' Failed loading in {pretrained_file}!')
 
     if 'ShapeNet' in model_name or loss == 'Shape':
         loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2)
@@ -117,7 +117,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         if (epoch + 1) % 5 == 0:
             model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
-            logger.info(f'Model saved to {os.path.join(model_save_path, model_file_name)}')
+            logger.info(f' Model saved to {os.path.join(model_save_path, model_file_name)}')
 
         # Plot loss curve.
         plot_loss(train_loss_list, val_loss_list, model_save_path, model_name)

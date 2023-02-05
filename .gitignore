@@ -1,3 +1,6 @@
+# nohup files
+*.out
+
 # Large data
 data/
 dataset/
