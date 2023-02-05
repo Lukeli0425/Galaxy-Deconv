@@ -261,60 +261,58 @@ if __name__ == "__main__":
         os.mkdir(opt.result_path)
     
     methods = [
-        'No_Deconv', 
-        'FPFS', # 'SCORE', # 'ngmix', 
-        'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)',
-        'Tikhonet_Laplacian', 'ShapeNet', 
+        # 'No_Deconv', 
+        # 'FPFS', # 'SCORE', # 'ngmix', 
+        # 'Wiener', 'Richard-Lucy(10)', 'Richard-Lucy(20)', 'Richard-Lucy(30)', 'Richard-Lucy(50)', 'Richard-Lucy(100)',
+        # 'Tikhonet_Laplacian', 'ShapeNet', 
         'Unrolled_ADMM_Gaussian(2)', 'Unrolled_ADMM_Gaussian(4)', 'Unrolled_ADMM_Gaussian(8)'
     ]
-    # n_iters = [
-    #     0, 
-    #     0,# 0, 0, 
-    #     0, 10, 20, 30, 50, 100,
+    n_iters = [
+        # 0, 
+        # 0,# 0, 0, 
+        # 0, 10, 20, 30, 50, 100,
     #     0, 0,
-    #     2, 4, 8
-    # ]
+        2, 4, 8
+    ]
     
     # model_files = [
     #     None, 
     #     None, 
     #     None, None, None, None, None, None,
-    #     "saved_models/Tikhonet_Laplacian_50epochs.pth",
-    #     "saved_models/ShapeNet_Laplacian_50epochs.pth",
-    #     "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_50epochs.pth", 
-    #     "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_50epochs.pth",
-    #     "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_50epochs.pth",
+    #     # "saved_models/Tikhonet_Laplacian_50epochs.pth",
+    #     # "saved_models/ShapeNet_Laplacian_50epochs.pth",
+    #     "saved_models/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
+    #     # "saved_models/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
+    #     # "saved_models/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     # ]
     
     model_files = [
-        None, 
+        # None, 
         # None, 
         # None, None, None, None, None, None,
         # "saved_models_200/Tikhonet_Laplacian_MSE_30epochs.pth",
         # "saved_models_200/ShapeNet_Laplacian_50epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_10epochs.pth", 
-        # "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_10epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_2iters_MultiScale_20epochs.pth", 
+        "saved_models_200/Gaussian_PnP_ADMM_4iters_MultiScale_20epochs.pth",
+        "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     ]
     
     snrs = [20, 40, 60, 80, 100, 150, 200]
 
     # Ablation Test.
-    methods = [
-        # 'No_Deconv', 
-        # 'Unrolled_ADMM_Gaussian(8)', 
-        # 'Unrolled_ADMM_Gaussian(8)_MSE',
-        # 'Unrolled_ADMM_Gaussian(8)_Shape',
-        'Unrolled_ADMM_Gaussian(8)_No_SubNet'
-    ]
-    n_iters = [8]
-    model_files = [
-        # None, 
-        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_35epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_8iters_MSE_20epochs.pth",
-        # "saved_models_200/Gaussian_PnP_ADMM_8iters_Shape_30epochs.pth",
-        "saved_models_200/Gaussian_PnP_ADMM_8iters_No_SubNet_MultiScale_20epochs.pth",
-    ]
+    # methods = [
+    #     'Unrolled_ADMM_Gaussian(8)', 
+    #     'Unrolled_ADMM_Gaussian(8)_MSE',
+    #     'Unrolled_ADMM_Gaussian(8)_Shape',
+    #     'Unrolled_ADMM_Gaussian(8)_No_SubNet'
+    # ]
+    # n_iters = [8, 8, 8, 8]
+    # model_files = [
+    #     "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
+    #     "saved_models_200/Gaussian_PnP_ADMM_8iters_MSE_20epochs.pth",
+    #     "saved_models_200/Gaussian_PnP_ADMM_8iters_Shape_20epochs.pth",
+    #     "saved_models_200/Gaussian_PnP_ADMM_8iters_No_SubNet_MultiScale_20epochs.pth",
+    # ]
     
     
     for snr in snrs:
