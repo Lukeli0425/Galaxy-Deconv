@@ -12,8 +12,13 @@ alpha-transform/
 PnP-ADMM/
 ShapeDeconv/
 
+# Old version of the code
+old/
+
 # Ablation study
 saved_models_abl/
+results_abl_1/
+
 # Full revision models
 saved_models3/ 
 # fixed parameters and SNR

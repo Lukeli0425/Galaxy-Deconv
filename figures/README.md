@@ -12,6 +12,8 @@ Figure 4 ([`time_err.jpg`](error_time.jpg)): Ellipticity error curve with respec
 
 Figure 5 ([`psf_err_cartoon.jpg`](psf_err_cartoon.jpg)): The response curves of ellipticity error as a function of systematic errors in the PSF.
 
+Figure 6 ([`ablation.jpg`](ablation.jpg)): Ablation test results of Unrolled ADMM network.
+
 ---
 
 ### Figure 1: [`pipeline.jpg`](pipeline.jpg)
@@ -41,5 +43,9 @@ Figure 5 ([`psf_err_cartoon.jpg`](psf_err_cartoon.jpg)): The response curves of 
 ### Figure 5: [`psf_err_cartoon.jpg`](psf_err_cartoon.jpg)
 
 **The response curves of ellipticity error as a function of systematic errors in the PSF.** This figure is created by [`psf_err_cartoon.pptx`](psf_err_cartoon.pptx). The line plot is created by [`psf_error.ipynb`](psf_error.ipynb) while the PSF cartoon bars are created by [`psf_cartoon.ipynb`](psf_cartoon.ipynb). This figure is changed to EPS format by [`jpg_to_eps.ipynb`](jpg_to_eps.ipynb).
+
+### Figure 6: [`ablation.jpg`](ablation.jpg)
+
+**Ablation test results of Unrolled ADMM network.** This figure is created by [`ablation.ipynb`](ablation.ipynb).
 
 ---
