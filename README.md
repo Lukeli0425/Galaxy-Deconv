@@ -3,7 +3,7 @@
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
 _Under Review_
 
-Code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://arxiv.org/abs/2211.01567).
+Official code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://arxiv.org/abs/2211.01567).
 
 ![](figures/pipeline.jpg)
 

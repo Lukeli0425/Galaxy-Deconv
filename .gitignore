@@ -1,6 +1,3 @@
-# nohup files
-*.out
-
 # Large data
 data/
 dataset/
@@ -42,13 +39,20 @@ results2/
 results3/
 
 # LSST_new2 results with fpfs 2.0.5
-results4_old_1/
+results4_old/
+
+########################################################################################
+
+########################################################################################
 
 # Vscode setting
 .vscode/
 
 # Mac files
 .DS_Store
+
+# nohup files
+*.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
