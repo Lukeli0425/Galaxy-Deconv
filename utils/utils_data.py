@@ -79,9 +79,9 @@ class Galaxy_Dataset(Dataset):
             self.n_train = self.info['n_train']
             self.n_test = self.info['n_test']
             self.sequence = self.info['sequence']
-            self.logger.info(f"Successfully constructed {'train' if self.train else 'test'} dataset. Total Samples: {self.n_train if self.train else self.n_test}.")
+            self.logger.info(f" Successfully constructed {'train' if self.train else 'test'} dataset. Total Samples: {self.n_train if self.train else self.n_test}.")
         except:
-            self.logger.critical(f'Failed reading information from {self.info_file}.')
+            self.logger.exception(f' Failed reading information from {self.info_file}.')
 
     def __len__(self):
         return self.n_train if self.train else self.n_test
