@@ -17,7 +17,7 @@ old/
 
 # Ablation study
 saved_models_abl/
-results_abl_1/
+results_abl/
 
 # Full revision models
 saved_models3/ 
@@ -42,7 +42,7 @@ results2/
 results3/
 
 # LSST_new2 results with fpfs 2.0.5
-results4_old/
+results4_old_1/
 
 # Vscode setting
 .vscode/
