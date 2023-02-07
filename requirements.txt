@@ -6,5 +6,3 @@ tqdm
 bm3d
 galsim
 fpfs
-ngmix
-scikit-image # score
