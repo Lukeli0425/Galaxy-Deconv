@@ -1,17 +1,19 @@
-import os
-import logging
 import argparse
-from tqdm import tqdm
 import json
+import logging
+import os
+
 import numpy as np
 import torch
-from utils.utils_data import get_dataloader
-from models.Wiener import Wiener
+from tqdm import tqdm
+
 from models.Richard_Lucy import Richard_Lucy
-from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Tikhonet import Tikhonet
+from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Wiener import Wiener
+from utils.utils_data import get_dataloader
+from utils.utils_ngmix import get_ngmix_Bootstrapper, make_data
 from utils.utils_test import delta_2D, estimate_shear_new
-from utils.utils_ngmix import make_data, get_ngmix_Bootstrapper
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
@@ -248,7 +250,6 @@ if __name__ == "__main__":
         "saved_models_200/Gaussian_PnP_ADMM_8iters_MultiScale_20epochs.pth",
     ]
     
-    
     # model_files = [
     #     None, 
     #     None, 
@@ -262,14 +263,12 @@ if __name__ == "__main__":
     # ]
     
     
-    # shear_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    shear_errs = [0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
+    shear_errs = [0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     for shear_err in shear_errs:
         test_psf_shear_err(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, shear_err=shear_err,
-                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
+                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     
-    # fwhm_errs = [0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-    # fwhm_errs = [0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
+    # fwhm_errs = [0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
     # for fwhm_err in fwhm_errs:
     #     test_psf_fwhm_err(methods=methods, n_iters=n_iters, model_files=model_files,  n_gal=opt.n_gal, fwhm_err=fwhm_err,
-    #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
+    #                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)

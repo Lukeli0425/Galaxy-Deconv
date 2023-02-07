@@ -144,5 +144,5 @@ if __name__ == "__main__":
 
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
           model_save_path='./saved_models_abl/', pretrained_epochs=opt.pretrained_epochs)
