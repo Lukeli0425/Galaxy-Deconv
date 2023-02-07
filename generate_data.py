@@ -1,13 +1,15 @@
-import os
+import argparse
 import json
 import logging
-import argparse
-from tqdm import tqdm
+import os
+
+import galsim
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import fft2, ifft2, fftshift, ifftshift
-import matplotlib.pyplot as plt
-import galsim
+from torch.fft import fft2, fftshift, ifft2, ifftshift
+from tqdm import tqdm
+
 from utils.utils_data import down_sample, get_flux
 
 
@@ -466,11 +468,11 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     
     if opt.task == 'Deconv':
-        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', n_train=40000, load_info=True,
+        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', n_train=40000, load_info=True,
                              survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
-                             snrs = [20, 40, 60, 80, 100, 150, 200],
-                             shear_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
-                             fwhm_errs=[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3])
+                             snrs=[20, 40, 60, 80, 100, 150, 200],
+                             shear_errs=[0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
+                             fwhm_errs=[0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2])
     elif opt.task == 'Denoise':
         generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=40000, load_info=True,
                               survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample)

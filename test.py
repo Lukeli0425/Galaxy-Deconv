@@ -320,7 +320,7 @@ if __name__ == "__main__":
     
     for snr in snrs:
         test_shear(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, snr=snr,
-                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
+                   data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
 
     # for i in range(0, 3):
     #     test_time(methods=methods, n_iters=n_iters, model_files=model_files, n_gal=opt.n_gal, 
