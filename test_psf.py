@@ -22,8 +22,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     test_loader = get_dataloader(data_path=data_path, train=False, 
-                                 psf_folder=f'psf_shear_err_{shear_err}/' if shear_err > 0 else 'psf/', 
-                                 obs_folder='obs/', gt_folder='gt/')
+                                 psf_folder=f'psf_shear_err_{shear_err}/' if shear_err > 0 else 'psf/')
     
     psf_delta = delta_2D(48, 48)
     
@@ -64,7 +63,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
             model.eval()    
     
         rec_shear = []
-        for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
+        for ((obs, psf, alpha), gt), _ in zip(test_loader, tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -149,11 +148,10 @@ def test_psf_fwhm_err(method, n_iter, model_file, n_gal, fwhm_errs,
     for fwhm_err in fwhm_errs:
         logger.info(' Running PSF fwhm_error=%s test with %s galaxies.\n', fwhm_err, n_gal)
         test_loader = get_dataloader(data_path=data_path, train=False,
-                                     psf_folder=f'psf_fwhm_err_{fwhm_err}/' if fwhm_err > 0 else 'psf/',
-                                     obs_folder='obs/', gt_folder='gt/')
+                                     psf_folder=f'psf_fwhm_err_{fwhm_err}/' if fwhm_err > 0 else 'psf/')
         
         rec_shear, gt_shear = [], []
-        for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
+        for ((obs, psf, alpha), gt), _ in zip(test_loader, tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()

@@ -206,7 +206,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(n_train+13000, n_total), tqdm(range(n_train+13000, n_total))):
+    for k in tqdm(range(0, n_total)):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Atmospheric PSF
@@ -410,7 +410,7 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(0, n_total), tqdm(range(0, n_train))):
+    for k in tqdm(range(0, n_train)):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Galaxy parameters .     

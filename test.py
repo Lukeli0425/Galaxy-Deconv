@@ -61,7 +61,7 @@ def test_shear(method, n_iter, model_file, n_gal, snrs, data_path, result_path):
                                      obs_folder=f'obs_{snr}/', gt_folder=f'gt_{snr}/')
         
         rec_shear, gt_shear = [], []
-        for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
+        for ((obs, psf, alpha), gt), idx in zip(test_loader, tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -152,7 +152,7 @@ def test_time(method, n_iter, model_file, n_gal, data_path, result_path):
 
     rec_shear = []
     time_start = time.time()
-    for (idx, ((obs, psf, alpha), gt)), _ in zip(enumerate(test_loader), tqdm(range(n_gal))):
+    for ((obs, psf, alpha), gt), idx in zip(test_loader, tqdm(range(n_gal))):
         with torch.no_grad():
             if method == 'No_Deconv':
                 obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
