@@ -203,7 +203,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(n_train+13000, n_total), tqdm(range(n_train+13000, n_total))):
+    for k, _ in zip(range(0, n_total), tqdm(range(0, n_total))):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Atmospheric PSF
@@ -468,7 +468,7 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     
     if opt.task == 'Deconv':
-        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', n_train=40000, load_info=True,
+        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', n_train=40000, load_info=False,
                              survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
                              snrs=[20, 40, 60, 80, 100, 150, 200],
                              shear_errs=[0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
