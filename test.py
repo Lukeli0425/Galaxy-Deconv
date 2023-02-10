@@ -178,7 +178,7 @@ def test_time(method, n_iter, model_file, n_gal, data_path, result_path):
                 rec_shear.append(estimate_shear_new(rec, psf_delta))
                 
     time_end = time.time()
-    logger.info(' Tested %s on %s galaxies: Time = {:.5g}s.'.format(method, n_gal, time_end-time_start))
+    logger.info(' Tested %s on %s galaxies: Time = {:.4g}s.'.format(time_end-time_start),method, n_gal)
 
     # Save test results.
     try:
@@ -233,12 +233,12 @@ if __name__ == "__main__":
     if opt.test == 'shear':
         snrs = [20, 40, 60, 80, 100, 150, 200]
         for method, (n_iter, model_file) in methods.items():
-            test_shear(method=method, n_iter=methods[method][0], model_file=methods[method][1], n_gal=opt.n_gal, snrs=snrs,
+            test_shear(method=method, n_iter=n_iter, model_file=model_file, n_gal=opt.n_gal, snrs=snrs,
                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     elif opt.test == 'time':
         for method, (n_iter, model_file) in methods.items():
             for i in range(3): # Run 2 dummy test first to warm up the GPU.
-                test_time(method=method, n_iters=method[method][0], model_file=methods[method][1], n_gal=opt.n_gal,
-                          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new3/', result_path=opt.result_path)
+                test_time(method=method, n_iter=n_iter, model_file=model_file, n_gal=opt.n_gal,
+                          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     else:
         raise ValueError("Invalid test type.")
