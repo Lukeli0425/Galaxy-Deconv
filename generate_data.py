@@ -155,20 +155,23 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
         real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         n_total = real_galaxy_catalog.nobjects #- 56030
-        logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
+        logger.info(' Successfully read in %s I=%s galaxies.', n_total, I)
     except:
-        logger.warning('Failed reading in I=%s galaxies.', I)
+        raise Exception(' Failed reading in I=%s galaxies.', I)
     
     info_file = os.path.join(data_path, f'info.json')
     if load_info:
-        with open(info_file, 'r') as f:
-            info = json.load(f)
-        survey = info['survey']
-        sequence = info['sequence']
-        I = info['I']
-        pixel_scale = info['pixel_scale']
-        n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
-        logger.info('Successfully loaded dataset information from %s.', info_file)
+        try:
+            with open(info_file, 'r') as f:
+                info = json.load(f)
+            survey = info['survey']
+            sequence = info['sequence']
+            I = info['I']
+            pixel_scale = info['pixel_scale']
+            n_total, n_train, n_test = info['n_total'], info['n_train'], info['n_test']
+            logger.info(' Successfully loaded dataset information from %s.', info_file)
+        except:
+            raise Exception(' Failed loading dataset information from %s.', info_file)
     else:
         sequence = np.arange(0, n_total) # Generate random sequence for dataset.
         np.random.shuffle(sequence)
@@ -176,7 +179,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
                 'n_total':n_total, 'n_train':n_train, 'n_test':n_total - n_train, 'sequence':sequence.tolist()}
         with open(info_file, 'w') as f:
             json.dump(info, f)
-        logger.info('Dataset information saved to %s.', info_file)
+        logger.info(' Dataset information saved to %s.', info_file)
 
     # Random number generators for the parameters.
     random_seed = 31415
@@ -194,16 +197,16 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.7), x_min=18, x_max=220, npoints=1000) # Log-uniform Distribution.
     
     # CCD and sky parameters.
-    exp_time = 30.                      # Exposure time (2*15 seconds).
-    sky_brightness = 20.48              # Sky brightness (absolute magnitude) in i band.
-    zero_point = 27.85                  # Instrumental zero point, i.e. asolute magnitude that would produce one e- per second.
-    gain = 2.3                          # CCD Gain (e-/ADU).
-    qe = 0.94                           # CCD Quantum efficiency.
-    read_noise = 8.8                    # Standrad deviation of Gaussain read noise (e-/pixel).
+    exp_time = 30.                          # Exposure time (2*15 seconds).
+    sky_brightness = 20.48                  # Sky brightness (absolute magnitude) in i band.
+    zero_point = 27.85                      # Instrumental zero point, i.e. asolute magnitude that would produce one e- per second.
+    gain = 2.3                              # CCD Gain (e-/ADU).
+    qe = 0.94                               # CCD Quantum efficiency.
+    read_noise = 8.8                        # Standrad deviation of Gaussain read noise (e-/pixel).
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(0, n_total), tqdm(range(0, n_total))):
+    for k in tqdm(range(0, n_total)):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Atmospheric PSF
@@ -398,16 +401,16 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
     rng_snr = galsim.DistDeviate(seed=rng, function=lambda x: 1/(x**0.44), x_min=18, x_max=320, npoints=1000) # Log-uniform Distribution.
     
     # CCD and sky parameters.
-    exp_time = 30.                      # Exposure time (2*15 seconds).
-    sky_brightness = 20.48              # Sky brightness (absolute magnitude) in i band.
-    zero_point = 27.85                  # Instrumental zero point, i.e. asolute magnitude that would produce one e- per second.
-    gain = 2.3                          # CCD Gain (e-/ADU).
-    qe = 0.94                           # CCD Quantum efficiency.
-    read_noise = 8.8                    # Standrad deviation of Gaussain read noise (e-/pixel).
+    exp_time = 30.                          # Exposure time (2*15 seconds).
+    sky_brightness = 20.48                  # Sky brightness (absolute magnitude) in i band.
+    zero_point = 27.85                      # Instrumental zero point, i.e. asolute magnitude that would produce one e- per second.
+    gain = 2.3                              # CCD Gain (e-/ADU).
+    qe = 0.94                               # CCD Quantum efficiency.
+    read_noise = 8.8                        # Standrad deviation of Gaussain read noise (e-/pixel).
     sky_level_pixel = get_flux(ab_magnitude=sky_brightness, exp_time=exp_time, zero_point=zero_point, gain=gain, qe=qe) * pixel_scale ** 2 # Sky level (ADU/pixel).
     sigma = np.sqrt(sky_level_pixel + (read_noise*qe/gain) ** 2) # Standard deviation of total noise (ADU/pixel).
 
-    for k, _ in zip(range(0, n_total), tqdm(range(0, n_train))):
+    for k in tqdm(range(0, n_train)):
         idx = sequence[k] # Index of galaxy in the catalog.
 
         # Galaxy parameters .     

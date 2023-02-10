@@ -21,7 +21,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     
     model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP, remove_SubNet=remove_SubNet)
     logger = logging.getLogger('Train')
-    logger.info(f' Start training {model_name} on {data_path} data for {n_epochs} epochs.')
+    logger.info(' Start training %s on %s data for %s epochs.', model_name, data_path, n_epochs)
     
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
@@ -44,9 +44,9 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         try:
             pretrained_file = os.path.join(model_save_path, f'{model_name}_{pretrained_epochs}epochs.pth')
             model.load_state_dict(torch.load(pretrained_file, map_location=torch.device(device)))
-            logger.info(f' Successfully loaded in {pretrained_file}.')
+            logger.info(' Successfully loaded in %s.', pretrained_file)
         except:
-            logger.critical(f' Failed loading in {pretrained_file}!')
+            raise Exception(' Failed loading in %s!', pretrained_file)
 
     if 'ShapeNet' in model_name or loss == 'Shape':
         loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2, gamma=1)
@@ -93,7 +93,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(train_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-                rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+                rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 train_loss += loss.item()
             train_loss_list.append(train_loss/len(train_loader))
@@ -103,7 +103,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-                rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+                rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 val_loss += loss.item()
             val_loss_list.append(val_loss/len(val_loader))
@@ -117,7 +117,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         if (epoch + 1) % 5 == 0:
             model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
-            logger.info(f' Model saved to {os.path.join(model_save_path, model_file_name)}')
+            logger.info(' Model saved to %s', os.path.join(model_save_path, model_file_name))
 
         # Plot loss curve.
         plot_loss(train_loss_list, val_loss_list, model_save_path, model_name)
@@ -145,4 +145,4 @@ if __name__ == "__main__":
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models_abl/', pretrained_epochs=opt.pretrained_epochs)
+          model_save_path='./saved_models_200/', pretrained_epochs=opt.pretrained_epochs)
