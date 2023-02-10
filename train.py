@@ -93,7 +93,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(train_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-                rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+                rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 train_loss += loss.item()
             train_loss_list.append(train_loss/len(train_loader))
@@ -103,7 +103,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                 obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
-                rec = model(obs, psf, alpha) #* M.view(batch_size,1,1)
+                rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 val_loss += loss.item()
             val_loss_list.append(val_loss/len(val_loader))
