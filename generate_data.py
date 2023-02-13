@@ -17,7 +17,7 @@ def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt
                  atmos_fwhm, atmos_e, atmos_beta, spher, trefoil1, trefoil2,
                  g1_err=0, g2_err=0,
                  fov_pixels=48, pixel_scale=0.2, upsample=4):
-    """Simulate a PSF from a ground-based observation.
+    """Simulate a PSF from a ground-based observation (typically LSST). The PSF consists of an optical component and an atmospheric component.
 
     Args:
         lam_over_diam (float): Wavelength over diameter of the telescope.
@@ -69,13 +69,13 @@ def get_LSST_PSF(lam_over_diam, opt_defocus, opt_c1, opt_c2, opt_a1, opt_a2, opt
     return psf_image
 
 
-def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx, 
+def get_COSMOS_Galaxy(real_galaxy_catalog, idx, 
                       gal_g, gal_beta, theta, gal_mu, dx, dy, 
                       fov_pixels=48, pixel_scale=0.2, upsample=4):
     """Simulate a background galaxy with data from COSMOS Catalog.
 
     Args:
-        cosmos_catalog (`galsim.COSMOSCatalog`): A `galsim.COSMOSCatalog` object, from which the parametric galaxies are read out.
+        real_galaxy_catalog (`galsim.COSMOSCatalog`): A `galsim.real_galaxy_catalog` object, from which the parametric galaxies are read out.
         idx (int): Index of the chosen galaxy in the catalog.
         gal_flux (float): Total flux of the galaxy in the simulated image.
         sky_level (float): Skylevel in the simulated image.
@@ -92,7 +92,6 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     """
 
     # Read out real galaxy from the catalog.
-    # gal_ori = cosmos_catalog.makeGalaxy(idx, gal_type='parametric', sersic_prec=0.05) # Use parametric model
     gal_ori = galsim.RealGalaxy(real_galaxy_catalog, index = idx)
     
     # Add random rotation, shear, and magnification.
@@ -102,9 +101,6 @@ def get_COSMOS_Galaxy(cosmos_catalog, real_galaxy_catalog, idx,
     
     # Draw galaxy image.
     gal_image = galsim.ImageF(fov_pixels*upsample, fov_pixels*upsample)
-    # try:
-    #     gal.drawImage(gal_image, scale=pixel_scale, offset=(dx,dy), method='auto')
-    # except:
     psf_hst = real_galaxy_catalog.getPSF(idx)
     gal = galsim.Convolve([psf_hst, gal]) # Concolve wth original PSF of HST.
     gal.drawImage(gal_image, scale=pixel_scale/upsample, offset=(dx,dy), method='auto')
@@ -153,7 +149,6 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     # Read the catalog.
     try:
         real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
-        cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         n_total = real_galaxy_catalog.nobjects #- 56030
         logger.info(' Successfully read in %s I=%s galaxies.', n_total, I)
     except:
@@ -238,7 +233,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
         theta = 2. * np.pi * rng()          # Rotation angle (radians), U(0,2*pi).
         dx = 2 * rng() - 1                  # Offset along x axis, U(-1,1).
         dy = 2 * rng() - 1                  # Offset along y axis, U(-1,1).
-        gal_image = get_COSMOS_Galaxy(cosmos_catalog=cosmos_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
+        gal_image = get_COSMOS_Galaxy(real_galaxy_catalog=real_galaxy_catalog, idx=idx,
                                       gal_g=gal_g, gal_beta=gal_beta,
                                       theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
                                       fov_pixels=fov_pixels, pixel_scale=pixel_scale, upsample=upsample)
@@ -346,9 +341,9 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
     Args:
         data_path (str): Path to save the dataset. 
         train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to 0.7.
-        survey (str, optional): _description_. Defaults to 'LSST'.
+        survey (str, optional): Simulated survey. Defaults to 'LSST'.
         I (str, optional): The sample in COSMOS data to use, "23.5" or "25.2". Defaults to '23.5'.
-        fov_pixels (int, optional):  Size of the simulated images in pixels.. Defaults to 48.
+        fov_pixels (int, optional): Size of the simulated images in pixels. Defaults to 48.
         pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
         upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
     """
@@ -369,7 +364,6 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
     # Read the catalog.
     try:
         real_galaxy_catalog = galsim.RealGalaxyCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
-        cosmos_catalog = galsim.COSMOSCatalog(dir='/mnt/WD6TB/tianaoli/COSMOS_23.5_training_sample/', sample=I)
         n_total = real_galaxy_catalog.nobjects #- 56030
         logger.info('Successfully read in %s I=%s galaxies.', n_total, I)
     except:
@@ -420,7 +414,7 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
         theta = 2. * np.pi * rng()          # Rotation angle (radians), U(0,2*pi).
         dx = 2 * rng() - 1                  # Offset along x axis, U(-1,1).
         dy = 2 * rng() - 1                  # Offset along y axis, U(-1,1).
-        gal_image = get_COSMOS_Galaxy(cosmos_catalog=cosmos_catalog, real_galaxy_catalog=real_galaxy_catalog, idx=idx,
+        gal_image = get_COSMOS_Galaxy(real_galaxy_catalog=real_galaxy_catalog, idx=idx,
                                       gal_g=gal_g, gal_beta=gal_beta,
                                       theta=theta, gal_mu=gal_mu, dx=dx, dy=dy,
                                       fov_pixels=fov_pixels, pixel_scale=pixel_scale, upsample=upsample)
@@ -463,6 +457,8 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Arguments for dataset.')
     parser.add_argument('--task', type=str, default='Deconv', choices=['Deconv', 'Denoise'])
+    parser.add_argument('--n_train', type=int, default=40000)
+    parser.add_argument('--load_info', type=str, action="store_true")
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=str, default='23.5', choices=['23.5', '25.2'])
     parser.add_argument('--fov_pixels', type=int, default=48)
@@ -471,13 +467,13 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     
     if opt.task == 'Deconv':
-        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', n_train=40000, load_info=False,
+        generate_data_deconv(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', n_train=opt.n_train, load_info=opt.load_info,
                              survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample,
                              snrs=[20, 40, 60, 80, 100, 150, 200],
                              shear_errs=[0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2],
                              fwhm_errs=[0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2])
     elif opt.task == 'Denoise':
-        generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=40000, load_info=True,
+        generate_data_denoise(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_denoise/', n_train=opt.n_train, load_info=opt.load_info,
                               survey=opt.survey, I=opt.I, fov_pixels=opt.fov_pixels, pixel_scale=opt.pixel_scale, upsample=opt.upsample)
     else:
         raise ValueError('Invalid task.')

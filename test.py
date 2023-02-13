@@ -4,17 +4,15 @@ import logging
 import os
 import time
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
-from models.ADMMNet import ADMMNet
 from models.Richard_Lucy import Richard_Lucy
 from models.Tikhonet import Tikhonet
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Wiener import Wiener
 from utils.utils_data import get_dataloader
-from utils.utils_test import delta_2D, estimate_shear_new
+from utils.utils_test import delta_2D, estimate_shear
 
 
 def test_shear(method, n_iters, model_file, n_gal, snrs, data_path, result_path):
@@ -66,27 +64,27 @@ def test_shear(method, n_iters, model_file, n_gal, snrs, data_path, result_path)
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    rec_shear.append(estimate_shear_new(obs, psf_delta))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(obs, psf))
+                    rec_shear.append(estimate_shear(obs, psf))
                 elif method == 'Wiener':
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
         
         # Save results.
         try:
@@ -156,26 +154,26 @@ def test_time(method, n_iters, model_file, n_gal, data_path, result_path):
         with torch.no_grad():
             if method == 'No_Deconv':
                 obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                rec_shear.append(estimate_shear_new(obs, psf_delta))
+                rec_shear.append(estimate_shear(obs, psf_delta))
             elif method == 'FPFS':
                 psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                 obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                rec_shear.append(estimate_shear_new(obs, psf))
+                rec_shear.append(estimate_shear(obs, psf))
             elif method == 'Wiener':
                 obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                 rec = model(obs, psf, alpha)
                 rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                rec_shear.append(estimate_shear_new(rec, psf_delta))
+                rec_shear.append(estimate_shear(rec, psf_delta))
             elif 'Richard-Lucy' in method:
                 obs, psf = obs.to(device), psf.to(device)
                 rec = model(obs, psf) 
                 rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                rec_shear.append(estimate_shear_new(rec, psf_delta))
+                rec_shear.append(estimate_shear(rec, psf_delta))
             else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                 obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                 rec = model(obs, psf, alpha)
                 rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                rec_shear.append(estimate_shear_new(rec, psf_delta))
+                rec_shear.append(estimate_shear(rec, psf_delta))
                 
     time_end = time.time()
     logger.info(' Tested %s on %s galaxies: Time = {:.4g}s.'.format(time_end-time_start),method, n_gal)

@@ -3,7 +3,6 @@ import json
 import logging
 import os
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -12,29 +11,25 @@ from models.Tikhonet import Tikhonet
 from models.Unrolled_ADMM import Unrolled_ADMM
 from models.Wiener import Wiener
 from utils.utils_data import get_dataloader
-from utils.utils_test import delta_2D, estimate_shear_new
+from utils.utils_test import delta_2D, estimate_shear
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
-def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_path, result_path):
+def test_psf_shear_err(method, n_iters, model_file, n_gal, shear_errs,
+                      data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path='results/'):
     logger = logging.getLogger('Noisy PSF Test (shear)')
-    logger.info(' Running PSF shear_error=%s test with %s galaxies.\n', shear_err, n_gal)   
+    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
-    test_loader = get_dataloader(data_path=data_path, train=False, 
-                                 psf_folder=f'psf_shear_err_{shear_err}/' if shear_err > 0 else 'psf/')
-    
+
     psf_delta = delta_2D(48, 48)
     
-    gt_shear = []
-    for method, model_file, n_iters in zip(methods, model_files, n_iters):
-        logger.info(' Tesing method: %s', method)
-        result_folder = os.path.join(result_path, method)
-        if not os.path.exists(result_folder):
-            os.mkdir(result_folder)
-        results_file = os.path.join(result_folder, 'results_psf_shear_err.json')
-        
-        # Load the model.
+    logger.info(' Tesing method: %s', method)
+    result_folder = os.path.join(result_path, method)
+    if not os.path.exists(result_folder):
+        os.mkdir(result_folder)
+    results_file = os.path.join(result_folder, 'results_psf_shear_err.json')
+    
+    # Load the model.
     model = None
     if method == 'Wiener':
         model = Wiener()
@@ -57,37 +52,51 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
                 logger.info(' Successfully loaded in %s.', model_file)
             except:
                 raise Exception('Failed loading in %s', model_file)
-        model.eval()    
+        model.eval()
     
+    for shear_err in shear_errs:
+        logger.info(' Running PSF shear_error=%s test with %s galaxies.\n', shear_err, n_gal)
+        test_loader = get_dataloader(data_path=data_path, train=False,
+                                     psf_folder=f'psf_shear_err_{shear_err}/' if shear_err > 0 else 'psf/')
+        
         rec_shear, gt_shear = [], []
         for ((obs, psf, alpha), gt), _ in zip(test_loader, tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    rec_shear.append(estimate_shear_new(obs, psf_delta))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(obs, psf))
+                    rec_shear.append(estimate_shear(obs, psf))
+                elif method == 'Wiener':
+                    obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
+                    rec = model(obs, psf, alpha)
+                    rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
+        
         
         # Save results.
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
+            logger.info(" Successfully loaded in %s.", results_file)
         except:
             results = {}
+            logger.critical(" Failed loading in %s.", results_file)
+            
         if not str(shear_err) in results:
             results[str(shear_err)] = {}
         results[str(shear_err)]['rec_shear'] = rec_shear
@@ -96,12 +105,12 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
         
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(" Test results saved to %s.\n", results_file)
+        logger.info(" PSF test (shear) results saved to %s.\n", results_file)
     
     return results
     
 def test_psf_fwhm_err(method, n_iters, model_file, n_gal, fwhm_errs,
-                      data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):
+                      data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path='results/'):
     logger = logging.getLogger('Noisy PSF Test (FWHM)')
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -150,34 +159,37 @@ def test_psf_fwhm_err(method, n_iters, model_file, n_gal, fwhm_errs,
                 if method == 'No_Deconv':
                     gt = gt.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    gt_shear.append(estimate_shear_new(gt, psf_delta))
-                    rec_shear.append(estimate_shear_new(obs, psf_delta))
+                    gt_shear.append(estimate_shear(gt, psf_delta))
+                    rec_shear.append(estimate_shear(obs, psf_delta))
                 elif method == 'FPFS':
                     psf = psf.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     obs = obs.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(obs, psf))
+                    rec_shear.append(estimate_shear(obs, psf))
                 elif method == 'Wiener':
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 elif 'Richard-Lucy' in method:
                     obs, psf = obs.to(device), psf.to(device)
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
                 else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
-                    rec_shear.append(estimate_shear_new(rec, psf_delta))
+                    rec_shear.append(estimate_shear(rec, psf_delta))
         
         # Save results.
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
+            logger.info(" Successfully loaded in %s.", results_file)
         except:
             results = {}
+            logger.critical(" Failed loading in %s.", results_file)
+            
         if not str(fwhm_err) in results:
             results[str(fwhm_err)] = {}
         results[str(fwhm_err)]['rec_shear'] = rec_shear
@@ -186,7 +198,7 @@ def test_psf_fwhm_err(method, n_iters, model_file, n_gal, fwhm_errs,
         
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(" Test results saved to %s.\n", results_file)
+        logger.info(" PSF test (FWHM) results saved to %s.\n", results_file)
 
 
 if __name__ == "__main__":

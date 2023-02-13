@@ -3,6 +3,5 @@ matplotlib
 scipy
 torch
 tqdm
-bm3d
 galsim
 fpfs

@@ -1,13 +1,6 @@
-import sys
-
-sys.path.append('.alpha_transform/')
 import numpy as np
-
-# from skimage.measure import label
 from AlphaTransform import AlphaShearletTransform as AST
 from numpy.linalg import norm
-
-# from modopt.signal.wavelet import filter_convolve
 from scipy.signal import convolve
 
 
