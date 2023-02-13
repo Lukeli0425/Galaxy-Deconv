@@ -26,8 +26,8 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
     
     psf_delta = delta_2D(48, 48)
     
-    gt_shear, obs_shear = [], []
-    for method, model_file, n_iter in zip(methods, model_files, n_iters):
+    gt_shear = []
+    for method, model_file, n_iters in zip(methods, model_files, n_iters):
         logger.info(' Tesing method: %s', method)
         result_folder = os.path.join(result_path, method)
         if not os.path.exists(result_folder):
@@ -35,34 +35,31 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
         results_file = os.path.join(result_folder, 'results_psf_shear_err.json')
         
         # Load the model.
-        if method == 'Wiener':
-            model = Wiener()
-            model.to(device)
-            model.eval()
-        elif 'Richard-Lucy' in method:
-            model = Richard_Lucy(n_iters=n_iter)
-            model.to(device)
-            model.eval()
-        elif 'Tikhonet' in method or method == 'ShapeNet' or 'ADMM' in method:
-            if method == 'Tikhonet':
-                model = Tikhonet(filter='Identity')
-            elif method == 'ShapeNet':
-                model = Tikhonet(filter='Laplacian')
-            elif 'Laplacian' in method:
-                model = Tikhonet(filter='Laplacian')
-            elif 'Gaussian' in method:
-                model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-            else:
-                model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
-            model.to(device)
-            try: # Load the model
+    model = None
+    if method == 'Wiener':
+        model = Wiener()
+    elif 'Richard-Lucy' in method:
+        model = Richard_Lucy(n_iters=n_iters)
+    elif method == 'Tikhonet':
+        model = Tikhonet(filter='Identity')
+    elif method == 'ShapeNet' or 'Laplacian' in method:
+        model = Tikhonet(filter='Laplacian')
+    elif 'Gaussian' in method:
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Gaussian', PnP=True)
+    else:
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Poisson', PnP=True)
+
+    if model is not None:
+        model.to(device)
+        if 'Tikhonet' in method or 'ShapeNet' in method or 'ADMM' in method:
+            try: # Load the pretrained wieghts.
                 model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
-                logger.info(' Successfully loaded in %s', model_file)
+                logger.info(' Successfully loaded in %s.', model_file)
             except:
                 raise Exception('Failed loading in %s', model_file)
-            model.eval()    
+        model.eval()    
     
-        rec_shear = []
+        rec_shear, gt_shear = [], []
         for ((obs, psf, alpha), gt), _ in zip(test_loader, tqdm(range(n_gal))):
             with torch.no_grad():
                 if method == 'No_Deconv':
@@ -79,13 +76,13 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
-                else: # ADMM, Tikhonet
+                else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        # Save results to json file。
+        # Save results.
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
@@ -103,7 +100,7 @@ def test_psf_shear_err(methods, n_iters, model_files, n_gal, shear_err, data_pat
     
     return results
     
-def test_psf_fwhm_err(method, n_iter, model_file, n_gal, fwhm_errs,
+def test_psf_fwhm_err(method, n_iters, model_file, n_gal, fwhm_errs,
                       data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', result_path='results/'):
     logger = logging.getLogger('Noisy PSF Test (FWHM)')
     
@@ -118,31 +115,28 @@ def test_psf_fwhm_err(method, n_iter, model_file, n_gal, fwhm_errs,
     results_file = os.path.join(result_folder, 'results_psf_fwhm_err.json')
     
     # Load the model.
+    model = None
     if method == 'Wiener':
         model = Wiener()
-        model.to(device)
-        model.eval()
     elif 'Richard-Lucy' in method:
-        model = Richard_Lucy(n_iters=n_iter)
+        model = Richard_Lucy(n_iters=n_iters)
+    elif method == 'Tikhonet':
+        model = Tikhonet(filter='Identity')
+    elif method == 'ShapeNet' or 'Laplacian' in method:
+        model = Tikhonet(filter='Laplacian')
+    elif 'Gaussian' in method:
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Gaussian', PnP=True)
+    else:
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Poisson', PnP=True)
+
+    if model is not None:
         model.to(device)
-        model.eval()
-    elif 'Tikhonet' in method or method == 'ShapeNet' or 'ADMM' in method:
-        if method == 'Tikhonet':
-            model = Tikhonet(filter='Identity')
-        elif method == 'ShapeNet':
-            model = Tikhonet(filter='Laplacian')
-        elif 'Laplacian' in method:
-            model = Tikhonet(filter='Laplacian')
-        elif 'Gaussian' in method:
-            model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
-        else:
-            model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
-        model.to(device)
-        try:
-            model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
-            logger.info(' Successfully loaded in %s', model_file)
-        except:
-            raise Exception('Failed loading in %s', model_file)
+        if 'Tikhonet' in method or 'ShapeNet' in method or 'ADMM' in method:
+            try: # Load the pretrained wieghts.
+                model.load_state_dict(torch.load(model_file, map_location=torch.device(device)))
+                logger.info(' Successfully loaded in %s.', model_file)
+            except:
+                raise Exception('Failed loading in %s', model_file)
         model.eval()
     
     for fwhm_err in fwhm_errs:
@@ -172,13 +166,13 @@ def test_psf_fwhm_err(method, n_iter, model_file, n_gal, fwhm_errs,
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
-                else: # ADMM, Tikhonet
+                else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        # Save results to json file
+        # Save results.
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
@@ -230,13 +224,13 @@ if __name__ == "__main__":
     
     if opt.error == 'shear':
         shear_errs = [0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-        for method, (n_iter, model_file) in methods.items():
-            test_psf_shear_err(methods=method, n_iters=method[method][0], model_file=methods[method][1], n_gal=opt.n_gal, shear_errs=shear_errs,
+        for method, (n_iters, model_file) in methods.items():
+            test_psf_shear_err(methods=method, n_iters=n_iters, model_file=model_file, n_gal=opt.n_gal, shear_errs=shear_errs,
                                data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     elif opt.error == 'fwhm':
         fwhm_errs = [0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]
-        for method, (n_iter, model_file) in methods.items():
-            test_psf_fwhm_err(method=method, n_iters=method[method][0], model_file=methods[method][1],  n_gal=opt.n_gal, fwhm_errs=fwhm_errs,
+        for method, (n_iters, model_file) in methods.items():
+            test_psf_fwhm_err(method=method, n_iters=n_iters, model_file=model_file,  n_gal=opt.n_gal, fwhm_errs=fwhm_errs,
                               data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     else:
         raise ValueError('Invalid PSF robustness test type.')

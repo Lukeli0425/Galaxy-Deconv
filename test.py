@@ -17,7 +17,7 @@ from utils.utils_data import get_dataloader
 from utils.utils_test import delta_2D, estimate_shear_new
 
 
-def test_shear(method, n_iter, model_file, n_gal, snrs, data_path, result_path):
+def test_shear(method, n_iters, model_file, n_gal, snrs, data_path, result_path):
     logger = logging.getLogger('Shear Test')
     logger.info(' Testing method: %s', method)
     
@@ -35,15 +35,15 @@ def test_shear(method, n_iter, model_file, n_gal, snrs, data_path, result_path):
     if method == 'Wiener':
         model = Wiener()
     elif 'Richard-Lucy' in method:
-        model = Richard_Lucy(n_iters=n_iter)
+        model = Richard_Lucy(n_iters=n_iters)
     elif method == 'Tikhonet':
         model = Tikhonet(filter='Identity')
     elif method == 'ShapeNet' or 'Laplacian' in method:
         model = Tikhonet(filter='Laplacian')
     elif 'Gaussian' in method:
-        model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Gaussian', PnP=True)
     else:
-        model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Poisson', PnP=True)
 
     if model is not None:
         model.to(device)
@@ -82,13 +82,13 @@ def test_shear(method, n_iter, model_file, n_gal, snrs, data_path, result_path):
                     rec = model(obs, psf) 
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
-                else: # ADMM, Tikhonet
+                else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                     obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                     rec = model(obs, psf, alpha)
                     rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                     rec_shear.append(estimate_shear_new(rec, psf_delta))
         
-        # Save results to json file.
+        # Save results.
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
@@ -105,11 +105,11 @@ def test_shear(method, n_iter, model_file, n_gal, snrs, data_path, result_path):
         
         with open(results_file, 'w') as f:
             json.dump(results, f)
-        logger.info(" Time test results saved to %s.\n", results_file)
+        logger.info(" Shear test results saved to %s.\n", results_file)
     
 
 
-def test_time(method, n_iter, model_file, n_gal, data_path, result_path):  
+def test_time(method, n_iters, model_file, n_gal, data_path, result_path):  
     """Test the time consumption of different methods."""
     logger = logging.getLogger('Time Test')
     logger.info(' Running time test with %s galaxies.', n_gal)
@@ -130,15 +130,15 @@ def test_time(method, n_iter, model_file, n_gal, data_path, result_path):
     if method == 'Wiener':
         model = Wiener()
     elif 'Richard-Lucy' in method:
-        model = Richard_Lucy(n_iters=n_iter)
+        model = Richard_Lucy(n_iters=n_iters)
     elif method == 'Tikhonet':
         model = Tikhonet(filter='Identity')
     elif method == 'ShapeNet' or 'Laplacian' in method:
         model = Tikhonet(filter='Laplacian')
     elif 'Gaussian' in method:
-        model = Unrolled_ADMM(n_iters=n_iter, llh='Gaussian', PnP=True)
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Gaussian', PnP=True)
     else:
-        model = Unrolled_ADMM(n_iters=n_iter, llh='Poisson', PnP=True)
+        model = Unrolled_ADMM(n_iters=n_iters, llh='Poisson', PnP=True)
 
     if model is not None:
         model.to(device)
@@ -171,7 +171,7 @@ def test_time(method, n_iter, model_file, n_gal, data_path, result_path):
                 rec = model(obs, psf) 
                 rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
                 rec_shear.append(estimate_shear_new(rec, psf_delta))
-            else: # ADMM, Tikhonet
+            else: # Unrolled ADMM, Wiener, Tikhonet, ShapeNet
                 obs, psf, alpha = obs.to(device), psf.to(device), alpha.to(device)
                 rec = model(obs, psf, alpha)
                 rec = rec.cpu().squeeze(dim=0).squeeze(dim=0).detach().numpy()
@@ -232,13 +232,13 @@ if __name__ == "__main__":
 
     if opt.test == 'shear':
         snrs = [20, 40, 60, 80, 100, 150, 200]
-        for method, (n_iter, model_file) in methods.items():
-            test_shear(method=method, n_iter=n_iter, model_file=model_file, n_gal=opt.n_gal, snrs=snrs,
+        for method, (n_iters, model_file) in methods.items():
+            test_shear(method=method, n_iters=n_iters, model_file=model_file, n_gal=opt.n_gal, snrs=snrs,
                        data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     elif opt.test == 'time':
-        for method, (n_iter, model_file) in methods.items():
+        for method, (n_iters, model_file) in methods.items():
             for i in range(3): # Run 2 dummy test first to warm up the GPU.
-                test_time(method=method, n_iter=n_iter, model_file=model_file, n_gal=opt.n_gal,
+                test_time(method=method, n_iters=n_iters, model_file=model_file, n_gal=opt.n_gal,
                           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path=opt.result_path)
     else:
         raise ValueError("Invalid test type.")

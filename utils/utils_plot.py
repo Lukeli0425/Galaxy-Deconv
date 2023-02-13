@@ -59,18 +59,19 @@ def get_label(method):
         
     return label
 
-def plot_loss(train_loss, val_loss, model_save_path, model_name):
+def plot_loss(train_loss, val_loss, epoch_min, model_save_path, model_name):
     n_epochs = len(train_loss)
     plt.figure(figsize=(12,7))
-    plt.plot(range(1, n_epochs+1), train_loss, '-o', markersize=3.5, label='Train Loss')
-    plt.plot(range(1, n_epochs+1), val_loss, '-o', markersize=3.5, label='Test Loss')
-    plt.title('Loss Curve', fontsize=18)
+    plt.plot(range(1, n_epochs+1), train_loss, '-o', markersize=4, label='Train Loss')
+    plt.plot(range(1, n_epochs+1), val_loss, '-o', markersize=4, label='Valid Loss')
+    plt.plot([epoch_min], [val_loss[epoch_min-1]], 'ro', markersize=7, label='Best Epoch')
+    plt.title(f'{model_name} Loss Curve', fontsize=18)
     plt.xlabel('Epoch', fontsize=14)
     plt.ylabel('Loss', fontsize=14)
     # plt.yscale("log")
     plt.legend(fontsize=15)
     file_name = f'./{model_save_path}/{model_name}_loss_curve.jpg'
-    plt.savefig(file_name)
+    plt.savefig(file_name, bbox_inches='tight')
     plt.close()
 
 def plot_psnr(n_iters, llh, PnP, n_epochs, survey, I):
@@ -261,4 +262,4 @@ def plot_seeing_err_results(methods):
 if __name__ == "__main__":
     train_loss = [0.082,0.079,0.072,0.062,0.051,0.047,0.039,0.035,0.032,0.029,0.082,0.079,0.072,0.062,0.051,0.047,0.039,0.035,0.032,0.029,0.082,0.079,0.072,0.062,0.051,0.047,0.039,0.035,0.032,0.029,0.09,0.08,0.072,0.066,0.058,0.051,0.04,0.037,0.036,0.0335]
     val_loss = [0.09,0.08,0.072,0.066,0.058,0.051,0.04,0.037,0.036,0.0335,0.09,0.08,0.072,0.066,0.058,0.051,0.04,0.037,0.036,0.0335,0.09,0.08,0.072,0.066,0.058,0.051,0.04,0.037,0.036,0.0335,0.09,0.08,0.072,0.066,0.058,0.051,0.04,0.037,0.036,0.0335]
-    plot_loss(train_loss, val_loss, 'Poisson', True, 11, True, 50, 23.5)
+    plot_loss(train_loss, val_loss, 10, './', 'Gaussian_ADMM')

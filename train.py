@@ -16,7 +16,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train_val_split=0.8, batch_size=32,
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=0.8, batch_size=32,
           model_save_path='./saved_models/', pretrained_epochs=0):
     
     model_name = get_model_name(method=model_name, loss=loss, filter=filter, n_iters=n_iters, llh=llh, PnP=PnP, remove_SubNet=remove_SubNet)
@@ -58,6 +58,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     optimizer = Adam(params=model.parameters(), lr = lr)
 
     train_loss_list, val_loss_list = [], []
+    val_loss_min, epoch_min = 1.e9, 0
     for epoch in range(n_epochs):
         model.train()
         train_loss = 0.0
@@ -114,13 +115,16 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
                         val_loss/len(val_loader)))
         
         # Save model.
-        if (epoch + 1) % 5 == 0:
+        if val_loss_min > val_loss or (epoch + 1) % 5 == 0:
+            if val_loss_min > val_loss:
+                val_loss_min = val_loss
+                epoch_min = epoch
             model_file_name = f'{model_name}_{epoch+1+pretrained_epochs}epochs.pth'
             torch.save(model.state_dict(), os.path.join(model_save_path, model_file_name))
             logger.info(' Model saved to %s', os.path.join(model_save_path, model_file_name))
 
         # Plot loss curve.
-        plot_loss(train_loss_list, val_loss_list, model_save_path, model_name)
+        plot_loss(train_loss_list, val_loss_list, epoch_min, model_save_path, model_name)
 
 
 
