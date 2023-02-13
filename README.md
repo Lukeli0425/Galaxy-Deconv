@@ -1,6 +1,6 @@
 # Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM
 
-[Tianao Li](https://lukeli0425.github.io)<sup>1</sup>, [Emma Alexander](https://www.alexander.vision/emma)<sup>2</sup><br>
+<b>[Tianao Li](https://lukeli0425.github.io)</b><sup>1</sup>, <b>[Emma Alexander](https://www.alexander.vision/emma)</b><sup>2</sup><br>
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
 _arXiv Preprint_
 
@@ -50,9 +50,13 @@ python test_psf.py --n_gal 10000
 
 All the test results will be automatically saved in the [`results`](results) folder.
 
+---
+
 ## Using the model on your own data
 
-We saved our models trained on our LSST dataset (see [`saved_models`](saved_models)). We also provide a tutorial for using the suggested model on your data, see [`tutorial/deconv.ipynb`](tutorial/deconv.ipynb) for details.
+We saved our models trained on our LSST dataset (see [`saved_models`](saved_models)). We also provide a tutorial for using the suggested model on your data, see [`tutorial/deconv.ipynb`](tutorial/deconv.ipynb) for details. 
+
+---
 
 ## Simulating your own dataset and Retraining
 
@@ -94,9 +98,13 @@ We provide a detailed tutorial for image simulation (see [`tutorials/image_simul
 
 You can train the models on your dataset.
 
+---
+
 ## Recreating our figures
 
-The [`figures`](figures) folder holds the figures in the paper and the files that created them (see [`figures/README.md`](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
+The [`figures`](figures) folder holds the figures in this paper and the files that created them (see [`figures/README.md`](figures/README.md)). To recreate the figures with your own results, you can use the given files and follow the instructions we provide.
+
+---
 
 ## Citation
 
