@@ -458,7 +458,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Arguments for dataset.')
     parser.add_argument('--task', type=str, default='Deconv', choices=['Deconv', 'Denoise'])
     parser.add_argument('--n_train', type=int, default=40000)
-    parser.add_argument('--load_info', type=str, action="store_true")
+    parser.add_argument('--load_info', action="store_true")
     parser.add_argument('--survey', type=str, default='LSST', choices=['LSST', 'JWST'])
     parser.add_argument('--I', type=str, default='23.5', choices=['23.5', '25.2'])
     parser.add_argument('--fov_pixels', type=int, default=48)
