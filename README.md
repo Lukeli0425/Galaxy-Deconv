@@ -109,10 +109,12 @@ The [`figures`](figures) folder holds the figures in this paper and the files th
 ## Citation
 
 ```bibtex
-@article{li2022galaxy,
-  title={Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM},
-  author={Li, Tianao and Alexander, Emma},
-  journal={arXiv preprint arXiv:2211.01567},
-  year={2022}
+@article{li2023galaxy,
+  title={Galaxy image deconvolution for weak gravitational lensing with unrolled plug-and-play ADMM},
+  author={Li, Tianao},
+  journal={Monthly Notices of the Royal Astronomical Society: Letters},
+  pages={slad032},
+  year={2023},
+  publisher={Oxford University Press}
 }
 ```
