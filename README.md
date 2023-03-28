@@ -2,7 +2,7 @@
 
 <b>[Tianao Li](https://lukeli0425.github.io)</b><sup>1</sup>, <b>[Emma Alexander](https://www.alexander.vision/emma)</b><sup>2</sup><br>
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
-__Monthly Notices of the Royal Astronomical Society, 2023__
+__Monthly Notices of the Royal Astronomical Society: Letters__
 
 Official code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://arxiv.org/abs/2211.01567).
 
