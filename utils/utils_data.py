@@ -1,11 +1,11 @@
-import os
 import json
 import logging
+import os
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Dataset, random_split
 
 
 def get_flux(ab_magnitude, exp_time, zero_point, gain, qe):
@@ -44,8 +44,7 @@ def down_sample(input, rate=4):
 class Galaxy_Dataset(Dataset):
     """Simulated Galaxy Image Dataset inherited from `torch.utils.data.Dataset`."""
     def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=True,
-                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/',
-                 normalize=False):
+                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
         """Construction function for the PyTorch Galaxy Dataset.
 
         Args:
@@ -68,7 +67,6 @@ class Galaxy_Dataset(Dataset):
         self.n_total, self.n_train, self.n_test = 0, 0, 0
         self.sequence = []
         self.info = {}
-        self.normalize = normalize
         
         # Read in information
         self.info_file = os.path.join(self.data_path, 'info.json')
@@ -106,7 +104,7 @@ class Galaxy_Dataset(Dataset):
             
             
 def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.8, batch_size=32,
-                   psf_folder='psf/', obs_folder='obs/', gt_folder='gt/', normalize=False):
+                   psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 
     Args:
@@ -124,7 +122,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train
         test_loader (`torch.utils.data.DataLoader`): PyTorch dataloader for test dataset.
     """
     if train:
-        train_dataset = Galaxy_Dataset(data_path=data_path, train=True, normalize=normalize)
+        train_dataset = Galaxy_Dataset(data_path=data_path, train=True)
         train_size = int(train_test_split * len(train_dataset))
         val_size = len(train_dataset) - train_size
         train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
@@ -132,7 +130,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
         return train_loader, val_loader
     else:
-        test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder, normalize=normalize)
+        test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         return test_loader
     
