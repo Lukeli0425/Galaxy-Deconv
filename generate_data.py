@@ -75,7 +75,7 @@ def get_COSMOS_Galaxy(real_galaxy_catalog, idx,
     """Simulate a background galaxy with data from COSMOS Catalog.
 
     Args:
-        real_galaxy_catalog (`galsim.COSMOSCatalog`): A `galsim.real_galaxy_catalog` object, from which the parametric galaxies are read out.
+        real_galaxy_catalog (`galsim.COSMOSCatalog`): A `galsim.RealGalaxyCatalog` object, from which the parametric galaxies are read out.
         idx (int): Index of the chosen galaxy in the catalog.
         gal_flux (float): Total flux of the galaxy in the simulated image.
         sky_level (float): Skylevel in the simulated image.
@@ -120,15 +120,15 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
 
     Args:
         data_path (str): Path to save the dataset. 
-        train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to 0.7.
-        survey (str, optional): _description_. Defaults to 'LSST'.
-        I (str, optional): The sample in COSMOS data to use, "23.5" or "25.2". Defaults to '23.5'.
-        fov_pixels (int, optional):  Size of the simulated images in pixels.. Defaults to 48.
-        pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
-        upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
-        snrs (list, optional): The list of SNR to be simulated for testing. Defaults to [10, 15, 20, 40, 60, 80, 100, 150, 200].
-        shear_errs (list, optional): The list of systematic PSF shear error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2].
-        fwhm_errs (list, optional): The list of systematic PSF FWHM error to be simulated for testing. Defaults to [0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3].
+        train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to `0.7`.
+        survey (str, optional): _description_. Defaults to `'LSST'`.
+        I (str, optional): The sample in COSMOS data to use, `"23.5"` or `"25.2"`. Defaults to `"23.5"`.
+        fov_pixels (int, optional):  Size of the simulated images in pixels. Defaults to `48`.
+        pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to `0.2`.
+        upsample (int, optional): Upsampling factor for simulations. Defaults to `4`.
+        snrs (list, optional): The list of SNR to be simulated for testing. Defaults to `[10, 15, 20, 40, 60, 80, 100, 150, 200]`.
+        shear_errs (list, optional): The list of systematic PSF shear error to be simulated for testing. Defaults to `[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2]`.
+        fwhm_errs (list, optional): The list of systematic PSF FWHM error to be simulated for testing. Defaults to `[0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3]`.
     """
     
     logger = logging.getLogger('DataGenerator')
@@ -340,12 +340,12 @@ def generate_data_denoise(data_path, n_train=40000, load_info=True,
 
     Args:
         data_path (str): Path to save the dataset. 
-        train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to 0.7.
-        survey (str, optional): Simulated survey. Defaults to 'LSST'.
-        I (str, optional): The sample in COSMOS data to use, "23.5" or "25.2". Defaults to '23.5'.
-        fov_pixels (int, optional): Size of the simulated images in pixels. Defaults to 48.
-        pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to 0.2.
-        upsample (int, optional): Upsampling factor for simulations. Defaults to 4.
+        train_split (float, optional): Proportion of data used in train dataset, the rest will be used in test dataset. Defaults to `0.7`.
+        survey (str, optional): Simulated survey. Defaults to `'LSST'`.
+        I (str, optional): The sample in COSMOS data to use, `"23.5"` or `"25.2"`. Defaults to `"23.5"`.
+        fov_pixels (int, optional): Size of the simulated images in pixels. Defaults to `48`.
+        pixel_scale (float, optional): Pixel scale in arcsec of the images. Defaults to `0.2`.
+        upsample (int, optional): Upsampling factor for simulations. Defaults to `4`.
     """
     
     logger = logging.getLogger('DataGenerator')

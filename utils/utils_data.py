@@ -2,7 +2,6 @@ import json
 import logging
 import os
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset, random_split
@@ -29,7 +28,7 @@ def down_sample(input, rate=4):
 
     Args:
         input (`torch.Tensor`): The input image with shape `[H, W]`.
-        rate (int, optional): Downsampling rate. Defaults to 4.
+        rate (int, optional): Downsampling rate. Defaults to `4`.
 
     Returns:
         `torch.Tensor`: The downsampled image.
@@ -43,16 +42,16 @@ def down_sample(input, rate=4):
 
 class Galaxy_Dataset(Dataset):
     """Simulated Galaxy Image Dataset inherited from `torch.utils.data.Dataset`."""
-    def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=True,
+    def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True,
                  psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
         """Construction function for the PyTorch Galaxy Dataset.
 
         Args:
-            data_path (str, optional): Path to the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5/'.
+            data_path (str, optional): Path to the dataset. Defaults to `'/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'`.
             train (bool, optional): Whether the dataset is generated for training or testing. Defaults to True.
-            psf_folder (str, optional): Path to the PSF image folder. Defaults to 'psf/'.
-            obs_folder (str, optional): Path to the observed image folder. Defaults to 'obs/'.
-            gt_folder (str, optional): Path to the ground truth image folder. Defaults to 'gt/'.
+            psf_folder (str, optional): Path to the PSF image folder. Defaults to `'psf/'`.
+            obs_folder (str, optional): Path to the observed image folder. Defaults to `'obs/'`.
+            gt_folder (str, optional): Path to the ground truth image folder. Defaults to `'gt/'`.
         """
         super(Galaxy_Dataset, self).__init__()
         
@@ -109,13 +108,13 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', tr
     """Generate PyTorch dataloaders for training or testing.
 
     Args:
-        data_path (str, optional): Path the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'.
+        data_path (str, optional): Path the dataset. Defaults to `'/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'`.
         train (bool, optional): Whether to generate train dataloader or test dataloader. Defaults to True.
-        train_test_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to 0.8888889.
+        train_test_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to `0.8`.
         batch_size (int, optional): Batch size for training dataset. Defaults to 32.
-        psf_folder (str, optional): Path to the PSF image folder. Defaults to 'psf/'.
-        obs_folder (str, optional): Path to the observed image folder. Defaults to 'obs/'.
-        gt_folder (str, optional): Path to the ground truth image folder. Defaults to 'gt/'.
+        psf_folder (str, optional): Path to the PSF image folder. Defaults to `'psf/'`.
+        obs_folder (str, optional): Path to the observed image folder. Defaults to `'obs/'`.
+        gt_folder (str, optional): Path to the ground truth image folder. Defaults to `'gt/'`.
 
     Returns:
         train_loader (`torch.utils.data.DataLoader`):  PyTorch dataloader for train dataset.
