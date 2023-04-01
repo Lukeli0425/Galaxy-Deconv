@@ -60,7 +60,7 @@ class Galaxy_Dataset(Dataset):
         
         # Initialize parameters
         self.data_path = data_path
-        self.train= train
+        self.train = train
         self.psf_folder = psf_folder
         self.obs_folder = obs_folder
         self.gt_folder = gt_folder
@@ -77,9 +77,10 @@ class Galaxy_Dataset(Dataset):
             self.n_train = self.info['n_train']
             self.n_test = self.info['n_test']
             self.sequence = self.info['sequence']
-            self.logger.info(f" Successfully constructed {'train' if self.train else 'test'} dataset. Total Samples: {self.n_train if self.train else self.n_test}.")
+            self.logger.info(" Successfully constructed %s dataset. Total Samples: %s.",
+                             'train' if self.train else 'test', self.n_train if self.train else self.n_test)
         except:
-            self.logger.exception(f' Failed reading information from {self.info_file}.')
+            self.logger.exception(' Failed reading information from %s.', self.info_file)
 
     def __len__(self):
         return self.n_train if self.train else self.n_test
@@ -103,12 +104,12 @@ class Galaxy_Dataset(Dataset):
         return (obs, psf, alpha), gt
             
             
-def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.8, batch_size=32,
+def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True, train_test_split=0.8, batch_size=32,
                    psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 
     Args:
-        data_path (str, optional): Path the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5/'.
+        data_path (str, optional): Path the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'.
         train (bool, optional): Whether to generate train dataloader or test dataloader. Defaults to True.
         train_test_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to 0.8888889.
         batch_size (int, optional): Batch size for training dataset. Defaults to 32.
