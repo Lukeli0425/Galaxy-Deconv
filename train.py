@@ -26,7 +26,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
     
-    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size)
+    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     

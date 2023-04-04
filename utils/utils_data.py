@@ -103,14 +103,14 @@ class Galaxy_Dataset(Dataset):
         return (obs, psf, alpha), gt
             
             
-def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True, train_test_split=0.8, batch_size=32,
+def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True, train_val_split=0.8, batch_size=32,
                    psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 
     Args:
         data_path (str, optional): Path the dataset. Defaults to `'/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'`.
         train (bool, optional): Whether to generate train dataloader or test dataloader. Defaults to True.
-        train_test_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to `0.8`.
+        train_val_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to `0.8`.
         batch_size (int, optional): Batch size for training dataset. Defaults to 32.
         psf_folder (str, optional): Path to the PSF image folder. Defaults to `'psf/'`.
         obs_folder (str, optional): Path to the observed image folder. Defaults to `'obs/'`.
@@ -123,7 +123,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', tr
     """
     if train:
         train_dataset = Galaxy_Dataset(data_path=data_path, train=True)
-        train_size = int(train_test_split * len(train_dataset))
+        train_size = int(train_val_split * len(train_dataset))
         val_size = len(train_dataset) - train_size
         train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -133,6 +133,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', tr
         test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         return test_loader
+    
     
 if __name__ == '__main__':
     get_dataloader()
