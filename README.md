@@ -4,7 +4,7 @@
 <sup>1</sup>Tsinghua University, <sup>2</sup>Northwestern University<br>
 __Monthly Notices of the Royal Astronomical Society: Letters__
 
-Official code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://arxiv.org/abs/2211.01567).
+Official code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://doi.org/10.1093/mnrasl/slad032).
 
 ![Pipeline Figure](figures/pipeline.jpg)
 
@@ -54,7 +54,7 @@ All the test results will be automatically saved in the [`results`](results) fol
 
 ## Using the model on your own data
 
-We saved our models trained on our LSST dataset (see [`saved_models`](saved_models)). We also provide a tutorial for using the suggested model on your data, see [`tutorial/deconv.ipynb`](tutorial/deconv.ipynb) for details. 
+We saved our models trained on our LSST dataset (see [`saved_models`](saved_models)). We also provide a tutorial for using the suggested model on your data, see [`tutorials/deconv.ipynb`](tutorials/deconv.ipynb) for details. 
 
 ---
 
@@ -63,7 +63,7 @@ We saved our models trained on our LSST dataset (see [`saved_models`](saved_mode
 We simulated our dataset with the modular galaxy image simulation toolkit [Galsim](https://github.com/GalSim-developers/GalSim) and the [COSMOS Real Galaxy Dataset](https://zenodo.org/record/3242143#.Ytjzki-KFAY). To us our image simulation pipeline, one need to first download the COSMOS data [here](https://zenodo.org/record/3242143#.Ytjzki-KFAY) or download with Galsim:
 
 ```zsh
-galsim_download_cosmos [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [--save] [-d DIR] [-s {23.5,25.2}] [--nolink]
+galsim_download_cosmos -s 23.5
 ```
 
 <!-- Create a `data` folder and download COSMOS dataset:
@@ -111,9 +111,11 @@ The [`figures`](figures) folder holds the figures in this paper and the files th
 ```bibtex
 @article{li2023galaxy,
   title={Galaxy image deconvolution for weak gravitational lensing with unrolled plug-and-play ADMM},
-  author={Li, Tianao},
+  author={Li, Tianao and Alexander, Emma},
   journal={Monthly Notices of the Royal Astronomical Society: Letters},
-  pages={slad032},
+  volume={522},
+  number={1},
+  pages={L31--L35},
   year={2023},
   publisher={Oxford University Press}
 }
