@@ -32,7 +32,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     if 'ADMM' in model_name:
-        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, SubNet=not remove_SubNet)
+        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
     elif 'ShapeNet' in model_name:
