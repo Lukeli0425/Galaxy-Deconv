@@ -154,7 +154,7 @@ def generate_data_deconv(data_path, n_train=40000, load_info=True,
     except:
         raise Exception(' Failed reading in I=%s galaxies.', I)
     
-    info_file = os.path.join(data_path, f'info.json')
+    info_file = os.path.join(data_path, 'info.json')
     if load_info:
         try:
             with open(info_file, 'r') as f:
