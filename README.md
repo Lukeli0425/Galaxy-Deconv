@@ -33,7 +33,7 @@ Download our simulated [galaxy dataset](https://drive.google.com/drive/folders/1
 To train the models, run [`train.py`](train.py) and choose parameters and loss function for your training, for instance:
 
 ```zsh
-python train.py --model Unrolled_ADMM --n_iters 8 --n_epochs 50 --loss Multiscale --lr 1e-4
+python train.py --model Unrolled_ADMM --n_iters 8 --n_epochs 50 --loss MultiScale --lr 1e-4
 ```
 
 Test the algorithms from the perspectives of time and performance with [`test.py`](test.py). Uncomment the methods to be tested in the code and specify the number of galaxies you want to use in the test dataset:
