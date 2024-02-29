@@ -9,6 +9,8 @@ alpha-transform/
 PnP-ADMM/
 ShapeDeconv/
 
+.git-rewrite
+
 # Old version of the code
 old/
 

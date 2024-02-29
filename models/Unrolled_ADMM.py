@@ -172,8 +172,7 @@ class Unrolled_ADMM(nn.Module):
 		rhs = tfft.fftn( conv_fft_batch(Ht, y/alpha), dim=[2,3] )
 		lhs = HtH + (1/alpha)
 		x0 = torch.real(tfft.ifftn(rhs/lhs, dim=[2,3]))
-		x0 = torch.clamp(x0,0,1)
-		return x0
+		return torch.clamp(x0,0,1)
 
 	def forward(self, y, kernel, alpha):
 		device = torch.device("cuda:0" if y.is_cuda else "cpu")
@@ -189,6 +188,7 @@ class Unrolled_ADMM(nn.Module):
 			rho1_iters, rho2_iters = self.init(kernel, alpha) 	# Hyperparameters
 		x = self.init_l2(y, H, alpha) # Initialization using Wiener Deconvolution
 		x_list.append(x)
+  
 		# Other ADMM variables
 		z = Variable(x.data.clone()).to(device)
 		v = Variable(y.data.clone()).to(device)
@@ -202,10 +202,12 @@ class Unrolled_ADMM(nn.Module):
 				rho2 = rho2_iters[:,:,:,n].view(N,1,1,1)
 			else:
 				rho1, rho2 = self.rho1_iters[n], self.rho2_iters[n]
+    
 			# V, Z and X updates
 			v = self.V(conv_fft_batch(H,x) + u2, y, rho2, alpha) if self.llh=='Poisson' else self.V(conv_fft_batch(H,x) + u2, y/alpha, rho2)
 			z = self.Z(x + u1) if self.PnP else self.Z(x + u1, lam, rho1)
 			x = self.X(z - u1, conv_fft_batch(Ht,v - u2), HtH, rho1, rho2)
+   
 			# Lagrangian updates
 			u1 = u1 + x - z			
 			u2 = u2 + conv_fft_batch(H,x) - v
