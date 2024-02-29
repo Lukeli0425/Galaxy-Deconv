@@ -15,6 +15,7 @@ from utils.utils_test import delta_2D, estimate_shear
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
+
 def test_psf_shear_err(method, n_iters, model_file, n_gal, shear_errs,
                       data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', result_path='results/'):
     logger = logging.getLogger('Noisy PSF Test (shear)')

@@ -1,11 +1,10 @@
-import os
 import json
 import logging
-import numpy as np
+import os
+
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Dataset, random_split
 
 
 def get_flux(ab_magnitude, exp_time, zero_point, gain, qe):
@@ -29,7 +28,7 @@ def down_sample(input, rate=4):
 
     Args:
         input (`torch.Tensor`): The input image with shape `[H, W]`.
-        rate (int, optional): Downsampling rate. Defaults to 4.
+        rate (int, optional): Downsampling rate. Defaults to `4`.
 
     Returns:
         `torch.Tensor`: The downsampled image.
@@ -43,17 +42,16 @@ def down_sample(input, rate=4):
 
 class Galaxy_Dataset(Dataset):
     """Simulated Galaxy Image Dataset inherited from `torch.utils.data.Dataset`."""
-    def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5/', train=True,
-                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/',
-                 normalize=False):
+    def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True,
+                 psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
         """Construction function for the PyTorch Galaxy Dataset.
 
         Args:
-            data_path (str, optional): Path to the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5/'.
+            data_path (str, optional): Path to the dataset. Defaults to `'/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'`.
             train (bool, optional): Whether the dataset is generated for training or testing. Defaults to True.
-            psf_folder (str, optional): Path to the PSF image folder. Defaults to 'psf/'.
-            obs_folder (str, optional): Path to the observed image folder. Defaults to 'obs/'.
-            gt_folder (str, optional): Path to the ground truth image folder. Defaults to 'gt/'.
+            psf_folder (str, optional): Path to the PSF image folder. Defaults to `'psf/'`.
+            obs_folder (str, optional): Path to the observed image folder. Defaults to `'obs/'`.
+            gt_folder (str, optional): Path to the ground truth image folder. Defaults to `'gt/'`.
         """
         super(Galaxy_Dataset, self).__init__()
         
@@ -61,14 +59,13 @@ class Galaxy_Dataset(Dataset):
         
         # Initialize parameters
         self.data_path = data_path
-        self.train= train
+        self.train = train
         self.psf_folder = psf_folder
         self.obs_folder = obs_folder
         self.gt_folder = gt_folder
         self.n_total, self.n_train, self.n_test = 0, 0, 0
         self.sequence = []
         self.info = {}
-        self.normalize = normalize
         
         # Read in information
         self.info_file = os.path.join(self.data_path, 'info.json')
@@ -79,9 +76,10 @@ class Galaxy_Dataset(Dataset):
             self.n_train = self.info['n_train']
             self.n_test = self.info['n_test']
             self.sequence = self.info['sequence']
-            self.logger.info(f" Successfully constructed {'train' if self.train else 'test'} dataset. Total Samples: {self.n_train if self.train else self.n_test}.")
+            self.logger.info(" Successfully constructed %s dataset. Total Samples: %s.",
+                             'train' if self.train else 'test', self.n_train if self.train else self.n_test)
         except:
-            self.logger.exception(f' Failed reading information from {self.info_file}.')
+            self.logger.exception(' Failed reading information from %s.', self.info_file)
 
     def __len__(self):
         return self.n_train if self.train else self.n_test
@@ -105,18 +103,18 @@ class Galaxy_Dataset(Dataset):
         return (obs, psf, alpha), gt
             
             
-def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train=True, train_test_split=0.8, batch_size=32,
-                   psf_folder='psf/', obs_folder='obs/', gt_folder='gt/', normalize=False):
+def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True, train_val_split=0.8, batch_size=32,
+                   psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 
     Args:
-        data_path (str, optional): Path the dataset. Defaults to '/mnt/WD6TB/tianaoli/dataset/LSST_23.5/'.
+        data_path (str, optional): Path the dataset. Defaults to `'/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/'`.
         train (bool, optional): Whether to generate train dataloader or test dataloader. Defaults to True.
-        train_test_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to 0.8888889.
+        train_val_split (float, optional): Proportion of data used in train dataloader in train dataset, the rest will be used in valid dataloader. Defaults to `0.8`.
         batch_size (int, optional): Batch size for training dataset. Defaults to 32.
-        psf_folder (str, optional): Path to the PSF image folder. Defaults to 'psf/'.
-        obs_folder (str, optional): Path to the observed image folder. Defaults to 'obs/'.
-        gt_folder (str, optional): Path to the ground truth image folder. Defaults to 'gt/'.
+        psf_folder (str, optional): Path to the PSF image folder. Defaults to `'psf/'`.
+        obs_folder (str, optional): Path to the observed image folder. Defaults to `'obs/'`.
+        gt_folder (str, optional): Path to the ground truth image folder. Defaults to `'gt/'`.
 
     Returns:
         train_loader (`torch.utils.data.DataLoader`):  PyTorch dataloader for train dataset.
@@ -124,17 +122,18 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_new/', train
         test_loader (`torch.utils.data.DataLoader`): PyTorch dataloader for test dataset.
     """
     if train:
-        train_dataset = Galaxy_Dataset(data_path=data_path, train=True, normalize=normalize)
-        train_size = int(train_test_split * len(train_dataset))
+        train_dataset = Galaxy_Dataset(data_path=data_path, train=True)
+        train_size = int(train_val_split * len(train_dataset))
         val_size = len(train_dataset) - train_size
         train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
         return train_loader, val_loader
     else:
-        test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder, normalize=normalize)
+        test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         return test_loader
+    
     
 if __name__ == '__main__':
     get_dataloader()

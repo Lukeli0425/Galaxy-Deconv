@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 from models.ResUNet import ResUNet
 from models.XDenseUNet import XDenseUNet
-from utils.utils_torch import conv_fft, conv_fft_batch, psf_to_otf
+from utils.utils_torch import conv_fft_batch, psf_to_otf
 
 
 def weights_init_kaiming(m):
@@ -56,9 +56,9 @@ class Down(nn.Module):
 		return self.maxpool_conv(x)
 
 
-class InitNet(nn.Module):
+class SubNet(nn.Module):
 	def __init__(self, n):
-		super(InitNet, self).__init__()
+		super(SubNet, self).__init__()
 		self.n = n
 		self.conv_layers = nn.Sequential(
 			Down(1,4),
@@ -151,25 +151,25 @@ class Z_Update_XDenseUNet(nn.Module):
 
 
 class Unrolled_ADMM(nn.Module):
-	def __init__(self, n_iters=8, llh='Poisson', denoiser='ResUNet', PnP=True, SubNet=True):
+	def __init__(self, n_iters=8, llh='Poisson', denoiser='ResUNet', PnP=True, subnet=True):
 		super(Unrolled_ADMM, self).__init__()
 		self.n = n_iters # Number of iterations.
 		self.llh = llh
 		self.PnP = PnP
-		self.SubNet = SubNet
+		self.subnet = subnet
 		self.denoiser = denoiser
 		self.X = X_Update() # FFT based quadratic solution.
 		self.V = V_Update_Poisson() if llh=='Poisson' else V_Update_Gaussian() # Poisson/Gaussian MLE.
 		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.	
-		if self.SubNet:
-			self.init = InitNet(self.n)
+		if self.subnet:
+			self.SubNet = SubNet(self.n)
 		else:
 			self.rho1_iters = torch.ones(size=[self.n,], requires_grad=True)
 			self.rho2_iters = torch.ones(size=[self.n,], requires_grad=True)
   
 	def init_l2(self, y, H, alpha):
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
-		rhs = tfft.fftn( conv_fft_batch(Ht, y/alpha), dim=[2,3] )
+		rhs = tfft.fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
 		lhs = HtH + (1/alpha)
 		x0 = torch.real(tfft.ifftn(rhs/lhs, dim=[2,3]))
 		return torch.clamp(x0,0,1)
@@ -180,24 +180,24 @@ class Unrolled_ADMM(nn.Module):
 		N, _, _, _ = y.size()
 		y = torch.max(y, torch.zeros_like(y))
   
-		# Generate auxiliary variables for convolution
+		# Generate auxiliary variables for convolution.
 		k_pad, H = psf_to_otf(kernel, y.size())
 		H = H.to(device)
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
-		if self.SubNet:
-			rho1_iters, rho2_iters = self.init(kernel, alpha) 	# Hyperparameters
-		x = self.init_l2(y, H, alpha) # Initialization using Wiener Deconvolution
+		if self.subnet:
+			rho1_iters, rho2_iters = self.SubNet(kernel, alpha) 	# Hyperparameters.
+		x = self.init_l2(y, H, alpha) # Initialization using Wiener Deconvolution.
 		x_list.append(x)
   
 		# Other ADMM variables
 		z = Variable(x.data.clone()).to(device)
 		v = Variable(y.data.clone()).to(device)
-		u1 = torch.zeros(y.size()).to(device)
+		u1 = torch.zeros(x.size()).to(device)
 		u2 = torch.zeros(y.size()).to(device)
 		
         # ADMM iterations
 		for n in range(self.n):
-			if self.SubNet:
+			if self.subnet:
 				rho1 = rho1_iters[:,:,:,n].view(N,1,1,1)
 				rho2 = rho2_iters[:,:,:,n].view(N,1,1,1)
 			else:
@@ -213,8 +213,8 @@ class Unrolled_ADMM(nn.Module):
 			u2 = u2 + conv_fft_batch(H,x) - v
 			x_list.append(x)
 
-		return x_list[-1] * alpha # if self.llh=='Poisson' else x_list[-1]
-		# return x_list, alpha # For press release
+		return x_list[-1] * alpha if self.llh=='Poisson' else x_list[-1]
+
 
 
 if __name__ == '__main__':

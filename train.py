@@ -14,6 +14,7 @@ from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
+
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=0.8, batch_size=32,
@@ -26,12 +27,12 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
     
-    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_test_split=train_val_split, batch_size=batch_size)
+    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     if 'ADMM' in model_name:
-        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, SubNet=not remove_SubNet)
+        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
     elif 'ShapeNet' in model_name:
@@ -149,4 +150,4 @@ if __name__ == "__main__":
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models_200/', pretrained_epochs=opt.pretrained_epochs)
+          model_save_path='./saved_models/', pretrained_epochs=opt.pretrained_epochs)
