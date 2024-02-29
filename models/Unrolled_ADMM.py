@@ -162,7 +162,7 @@ class Unrolled_ADMM(nn.Module):
 		self.V = V_Update_Poisson() if llh=='Poisson' else V_Update_Gaussian() # Poisson/Gaussian MLE.
 		self.Z = (Z_Update_ResUNet() if self.denoiser=='ResUNet' else Z_Update_XDenseUNet()) if PnP else Z_Update() # Denoiser.	
 		if self.subnet:
-			self.SubNet = SubNet(self.n)
+			self.init = SubNet(self.n)
 		else:
 			self.rho1_iters = torch.ones(size=[self.n,], requires_grad=True)
 			self.rho2_iters = torch.ones(size=[self.n,], requires_grad=True)
@@ -185,7 +185,7 @@ class Unrolled_ADMM(nn.Module):
 		H = H.to(device)
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
 		if self.subnet:
-			rho1_iters, rho2_iters = self.SubNet(kernel, alpha) 	# Hyperparameters.
+			rho1_iters, rho2_iters = self.init(kernel, alpha) 	# Hyperparameters.
 		x = self.init_l2(y, H, alpha) # Initialization using Wiener Deconvolution.
 		x_list.append(x)
   
