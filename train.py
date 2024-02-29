@@ -14,6 +14,8 @@ from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove_SubNet=False, filter='Laplacian',
           n_epochs=10, lr=1e-4, loss='MultiScale',
@@ -28,8 +30,6 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         os.mkdir(model_save_path)
     
     train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size)
-    
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     if 'ADMM' in model_name:
         model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)

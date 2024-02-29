@@ -14,13 +14,13 @@ from models.Wiener import Wiener
 from utils.utils_data import get_dataloader
 from utils.utils_test import delta_2D, estimate_shear
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def test_shear(method, n_iters, model_file, n_gal, snrs, data_path, result_path):
     logger = logging.getLogger('Shear Test')
     logger.info(' Testing method: %s', method)
-    
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
+        
     psf_delta = delta_2D(48, 48)
     
     result_folder = os.path.join(result_path, method)
@@ -112,7 +112,6 @@ def test_time(method, n_iters, model_file, n_gal, data_path, result_path):
     logger = logging.getLogger('Time Test')
     logger.info(' Running time test with %s galaxies.', n_gal)
     logger.info(' Testing method: %s', method)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     test_loader = get_dataloader(data_path=data_path, train=False)
     
