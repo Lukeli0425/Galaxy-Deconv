@@ -1,11 +1,21 @@
-from collections import OrderedDict
-
 import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
+import torch.nn.functional as F
 
 from utils.utils_deblur import crop, gauss_kernel, pad
+
+
+
+def pad_double(img):
+    H, W = img.shape[-2], img.shape[-1]
+    return F.pad(img, (W//2, W//2, H//2, H//2))
+
+
+def crop_half(img):
+    B, C, H, W = img.shape
+    return img[:,:,H//4:3*H//4, W//4:3*W//4]
 
 
 # functionName implies a torch version of the function

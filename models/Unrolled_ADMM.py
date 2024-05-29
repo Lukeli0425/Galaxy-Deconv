@@ -2,14 +2,14 @@ import math
 
 import numpy as np
 import torch
-import torch.fft as tfft
+from torch.fft import fft2, ifft2, fftn, ifftn, fftshift, ifftshift
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
 from models.ResUNet import ResUNet
 from models.XDenseUNet import XDenseUNet
-from utils.utils_torch import conv_fft_batch, psf_to_otf
+from utils.utils_torch import conv_fft_batch, psf_to_otf, crop_half, pad_double
 
 
 def weights_init_kaiming(m):
@@ -79,7 +79,7 @@ class SubNet(nn.Module):
 		h1, h2 = int(np.floor(0.5*(128-h))), int(np.ceil(0.5*(128-h)))
 		w1, w2 = int(np.floor(0.5*(128-w))), int(np.ceil(0.5*(128-w)))
 		k_pad = F.pad(kernel, (w1,w2,h1,h2), "constant", 0)
-		H = tfft.fftn(k_pad,dim=[2,3])
+		H = fftn(k_pad,dim=[2,3])
 		HtH = torch.abs(H)**2
 		x = self.conv_layers(HtH.float())
 		x = torch.cat((x.view(N,1,16*8*8),  alpha.float().view(N,1,1)), axis=2).float()
@@ -95,9 +95,9 @@ class X_Update(nn.Module):
 		super(X_Update, self).__init__()
 
 	def forward(self, x0, x1, HtH, rho1, rho2):
-		lhs = rho1*HtH + rho2 
-		rhs = tfft.fftn(rho1*x0 + rho2*x1, dim=[2,3] )
-		x = tfft.ifftn(rhs/lhs, dim=[2,3])
+		lhs = rho1 + rho2  * HtH
+		rhs = fftn(rho1*x0 + rho2*x1, dim=[2,3])
+		x = ifftn(rhs/lhs, dim=[2,3])
 		return x.real
 
 
@@ -106,7 +106,7 @@ class V_Update_Poisson(nn.Module):
 		super(V_Update_Poisson, self).__init__()
 
 	def forward(self, v_tilde, y, rho2, alpha):
-		t1 = rho2*v_tilde - alpha 
+		t1 = rho2 * v_tilde - alpha 
 		return 0.5*(1/rho2)*(-t1 + torch.sqrt(t1**2 + 4*y*rho2))
 
 
@@ -115,7 +115,7 @@ class V_Update_Gaussian(nn.Module):
 		super(V_Update_Gaussian, self).__init__()
 
 	def forward(self, v_tilde, y, rho2):
-		return (rho2*v_tilde + y)/(1+rho2)
+		return (rho2 * v_tilde + y) / (1+rho2)
 
 
 class Z_Update(nn.Module):
@@ -132,7 +132,7 @@ class Z_Update_ResUNet(nn.Module):
 	"""Updating Z with ResUNet as denoiser."""
 	def __init__(self):
 		super(Z_Update_ResUNet, self).__init__()		
-		self.net = ResUNet()
+		self.net = ResUNet(nc=[32, 64, 128, 256])
 
 	def forward(self, z):
 		z_out = self.net(z.float())
@@ -164,14 +164,14 @@ class Unrolled_ADMM(nn.Module):
 		if self.subnet:
 			self.init = SubNet(self.n)
 		else:
-			self.rho1_iters = torch.ones(size=[self.n,], requires_grad=True)
-			self.rho2_iters = torch.ones(size=[self.n,], requires_grad=True)
+			self.rho1_iters = nn.Parameter(torch.ones(size=[self.n,]), requires_grad=True)
+			self.rho2_iters = nn.Parameter(torch.ones(size=[self.n,]), requires_grad=True)
   
 	def init_l2(self, y, H, alpha):
 		Ht, HtH = torch.conj(H), torch.abs(H)**2
-		rhs = tfft.fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
+		rhs = fftn(conv_fft_batch(Ht, y/alpha), dim=[2,3])
 		lhs = HtH + (1/alpha)
-		x0 = torch.real(tfft.ifftn(rhs/lhs, dim=[2,3]))
+		x0 = ifftn(rhs/lhs, dim=[2,3]).real
 		return torch.clamp(x0,0,1)
 
 	def forward(self, y, kernel, alpha):
@@ -217,7 +217,8 @@ class Unrolled_ADMM(nn.Module):
 
 
 
+
 if __name__ == '__main__':
-	model = Unrolled_ADMM()
+	model = Unrolled_ADMM(PnP=True, subnet=True)
 	total = sum([param.nelement() for param in model.parameters()])
 	print("Number of parameter: %s" % (total))

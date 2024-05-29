@@ -8,6 +8,7 @@ from torch.optim import Adam
 from models.ResUNet import ResUNet
 from models.Tikhonet import Tikhonet
 from models.Unrolled_ADMM import Unrolled_ADMM
+from models.Unrolled_ADMM_Gaussian import Unrolled_ADMM_Gaussian
 from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
@@ -29,10 +30,11 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
     
-    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size)
+    train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size, num_workers=12)
     
     if 'ADMM' in model_name:
-        model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)
+        # model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)
+        model = Unrolled_ADMM_Gaussian(n_iters=n_iters, PnP=PnP, subnet=True)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
     elif 'ShapeNet' in model_name:
@@ -139,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--remove_SubNet', action="store_true")
     parser.add_argument('--filter', type=str, default='Laplacian', choices=['Identity', 'Laplacian'])
     parser.add_argument('--n_epochs', type=int, default=50)
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--loss', type=str, default='MultiScale', choices=['MultiScale', 'MSE', 'Shape'])
     parser.add_argument('--train_val_split', type=float, default=0.9)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -150,4 +152,4 @@ if __name__ == "__main__":
     train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
           n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
           data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models/', pretrained_epochs=opt.pretrained_epochs)
+          model_save_path='./saved_models_2024/', pretrained_epochs=opt.pretrained_epochs)

@@ -18,6 +18,7 @@ old/
 saved_models_abl/
 results_abl/
 
+saved_models_2024/
 # Full revision models
 saved_models3/ 
 # fixed parameters and SNR

@@ -19,7 +19,7 @@ class Richard_Lucy(nn.Module):
         for i in range(self.n_iters):
             Hx = conv_fft_batch(H, x).to(device)
             numerator = conv_fft_batch(Ht, y/Hx)
-            divisor = conv_fft_batch(H, ones)
+            divisor = conv_fft_batch(Ht, ones)
             x = x*numerator/divisor
         return x
     
