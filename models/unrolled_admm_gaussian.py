@@ -96,12 +96,13 @@ class X_Update_Gaussian(nn.Module):
 
 
 class Unrolled_ADMM_Gaussian(nn.Module):
-	def __init__(self, n_iters=8, denoiser='ResUNet', PnP=True, subnet=True):
+	def __init__(self, n_iters=8, denoiser='ResUNet', PnP=True, subnet=True, analysis=False):
 		super(Unrolled_ADMM_Gaussian, self).__init__()
 		self.n_iters = n_iters # Number of iterations.
+		self.denoiser = denoiser
 		self.PnP = PnP
 		self.subnet = subnet
-		self.denoiser = denoiser
+		self.analysis = analysis
 		self.X = X_Update_Gaussian()
 		self.Z = Z_Update_ResUNet()
 		if self.subnet:
@@ -118,7 +119,7 @@ class Unrolled_ADMM_Gaussian(nn.Module):
 
 	def forward(self, y, kernel, alpha):
 		y = torch.maximum(y, torch.zeros_like(y))
-  
+
 		# Generate auxiliary variables for convolution.
 		Y = fft2(ifftshift(pad_double(y), dim=(-2,-1)))
 		H = fft2(ifftshift(pad_double(kernel), dim=(-2,-1)))
@@ -132,10 +133,9 @@ class Unrolled_ADMM_Gaussian(nn.Module):
 		# Other ADMM variables
 		# z = x.clone()
 		u = torch.zeros_like(y, device=y.device)
-  
-		
+
         # ADMM iterations
-		x_list = []
+		x_list, z_list, u_list, rho_list = [], [], [], []
 		for i in range(self.n_iters):
 			if self.subnet:
 				rho = rho_iters[:,:,:,i].view(-1,1,1,1)
@@ -144,11 +144,14 @@ class Unrolled_ADMM_Gaussian(nn.Module):
     
 			# X, Z updates
 			x = self.X(Y, Ht, HtH, z, u, rho)
-			z = self.Z(x)
+			z = self.Z(rho*x+u)
    
 			# Lagrangian updates
-			u = u + x - z			
+			u = u + rho*(x - z)		
 
-			x_list.append(z)
+			x_list.append(x)
+			z_list.append(z)
+			u_list.append(u)
+			rho_list.append(rho)
 
-		return x_list[-1]
+		return (x_list, z_list, u_list, rho_list) if self.analysis else z_list[-1]
