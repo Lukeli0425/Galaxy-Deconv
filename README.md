@@ -120,3 +120,7 @@ The [`figures`](figures) folder holds the figures in this paper and the files th
   publisher={Oxford University Press}
 }
 ```
+
+### Acknowledgement
+
+We would like to thank Adam Miller, Jason Wang, Keming Zhang, Nick Antipa, and an anonymous reviewer for their valuable advice, and the Computational Photography Lab (esp. Aniket Dashpute) at Northwestern University for support of computational resources.
