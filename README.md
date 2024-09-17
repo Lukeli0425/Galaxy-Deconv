@@ -6,6 +6,11 @@ __Monthly Notices of the Royal Astronomical Society: Letters__
 
 Official code for [_Galaxy Image Deconvolution for Weak Gravitational Lensing with Unrolled Plug-and-Play ADMM_](https://doi.org/10.1093/mnrasl/slad032).
 
+[![project page](https://img.shields.io/badge/project-page-purple)](https://lukeli0425.github.io/Galaxy_Deconv/)&nbsp;
+[![paper](https://img.shields.io/badge/MNRAS-paper-blue)](https://doi.org/10.1093/mnrasl/slad032)&nbsp;
+[![arXiv](https://img.shields.io/badge/arXiv-2211.01567-b31b1b.svg)](https://arxiv.org/abs/2211.01567)&nbsp;
+[![dataset](https://img.shields.io/badge/synthetic-dataset-green)](https://drive.google.com/drive/folders/1IwgvbetMDpLK2skRalYWmth2J1gvF-qm)&nbsp;
+
 ![Pipeline Figure](figures/pipeline.jpg)
 
 ![Grid Plot](figures/grid.jpg)
