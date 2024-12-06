@@ -1,13 +1,11 @@
 import numpy as np
 import torch
-from torch.fft import fft2, ifft2, fftshift, ifftshift
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.fft import fft2, fftshift, ifft2, ifftshift
 
 from models.ResUNet import ResUNet
-from models.XDenseUNet import XDenseUNet
-from utils.utils_torch import conv_fft_batch, psf_to_otf, crop_half, pad_double
-
+from utils.utils_torch import crop_half, pad_double
 
 
 class DoubleConv(nn.Module):
@@ -73,10 +71,10 @@ class SubNet(nn.Module):
 		return output.view(N, 1, 1, self.n)
 
 
-class Z_Update_ResUNet(nn.Module):
-	"""Updating Z with ResUNet as denoiser."""
+class ZUpdateResUNet(nn.Module):
+	"""Updating Z with ResUNet denoiser."""
 	def __init__(self):
-		super(Z_Update_ResUNet, self).__init__()		
+		super(ZUpdateResUNet, self).__init__()		
 		self.net = ResUNet(nc=[32, 64, 128, 256])
 
 	def forward(self, z):
@@ -84,9 +82,9 @@ class Z_Update_ResUNet(nn.Module):
 		return z_out
 
 
-class X_Update_Gaussian(nn.Module):
+class XUpdateGaussian(nn.Module):
 	def __init__(self):
-		super(X_Update_Gaussian, self).__init__()
+		super(XUpdateGaussian, self).__init__()
 
 	def forward(self, Y, Ht, HtH, z, u, rho):
 		lhs = rho + HtH
@@ -95,16 +93,16 @@ class X_Update_Gaussian(nn.Module):
 		return crop_half(x)
 
 
-class Unrolled_ADMM_Gaussian(nn.Module):
+class UnrolledADMMGaussian(nn.Module):
 	def __init__(self, n_iters=8, denoiser='ResUNet', PnP=True, subnet=True, analysis=False):
-		super(Unrolled_ADMM_Gaussian, self).__init__()
+		super(UnrolledADMMGaussian, self).__init__()
 		self.n_iters = n_iters # Number of iterations.
 		self.denoiser = denoiser
 		self.PnP = PnP
 		self.subnet = subnet
 		self.analysis = analysis
-		self.X = X_Update_Gaussian()
-		self.Z = Z_Update_ResUNet()
+		self.X = XUpdateGaussian()
+		self.Z = ZUpdateResUNet()
 		if self.subnet:
 			self.init = SubNet(self.n_iters)
 		else: 
@@ -115,7 +113,6 @@ class Unrolled_ADMM_Gaussian(nn.Module):
 		lhs = HtH + (1/alpha)
 		x0 = fftshift(ifft2(rhs/lhs), dim=(-2,-1)).real
 		return crop_half(x0)
-		# return torch.clamp(x0,0,1)
 
 	def forward(self, y, kernel, alpha):
 		y = torch.maximum(y, torch.zeros_like(y))
@@ -128,10 +125,8 @@ class Unrolled_ADMM_Gaussian(nn.Module):
 		if self.subnet:
 			rho_iters = self.init(kernel, alpha) 	# Hyperparameters.
 		z = self.init_l2(Y, Ht, HtH, alpha) # Initialization using Wiener Deconvolution.
-		# x_list.append(x)
   
 		# Other ADMM variables
-		# z = x.clone()
 		u = torch.zeros_like(y, device=y.device)
 
         # ADMM iterations

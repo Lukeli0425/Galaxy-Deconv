@@ -1,6 +1,7 @@
-import models.resnet_basicblock as B
-import torch.nn as nn
 import numpy as np
+import torch.nn as nn
+
+import models.resnet_basicblock as B
 
 
 class ResUNet(nn.Module):
