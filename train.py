@@ -3,17 +3,16 @@ import logging
 import os
 
 import torch
+from torch.nn import MSELoss
 from torch.optim import Adam
 
 from models.ResUNet import ResUNet
 from models.Tikhonet import Tikhonet
 from models.Unrolled_ADMM import Unrolled_ADMM
-from models.Unrolled_ADMM_Gaussian import Unrolled_ADMM_Gaussian
+from models.unrolled_admm_gaussian import UnrolledADMMGaussian
 from utils.utils_data import get_dataloader
 from utils.utils_plot import plot_loss
 from utils.utils_train import MultiScaleLoss, ShapeConstraint, get_model_name
-
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -27,14 +26,13 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     logger = logging.getLogger('Train')
     logger.info(' Start training %s on %s data for %s epochs.', model_name, data_path, n_epochs)
     
-    if not os.path.exists(model_save_path):
-        os.mkdir(model_save_path)
+    os.makedirs(model_save_path, exist_ok=True)
     
     train_loader, val_loader = get_dataloader(data_path=data_path, train=True, train_val_split=train_val_split, batch_size=batch_size, num_workers=12)
     
     if 'ADMM' in model_name:
         # model = Unrolled_ADMM(n_iters=n_iters, llh=llh, PnP=PnP, subnet=not remove_SubNet)
-        model = Unrolled_ADMM_Gaussian(n_iters=n_iters, PnP=PnP, subnet=True)
+        model = UnrolledADMMGaussian(n_iters=n_iters, PnP=PnP, subnet=True, analysis=False)
     elif 'Tikhonet' in model_name:
         model = Tikhonet(filter=filter)
     elif 'ShapeNet' in model_name:
@@ -42,7 +40,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     elif model_name == 'ResUNet':
         model = ResUNet()
 
-    model.to(device)
+    model.cuda()
     if pretrained_epochs > 0:
         try:
             pretrained_file = os.path.join(model_save_path, f'{model_name}_{pretrained_epochs}epochs.pth')
@@ -54,9 +52,9 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
     if 'ShapeNet' in model_name or loss == 'Shape':
         loss_fn = ShapeConstraint(device=device, fov_pixels=48, n_shearlet=2, gamma=1)
     elif loss == 'MSE':
-        loss_fn = torch.nn.MSELoss()
+        loss_fn = MSELoss().cuda()
     elif loss == 'MultiScale':
-        loss_fn = MultiScaleLoss()
+        loss_fn = MultiScaleLoss().cuda()
     
     optimizer = Adam(params=model.parameters(), lr = lr)
 
@@ -67,7 +65,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         train_loss = 0.0
         for idx, ((obs, psf, alpha), gt) in enumerate(train_loader):
             optimizer.zero_grad()
-            obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
+            obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
             rec = model(obs, psf, alpha)
             loss = loss_fn(gt, rec)
 
@@ -81,22 +79,21 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
                 model.eval()
                 with torch.no_grad():
                     for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
-                        obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
+                        obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
                         rec = model(obs, psf, alpha)
                         loss = loss_fn(gt, rec)
                         val_loss += loss.item()
 
                 logger.info(" [{}: {}/{}]  train_loss={:.4g}  val_loss={:.4g}".format(
                                 epoch+1, idx+1, len(train_loader),
-                                train_loss,
-                                val_loss/len(val_loader)))
+                                train_loss, val_loss/len(val_loader)))
     
         # Evaluate on train & valid dataset after every epoch.
         train_loss = 0.0
         model.eval()
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(train_loader):
-                obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
+                obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
                 rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 train_loss += loss.item()
@@ -106,7 +103,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         model.eval()
         with torch.no_grad():
             for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
-                obs, psf, alpha, gt = obs.to(device), psf.to(device), alpha.to(device), gt.to(device)
+                obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
                 rec = model(obs, psf, alpha)
                 loss = loss_fn(gt, rec)
                 val_loss += loss.item()
@@ -114,8 +111,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
 
         logger.info(" [{}: {}/{}]  train_loss={:.4g}  val_loss={:.4g}".format(
                         epoch+1, len(train_loader), len(train_loader),
-                        train_loss/len(train_loader),
-                        val_loss/len(val_loader)))
+                        train_loss/len(train_loader), val_loss/len(val_loader)))
         
         # Save model.
         if val_loss_min > val_loss or (epoch + 1) % 5 == 0:
@@ -130,11 +126,11 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
         plot_loss(train_loss_list, val_loss_list, epoch_min, model_save_path, model_name)
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(description='Arguments for training.')
+    parser.add_argument('--gpu', type=str, default='0', choices=['0', '1', '2'])
     parser.add_argument('--n_iters', type=int, default=8)
     parser.add_argument('--model', type=str, default='Unrolled_ADMM', choices=['Unrolled_ADMM', 'Tikhonet', 'ShapeNet', 'ResUNet'])
     parser.add_argument('--llh', type=str, default='Gaussian', choices=['Gaussian', 'Poisson'])
@@ -146,10 +142,12 @@ if __name__ == "__main__":
     parser.add_argument('--train_val_split', type=float, default=0.9)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--pretrained_epochs', type=int, default=0)
-    opt = parser.parse_args()
+    args = parser.parse_args()
 
+    # Select GPU.
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-    train(model_name=opt.model, n_iters=opt.n_iters, llh=opt.llh, PnP=True, remove_SubNet=opt.remove_SubNet, filter=opt.filter,
-          n_epochs=opt.n_epochs, lr=opt.lr, loss=opt.loss,
-          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=opt.train_val_split, batch_size=opt.batch_size,
-          model_save_path='./saved_models_2024/', pretrained_epochs=opt.pretrained_epochs)
+    train(model_name=args.model, n_iters=args.n_iters, llh=args.llh, PnP=True, remove_SubNet=args.remove_SubNet, filter=args.filter,
+          n_epochs=args.n_epochs, lr=args.lr, loss=args.loss,
+          data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train_val_split=args.train_val_split, batch_size=args.batch_size,
+          model_save_path='./saved_models_test/', pretrained_epochs=args.pretrained_epochs)
