@@ -40,7 +40,7 @@ def down_sample(input, rate=4):
     return output
 
 
-class Galaxy_Dataset(Dataset):
+class GalaxyDataset(Dataset):
     """Simulated Galaxy Image Dataset inherited from `torch.utils.data.Dataset`."""
     def __init__(self, data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True,
                  psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
@@ -53,7 +53,7 @@ class Galaxy_Dataset(Dataset):
             obs_folder (`str`, optional): Path to the observed image folder. Defaults to `'obs/'`.
             gt_folder (`str`, optional): Path to the ground truth image folder. Defaults to `'gt/'`.
         """
-        super(Galaxy_Dataset, self).__init__()
+        super(GalaxyDataset, self).__init__()
         
         self.logger = logging.getLogger('Dataset')
         
@@ -104,7 +104,7 @@ class Galaxy_Dataset(Dataset):
             
             
 def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', train=True, train_val_split=0.8, batch_size=32,
-                   num_workers=18, pin_memory=True,
+                   num_workers=22, pin_memory=False,
                    psf_folder='psf/', obs_folder='obs/', gt_folder='gt/'):
     """Generate PyTorch dataloaders for training or testing.
 
@@ -123,7 +123,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', tr
         test_loader (`torch.utils.data.DataLoader`): PyTorch dataloader for test dataset.
     """
     if train:
-        train_dataset = Galaxy_Dataset(data_path=data_path, train=True)
+        train_dataset = GalaxyDataset(data_path=data_path, train=True)
         train_size = int(train_val_split * len(train_dataset))
         val_size = len(train_dataset) - train_size
         train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
@@ -131,7 +131,7 @@ def get_dataloader(data_path='/mnt/WD6TB/tianaoli/dataset/LSST_23.5_deconv/', tr
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
         return train_loader, val_loader
     else:
-        test_dataset = Galaxy_Dataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder)
+        test_dataset = GalaxyDataset(data_path=data_path, train=False, psf_folder=psf_folder, obs_folder=obs_folder, gt_folder=gt_folder)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         return test_loader
     
