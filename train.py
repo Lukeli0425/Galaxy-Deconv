@@ -73,7 +73,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
             optimizer.step()
             train_loss = loss.item()
             
-            # Evaluate on valid dataset.
+            # Evaluate on validation dataset.
             if (idx+1) % 25 == 0:
                 val_loss = 0.0
                 model.eval()
@@ -81,8 +81,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
                     for _, ((obs, psf, alpha), gt) in enumerate(val_loader):
                         obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
                         rec = model(obs, psf, alpha)
-                        loss = loss_fn(gt, rec)
-                        val_loss += loss.item()
+                        val_loss += loss_fn(gt, rec).item()
 
                 logger.info(" [{}: {}/{}]  train_loss={:.4g}  val_loss={:.4g}".format(
                                 epoch+1, idx+1, len(train_loader),
@@ -95,8 +94,7 @@ def train(model_name='Unrolled ADMM', n_iters=8, llh='Poisson', PnP=True, remove
             for _, ((obs, psf, alpha), gt) in enumerate(train_loader):
                 obs, psf, alpha, gt = obs.cuda(), psf.cuda(), alpha.cuda(), gt.cuda()
                 rec = model(obs, psf, alpha)
-                loss = loss_fn(gt, rec)
-                train_loss += loss.item()
+                train_loss += loss_fn(gt, rec).item()
             train_loss_list.append(train_loss/len(train_loader))
         
         val_loss = 0.0
