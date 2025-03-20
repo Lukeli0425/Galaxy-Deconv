@@ -5,3 +5,4 @@ torch
 tqdm
 galsim
 fpfs
+pyfftw
