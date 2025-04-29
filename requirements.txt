@@ -6,3 +6,4 @@ tqdm
 galsim
 fpfs
 pyfftw
+ffmpeg-python
